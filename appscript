@@ -25,17 +25,34 @@ function doPost(e) {
       reply =
         "Format input stok:\n" +
         "input#nama motor;tahun;plat;surat-surat;tahun plat;pajak;harga jual;harga laku;harga beli;tgl terjual;status\n\n" +
+        "Format label (lebih mudah):\n" +
+        "NAMA MOTOR: Vario 125\n" +
+        "TAHUN: 2022\n" +
+        "PLAT: B1234XYZ\n" +
+        "SURAT-SURAT: Lengkap hidup\n" +
+        "TAHUN PLAT: 2027\n" +
+        "PAJAK: Hidup\n" +
+        "HARGA JUAL: 22500000\n" +
+        "HARGA BELI: 19000000\n\n" +
+        "Format update label:\n" +
+        "NO: 7\n" +
+        "HARGA JUAL: 22500000\n" +
+        "HARGA LAKU: 21000000\n" +
+        "TGL TERJUAL: 24/02/2026\n" +
+        "STATUS: terjual\n\n" +
         "Format input singkat (stok awal):\n" +
         "input#nama motor;tahun;plat;surat-surat;tahun plat;pajak;harga jual;harga beli\n\n" +
         "Format update saat terjual:\n" +
-        "update#plat;harga jual;harga laku;tgl terjual;status\n\n" +
+        "update#no;harga jual;harga laku;tgl terjual;status\n\n" +
         "Contoh:\n" +
         "input#Vario 125;2022;B1234XYZ;Lengkap hidup;2027;Hidup;22500000;19000000\n" +
-        "update#B1234XYZ;22500000;21000000;24/02/2026;terjual\n\n" +
+        "update#7;22500000;21000000;24/02/2026;terjual\n\n" +
         "Catatan:\n" +
         "- WAJIB input stok: nama motor, tahun, plat, surat-surat, tahun plat, pajak, harga beli\n" +
         "- surat-surat hanya: Lengkap hidup / Lengkap mati / BPKB ONLY\n" +
         "- PAJAK boleh kirim tahun (contoh 2027) atau status Hidup/Mati\n" +
+        "- update pakai NO (kolom A), bukan PLAT\n" +
+        "- jika update HARGA LAKU tanpa TGL TERJUAL, tanggal otomatis hari ini\n" +
         "- tgl terjual dan status boleh dikosongkan\n" +
         "- status otomatis centang jika harga laku / tgl terjual terisi\n" +
         "- status manual: terjual/ya/1 = dicentang";
@@ -61,7 +78,28 @@ function doPost(e) {
         ? "Data terupdate di baris " + saveResult.row
         : "Gagal update: " + saveResult.error;
     } else {
-      reply = "Perintah tidak dikenali. Ketik HALO untuk lihat format.";
+      const parsedUpdate = parseLabeledUpdate_(text);
+      if (parsedUpdate.matched) {
+        saveResult = updateSoldData_(parsedUpdate.cols);
+        reply = saveResult.ok
+          ? "Data terupdate di baris " + saveResult.row
+          : "Gagal update: " + saveResult.error;
+      } else {
+      const parsed = parseLabeledInput_(text);
+      if (parsed.matched) {
+        const validation = validateInput_(parsed.cols);
+        if (!validation.ok) {
+          reply = "Format salah: " + validation.error;
+        } else {
+          saveResult = saveToSheet_(validation.data);
+          reply = saveResult.ok
+            ? "Data tersimpan di baris " + saveResult.row
+            : "Gagal simpan: " + saveResult.error;
+        }
+      } else {
+        reply = "Perintah tidak dikenali. Ketik HALO untuk lihat format.";
+      }
+      }
     }
 
     if (sender) sendWa_(sender, reply);
@@ -162,11 +200,23 @@ function parseNumber_(value) {
 }
 
 function parseStatus_(statusText, hargaLaku, tglTerjual) {
+  // Jika harga laku terisi, status selalu dianggap terjual (centang).
+  if (isFilledValue_(hargaLaku)) {
+    return true;
+  }
+
   const s = String(statusText || "").trim().toLowerCase();
   if (!s) {
-    return Boolean(String(hargaLaku || "").trim() || String(tglTerjual || "").trim());
+    return isFilledValue_(tglTerjual);
   }
   return ["1", "true", "ya", "yes", "terjual", "laku", "sold", "done"].indexOf(s) !== -1;
+}
+
+function isFilledValue_(value) {
+  if (value === null || value === undefined) return false;
+  if (value instanceof Date) return !isNaN(value.getTime());
+  if (typeof value === "number") return true;
+  return String(value).trim() !== "";
 }
 
 function validateInput_(cols) {
@@ -320,15 +370,21 @@ function updateSoldData_(cols) {
     const sh = ss.getSheetByName(SHEET_NAME);
     if (!sh) return { ok: false, error: 'Sheet "' + SHEET_NAME + '" tidak ditemukan' };
 
-    const platInput = String(cols[0] || "").trim();
-    if (!platInput) return { ok: false, error: "PLAT wajib diisi untuk update." };
+    const noInput = String(cols[0] || "").trim();
+    if (!noInput) return { ok: false, error: "NO wajib diisi untuk update." };
 
-    const row = findRowByPlate_(sh, platInput);
-    if (!row) return { ok: false, error: "PLAT tidak ditemukan: " + platInput };
+    const row = findRowByNo_(sh, noInput);
+    if (!row) return { ok: false, error: "NO tidak ditemukan: " + noInput };
 
     const hargaJual = String(cols[1] || "").trim() ? parseNumber_(cols[1]) : null;
-    const hargaLaku = String(cols[2] || "").trim() ? parseNumber_(cols[2]) : null;
-    const tglTerjual = String(cols[3] || "").trim() ? parseDate_(cols[3]) : null;
+    const hasHargaLaku = String(cols[2] || "").trim() !== "";
+    const hargaLaku = hasHargaLaku ? parseNumber_(cols[2]) : null;
+    let tglTerjual = String(cols[3] || "").trim() ? parseDate_(cols[3]) : null;
+
+    // Jika harga laku diupdate tapi tanggal kosong, isi otomatis dengan tanggal hari ini.
+    if (!tglTerjual && hasHargaLaku) {
+      tglTerjual = new Date();
+    }
 
     if (hargaJual !== null) sh.getRange(row, 8).setValue(hargaJual); // H HARGA JUAL
     if (hargaLaku !== null) sh.getRange(row, 9).setValue(hargaLaku); // I HARGA LAKU
@@ -345,24 +401,113 @@ function updateSoldData_(cols) {
   }
 }
 
-function findRowByPlate_(sheet, plateInput) {
-  const target = normalizePlate_(plateInput);
-  if (!target) return 0;
+function findRowByNo_(sheet, noInput) {
+  const target = normalizeNo_(noInput);
+  if (target === "") return 0;
 
   const startRow = 2;
   const last = Math.max(sheet.getLastRow(), startRow);
-  const vals = sheet.getRange(startRow, 4, last - startRow + 1, 1).getDisplayValues(); // D PLAT
+  const vals = sheet.getRange(startRow, 1, last - startRow + 1, 1).getDisplayValues(); // A NO
 
   for (let i = 0; i < vals.length; i++) {
-    if (normalizePlate_(vals[i][0]) === target) return startRow + i;
+    if (normalizeNo_(vals[i][0]) === target) return startRow + i;
   }
   return 0;
 }
 
-function normalizePlate_(value) {
+function normalizeNo_(value) {
   return String(value || "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
+    .replace(/[^\d]/g, "")
+    .trim();
+}
+
+function parseLabeledInput_(text) {
+  const lines = String(text || "").split(/\r?\n/);
+  const cols = ["", "", "", "", "", "", "", "", "", "", ""];
+  let recognized = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = String(lines[i] || "").trim();
+    if (!line || line.indexOf(":") === -1) continue;
+
+    const parts = line.split(":");
+    const key = normalizeLabelKey_(parts.shift());
+    const value = parts.join(":").trim();
+    const idx = mapLabelToIndex_(key);
+    if (idx === -1) continue;
+
+    cols[idx] = value;
+    recognized++;
+  }
+
+  const hasCore = cols[0] || cols[2] || cols[8];
+  return {
+    matched: recognized >= 3 && Boolean(hasCore),
+    cols: cols
+  };
+}
+
+function normalizeLabelKey_(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function mapLabelToIndex_(key) {
+  if (key === "namamotor") return 0;
+  if (key === "tahun") return 1;
+  if (key === "plat") return 2;
+  if (key === "suratsurat") return 3;
+  if (key === "tahunplat") return 4;
+  if (key === "pajak") return 5;
+  if (key === "hargajual") return 6;
+  if (key === "hargalaku") return 7;
+  if (key === "hargabeli") return 8;
+  if (key === "tglterjual" || key === "tanggalterjual") return 9;
+  if (key === "status") return 10;
+  return -1;
+}
+
+function parseLabeledUpdate_(text) {
+  const lines = String(text || "").split(/\r?\n/);
+  const cols = ["", "", "", "", ""];
+  let recognized = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = String(lines[i] || "").trim();
+    if (!line || line.indexOf(":") === -1) continue;
+
+    const parts = line.split(":");
+    const key = normalizeLabelKey_(parts.shift());
+    const value = parts.join(":").trim();
+    const idx = mapUpdateLabelToIndex_(key);
+    if (idx === -1) continue;
+
+    cols[idx] = value;
+    recognized++;
+  }
+
+  const hasNo = Boolean(String(cols[0] || "").trim());
+  const hasUpdateField = Boolean(
+    String(cols[1] || "").trim() ||
+    String(cols[2] || "").trim() ||
+    String(cols[3] || "").trim() ||
+    String(cols[4] || "").trim()
+  );
+
+  return {
+    matched: recognized >= 2 && hasNo && hasUpdateField,
+    cols: cols
+  };
+}
+
+function mapUpdateLabelToIndex_(key) {
+  if (key === "no" || key === "nomor") return 0;
+  if (key === "hargajual") return 1;
+  if (key === "hargalaku") return 2;
+  if (key === "tglterjual" || key === "tanggalterjual") return 3;
+  if (key === "status") return 4;
+  return -1;
 }
 
 function sendWa_(target, message) {
