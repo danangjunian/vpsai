@@ -1,0 +1,140 @@
+const FONNTE_TOKEN = "PuvpcDVE1wXokszh3GTV"; // ganti kalau perlu
+const SPREADSHEET_ID = ""; // isi jika script standalone, contoh: 1AbC...
+const SHEET_NAME = "Sheet1"; // ganti sesuai nama sheet kamu
+const DEBUG_MODE = true;
+
+function doGet(e) {
+  return ContentService.createTextOutput("OK");
+}
+
+function doPost(e) {
+  try {
+    const raw = (e && e.postData && e.postData.contents) || "{}";
+    const data = JSON.parse(raw);
+    const sender = String(data.sender || "").trim();
+    const text = String(data.message || "").trim();
+    const lower = text.toLowerCase();
+    let reply = "";
+    let saveResult = null;
+
+    log_("RAW_BODY: " + raw);
+
+    if (!text) return ContentService.createTextOutput("NO_MESSAGE");
+
+    if (lower === "halo" || lower === "hi" || lower === "menu") {
+      reply =
+        "Format input:\n" +
+        "input#nama motor;tahun;plat;surat-surat;tahun plat;pajak;harga jual;harga laku;tgl terjual\n\n" +
+        "Contoh:\n" +
+        "input#Vario 125;2022;B1234XYZ;Lengkap;2027;Hidup;22500000;;";
+    } else if (lower.startsWith("input#")) {
+      const body = text.slice(6).trim();
+      const cols = body.split(";").map(function (s) { return s.trim(); });
+
+      if (cols.length < 7) {
+        reply = "Format salah. Minimal isi sampai HARGA JUAL.";
+      } else {
+        saveResult = saveToSheet_(cols);
+        reply = saveResult.ok
+          ? "Data tersimpan di baris " + saveResult.row
+          : "Gagal simpan: " + saveResult.error;
+      }
+    } else {
+      reply = "Perintah tidak dikenali. Ketik HALO untuk lihat format.";
+    }
+
+    if (sender) sendWa_(sender, reply);
+
+    if (saveResult) {
+      return ContentService.createTextOutput(
+        saveResult.ok ? "OK_SAVED_ROW_" + saveResult.row : "ERROR_" + saveResult.error
+      );
+    }
+    return ContentService.createTextOutput("OK");
+  } catch (err) {
+    log_("doPost error: " + err.message);
+    return ContentService.createTextOutput("ERROR_" + err.message);
+  }
+}
+
+function saveToSheet_(cols) {
+  try {
+    const ss = getSpreadsheet_();
+    if (!ss) {
+      return {
+        ok: false,
+        error: "Spreadsheet tidak terbaca. Isi SPREADSHEET_ID jika script standalone."
+      };
+    }
+
+    const sh = ss.getSheetByName(SHEET_NAME);
+    if (!sh) return { ok: false, error: 'Sheet "' + SHEET_NAME + '" tidak ditemukan' };
+
+    const row = findFirstEmptyRow_(sh, 2, 2); // cari baris kosong dari kolom B
+
+    // Kolom A (NO) otomatis isi jika kosong
+    if (!sh.getRange(row, 1).getValue()) {
+      sh.getRange(row, 1).setValue(row - 1);
+    }
+
+    const tglTerjual = cols[8] ? parseDate_(cols[8]) : "";
+
+    // B:J = NAMA MOTOR s/d TGL TERJUAL
+    sh.getRange(row, 2, 1, 9).setValues([[
+      cols[0] || "",                    // NAMA MOTOR
+      cols[1] || "",                    // TAHUN
+      (cols[2] || "").toUpperCase(),    // PLAT
+      cols[3] || "",                    // SURAT-SURAT
+      cols[4] || "",                    // TAHUN PLAT
+      cols[5] || "",                    // PAJAK
+      cols[6] || "",                    // HARGA JUAL
+      cols[7] || "",                    // HARGA LAKU
+      tglTerjual                        // TGL TERJUAL
+    ]]);
+
+    log_("SAVE_OK row=" + row + " data=" + JSON.stringify(cols));
+    return { ok: true, row: row };
+  } catch (err) {
+    log_("saveToSheet_ error: " + err.message);
+    return { ok: false, error: err.message };
+  }
+}
+
+function getSpreadsheet_() {
+  if (SPREADSHEET_ID) {
+    return SpreadsheetApp.openById(SPREADSHEET_ID);
+  }
+  return SpreadsheetApp.getActiveSpreadsheet();
+}
+
+function findFirstEmptyRow_(sheet, startRow, col) {
+  const last = Math.max(sheet.getLastRow(), startRow);
+  const vals = sheet.getRange(startRow, col, last - startRow + 1, 1).getValues();
+  for (let i = 0; i < vals.length; i++) {
+    if (!vals[i][0]) return startRow + i;
+  }
+  return last + 1;
+}
+
+function parseDate_(s) {
+  const m = String(s).match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (!m) return s; // kalau bukan format tanggal, simpan sebagai teks
+  return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+}
+
+function sendWa_(target, message) {
+  if (!target || !message) return;
+  UrlFetchApp.fetch("https://api.fonnte.com/send", {
+    method: "post",
+    headers: { Authorization: FONNTE_TOKEN },
+    payload: {
+      target: target,
+      message: message
+    },
+    muteHttpExceptions: true
+  });
+}
+
+function log_(message) {
+  if (DEBUG_MODE) Logger.log(message);
+}
