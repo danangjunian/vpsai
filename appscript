@@ -1,6 +1,6 @@
 const FONNTE_TOKEN = "PuvpcDVE1wXokszh3GTV"; // ganti kalau perlu
-const SPREADSHEET_ID = ""; // isi jika script standalone, contoh: 1AbC...
-const SHEET_NAME = "Sheet1"; // ganti sesuai nama sheet kamu
+const SPREADSHEET_ID = "1dp0Mb16-0Zgv8wnzylukw_1_snKtWtb1QI7mT2CkiVQ"; // isi jika script standalone, contoh: 1AbC...
+const SHEET_NAME = "STOK MOTOR"; // ganti sesuai nama sheet kamu
 const DEBUG_MODE = true;
 
 function doGet(e) {
@@ -24,17 +24,25 @@ function doPost(e) {
     if (lower === "halo" || lower === "hi" || lower === "menu") {
       reply =
         "Format input:\n" +
-        "input#nama motor;tahun;plat;surat-surat;tahun plat;pajak;harga jual;harga laku;tgl terjual\n\n" +
+        "input#nama motor;tahun;plat;surat-surat;tahun plat;pajak;harga jual;harga laku;harga beli;tgl terjual;status\n\n" +
         "Contoh:\n" +
-        "input#Vario 125;2022;B1234XYZ;Lengkap;2027;Hidup;22500000;;";
+        "input#Vario 125;2022;B1234XYZ;Lengkap hidup;2027;Hidup;22500000;21000000;19000000;24/02/2026;\n\n" +
+        "Catatan:\n" +
+        "- WAJIB isi: nama motor, tahun, plat, surat-surat, tahun plat, pajak, harga jual, harga laku, harga beli\n" +
+        "- surat-surat hanya: Lengkap hidup / Lengkap mati / BPKB ONLY\n" +
+        "- PAJAK boleh kirim tahun (contoh 2027) atau status Hidup/Mati\n" +
+        "- tgl terjual dan status boleh dikosongkan\n" +
+        "- status otomatis centang jika harga laku / tgl terjual terisi\n" +
+        "- status manual: terjual/ya/1 = dicentang";
     } else if (lower.startsWith("input#")) {
       const body = text.slice(6).trim();
       const cols = body.split(";").map(function (s) { return s.trim(); });
 
-      if (cols.length < 7) {
-        reply = "Format salah. Minimal isi sampai HARGA JUAL.";
+      const validation = validateInput_(cols);
+      if (!validation.ok) {
+        reply = "Format salah: " + validation.error;
       } else {
-        saveResult = saveToSheet_(cols);
+        saveResult = saveToSheet_(validation.data);
         reply = saveResult.ok
           ? "Data tersimpan di baris " + saveResult.row
           : "Gagal simpan: " + saveResult.error;
@@ -72,25 +80,35 @@ function saveToSheet_(cols) {
 
     const row = findFirstEmptyRow_(sh, 2, 2); // cari baris kosong dari kolom B
 
-    // Kolom A (NO) otomatis isi jika kosong
+    const hargaJual = parseNumber_(cols[6]);
+    const hargaLaku = parseNumber_(cols[7]);
+    const hargaBeli = parseNumber_(cols[8]);
+    const tglTerjual = cols[9] ? parseDate_(cols[9]) : "";
+    const status = parseStatus_(cols[10], hargaLaku, tglTerjual);
+    const suratSurat = normalizeWithValidation_(sh, row, 5, cols[3], "SURAT-SURAT");
+    const tahunPlat = normalizeWithValidation_(sh, row, 6, cols[4], "TAHUN PLAT");
+    const pajakInput = normalizePajakInput_(cols[5], tahunPlat);
+    const pajak = normalizeWithValidation_(sh, row, 7, pajakInput, "PAJAK");
+
+    // Isi data utama
+    sh.getRange(row, 2).setValue(cols[0] || "");                 // B NAMA MOTOR
+    sh.getRange(row, 3).setValue(cols[1] || "");                 // C TAHUN
+    sh.getRange(row, 4).setValue((cols[2] || "").toUpperCase()); // D PLAT
+    sh.getRange(row, 5).setValue(suratSurat);                    // E SURAT-SURAT
+    sh.getRange(row, 6).setValue(tahunPlat);                     // F TAHUN PLAT
+    sh.getRange(row, 7).setValue(pajak);                         // G PAJAK
+    sh.getRange(row, 8).setValue(hargaJual);                     // H HARGA JUAL
+    sh.getRange(row, 9).setValue(hargaLaku);                     // I HARGA LAKU
+    sh.getRange(row, 10).setValue(tglTerjual);                   // J TGL TERJUAL
+
+    // K (LABA/RUGI) tidak diubah dari script karena sudah pakai rumus di spreadsheet
+    sh.getRange(row, 12).setValue(hargaBeli);                    // L HARGA BELI
+    sh.getRange(row, 13).setValue(status);                       // M STATUS (checkbox)
+
+    // Kolom A (NO) otomatis isi jika kosong, set terakhir agar tidak ada baris setengah jadi saat error
     if (!sh.getRange(row, 1).getValue()) {
       sh.getRange(row, 1).setValue(row - 1);
     }
-
-    const tglTerjual = cols[8] ? parseDate_(cols[8]) : "";
-
-    // B:J = NAMA MOTOR s/d TGL TERJUAL
-    sh.getRange(row, 2, 1, 9).setValues([[
-      cols[0] || "",                    // NAMA MOTOR
-      cols[1] || "",                    // TAHUN
-      (cols[2] || "").toUpperCase(),    // PLAT
-      cols[3] || "",                    // SURAT-SURAT
-      cols[4] || "",                    // TAHUN PLAT
-      cols[5] || "",                    // PAJAK
-      cols[6] || "",                    // HARGA JUAL
-      cols[7] || "",                    // HARGA LAKU
-      tglTerjual                        // TGL TERJUAL
-    ]]);
 
     log_("SAVE_OK row=" + row + " data=" + JSON.stringify(cols));
     return { ok: true, row: row };
@@ -120,6 +138,141 @@ function parseDate_(s) {
   const m = String(s).match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
   if (!m) return s; // kalau bukan format tanggal, simpan sebagai teks
   return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+}
+
+function parseNumber_(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const cleaned = raw.replace(/\./g, "").replace(",", ".").replace(/[^\d\-\.]/g, "");
+  const n = Number(cleaned);
+  return isNaN(n) ? raw : n;
+}
+
+function parseStatus_(statusText, hargaLaku, tglTerjual) {
+  const s = String(statusText || "").trim().toLowerCase();
+  if (!s) {
+    return Boolean(String(hargaLaku || "").trim() || String(tglTerjual || "").trim());
+  }
+  return ["1", "true", "ya", "yes", "terjual", "laku", "sold", "done"].indexOf(s) !== -1;
+}
+
+function validateInput_(cols) {
+  const required = [
+    { idx: 0, name: "NAMA MOTOR" },
+    { idx: 1, name: "TAHUN" },
+    { idx: 2, name: "PLAT" },
+    { idx: 3, name: "SURAT-SURAT" },
+    { idx: 4, name: "TAHUN PLAT" },
+    { idx: 5, name: "PAJAK" },
+    { idx: 6, name: "HARGA JUAL" },
+    { idx: 7, name: "HARGA LAKU" },
+    { idx: 8, name: "HARGA BELI" }
+  ];
+
+  for (let i = 0; i < required.length; i++) {
+    const r = required[i];
+    if (!String(cols[r.idx] || "").trim()) {
+      return { ok: false, error: r.name + " wajib diisi." };
+    }
+  }
+
+  const surat = normalizeSurat_(cols[3]);
+  if (!surat) {
+    return { ok: false, error: 'SURAT-SURAT harus "Lengkap hidup", "Lengkap mati", atau "BPKB ONLY".' };
+  }
+
+  // normalisasi nilai sebelum simpan
+  const normalized = cols.slice();
+  normalized[3] = surat;
+
+  return { ok: true, data: normalized };
+}
+
+function normalizeSurat_(value) {
+  const v = String(value || "").trim().toLowerCase();
+  if (v === "lengkap hidup") return "Lengkap hidup";
+  if (v === "lengkap mati") return "Lengkap mati";
+  if (v === "bpkb only") return "BPKB ONLY";
+  return "";
+}
+
+function normalizePajakInput_(value, tahunPlat) {
+  const raw = String(value || "").trim();
+  const v = raw.toLowerCase();
+  if (!v) return "";
+
+  // Jika input pajak berupa status, konversi ke angka tahun agar cocok dengan dropdown tahun.
+  if (["hidup", "aktif", "on", "yes", "lunas"].indexOf(v) !== -1) {
+    const y = extractYear_(tahunPlat) || new Date().getFullYear();
+    return String(y);
+  }
+  if (["mati", "off", "no", "telat", "belum"].indexOf(v) !== -1) {
+    const y = extractYear_(tahunPlat);
+    if (y) return String(y - 1);
+    return String(new Date().getFullYear() - 1);
+  }
+
+  return raw;
+}
+
+function normalizeWithValidation_(sheet, row, col, value, fieldName) {
+  const raw = String(value || "").trim();
+  const range = sheet.getRange(row, col);
+  const options = getValidationOptions_(range);
+
+  // Jika tidak ada data validation, simpan apa adanya
+  if (!options.length) return raw;
+
+  // Cocokkan exact (case-insensitive)
+  const target = normalizeText_(raw);
+  for (let i = 0; i < options.length; i++) {
+    if (normalizeText_(options[i]) === target) return options[i];
+  }
+
+  // Cocokkan parsial untuk nilai seperti "pajak hidup" vs "Hidup"
+  for (let i = 0; i < options.length; i++) {
+    const opt = normalizeText_(options[i]);
+    if (opt.indexOf(target) !== -1 || target.indexOf(opt) !== -1) return options[i];
+  }
+
+  throw new Error(fieldName + " tidak valid. Pilihan yang tersedia: " + options.join(" / "));
+}
+
+function getValidationOptions_(range) {
+  const rule = range.getDataValidation();
+  if (!rule) return [];
+
+  const type = rule.getCriteriaType();
+  const args = rule.getCriteriaValues();
+
+  if (type === SpreadsheetApp.DataValidationCriteria.VALUE_IN_LIST) {
+    return (args[0] || [])
+      .map(function (v) { return String(v).trim(); })
+      .filter(function (v) { return v !== ""; });
+  }
+
+  if (type === SpreadsheetApp.DataValidationCriteria.VALUE_IN_RANGE) {
+    const sourceRange = args[0];
+    if (!sourceRange) return [];
+    return sourceRange.getDisplayValues()
+      .reduce(function (acc, rowVals) { return acc.concat(rowVals); }, [])
+      .map(function (v) { return String(v).trim(); })
+      .filter(function (v) { return v !== ""; });
+  }
+
+  return [];
+}
+
+function normalizeText_(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractYear_(value) {
+  const m = String(value || "").match(/\b(19|20)\d{2}\b/);
+  return m ? Number(m[0]) : null;
 }
 
 function sendWa_(target, message) {
