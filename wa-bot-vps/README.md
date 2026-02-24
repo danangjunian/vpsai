@@ -106,6 +106,18 @@ Alur:
 3. Bot kirim ringkasan + minta konfirmasi.
 4. Admin kirim `OK` untuk simpan atau `BATAL` untuk membatalkan.
 
+### Motor terjual pilih daftar (`motor <nama> laku`)
+```text
+motor vixion laku
+```
+Alur:
+1. Bot kirim daftar kandidat motor sesuai nama.
+2. Admin pilih item dengan format `no <pilihan> laku <harga>`.
+3. Bot minta konfirmasi `OK / BATAL`.
+4. Jika `OK`, bot kirim update ke Apps Script:
+   `update#no;;harga laku;;terjual`
+   (tanggal terjual otomatis diisi Apps Script jika kosong).
+
 ## 4. Logika
 - Input stok boleh ada field kosong.
 - Jika `HARGA LAKU` terisi, `STATUS` otomatis centang.

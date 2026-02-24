@@ -143,6 +143,8 @@ async function startBaileysMode(options) {
             console.log(
               "[wa-auth] skip unauthorized sender=" + senderJid +
               " chat=" + remoteJid +
+              " senderPn=" + String((msg.key && msg.key.senderPn) || "") +
+              " participantPn=" + String((msg.key && msg.key.participantPn) || "") +
               " admin=" + isAdminSender +
               " selfChat=" + isSelfChat
             );
@@ -225,10 +227,39 @@ function normalizeJid_(jid) {
 
 function resolveSenderJid_(msg, context) {
   const key = (msg && msg.key) || {};
-  const participantJid = normalizeJid_(key.participant || msg.participant);
-  if (participantJid) return participantJid;
+  const senderCandidate = firstNonEmpty_([
+    key.participantPn,
+    key.participant,
+    key.senderPn,
+    key.senderLid,
+    key.participantLid,
+    msg && msg.participantPn,
+    msg && msg.participant,
+    msg && msg.senderPn,
+    msg && msg.senderLid
+  ]);
+  const senderJid = normalizePersonJid_(senderCandidate);
+  if (senderJid) return senderJid;
   if (context && context.fromMe) return String(context.botJid || "");
   return String((context && context.remoteJid) || "");
+}
+
+function normalizePersonJid_(value) {
+  const raw = normalizeJid_(value);
+  if (!raw) return "";
+  if (raw.indexOf("@") !== -1) return raw;
+  const digits = raw.replace(/[^\d]/g, "");
+  if (!digits) return raw;
+  return digits + "@s.whatsapp.net";
+}
+
+function firstNonEmpty_(values) {
+  const list = Array.isArray(values) ? values : [];
+  for (let i = 0; i < list.length; i++) {
+    const v = String(list[i] || "").trim();
+    if (v) return v;
+  }
+  return "";
 }
 
 function isCommandLike_(textLower) {

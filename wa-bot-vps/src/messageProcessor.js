@@ -8,6 +8,9 @@ const {
 
 const pendingMotorMasukByConversation_ = new Map();
 const MOTOR_MASUK_PENDING_TTL_MS = 6 * 60 * 60 * 1000;
+const pendingMotorLakuByConversation_ = new Map();
+const MOTOR_LAKU_PENDING_TTL_MS = 6 * 60 * 60 * 1000;
+const MOTOR_LAKU_LIST_MAX = 20;
 
 const MOTOR_MASUK_TEMPLATE_TEXT = [
   "NAMA MOTOR:",
@@ -30,8 +33,10 @@ async function processIncomingText(text, dataService, messageMeta) {
   }
 
   cleanupPendingMotorMasuk_();
+  cleanupPendingMotorLaku_();
 
   if (isMotorMasukCommand_(bodyText)) {
+    pendingMotorLakuByConversation_.delete(convoKey);
     pendingMotorMasukByConversation_.set(convoKey, {
       stage: "awaiting_details",
       createdAt: Date.now()
@@ -45,9 +50,45 @@ async function processIncomingText(text, dataService, messageMeta) {
     };
   }
 
-  const pending = pendingMotorMasukByConversation_.get(convoKey);
-  if (pending) {
-    return handlePendingMotorMasuk_(pending, bodyText, lower, dataService, messageMeta, convoKey);
+  const motorLakuKeyword = parseMotorLakuKeyword_(bodyText);
+  if (motorLakuKeyword !== null) {
+    if (!motorLakuKeyword) {
+      return { reply: "Format salah. Gunakan: motor <nama motor> laku", saveResult: null };
+    }
+
+    const lookup = await dataService.executeText("data motor " + motorLakuKeyword, messageMeta);
+    const options = parseMotorRowsFromDataReply_(lookup && lookup.reply);
+    if (!options.length) {
+      const fallbackReply = String((lookup && lookup.reply) || "").trim();
+      return {
+        reply: fallbackReply || ('Data motor "' + motorLakuKeyword + '" tidak ditemukan.'),
+        saveResult: null
+      };
+    }
+
+    const shownOptions = options.slice(0, MOTOR_LAKU_LIST_MAX);
+    pendingMotorMasukByConversation_.delete(convoKey);
+    pendingMotorLakuByConversation_.set(convoKey, {
+      stage: "awaiting_selection",
+      createdAt: Date.now(),
+      keyword: motorLakuKeyword,
+      options: shownOptions
+    });
+
+    return {
+      reply: formatMotorLakuOptionsReply_(motorLakuKeyword, shownOptions, options.length),
+      saveResult: null
+    };
+  }
+
+  const pendingMotorMasuk = pendingMotorMasukByConversation_.get(convoKey);
+  if (pendingMotorMasuk) {
+    return handlePendingMotorMasuk_(pendingMotorMasuk, bodyText, lower, dataService, messageMeta, convoKey);
+  }
+
+  const pendingMotorLaku = pendingMotorLakuByConversation_.get(convoKey);
+  if (pendingMotorLaku) {
+    return handlePendingMotorLaku_(pendingMotorLaku, bodyText, lower, dataService, messageMeta, convoKey);
   }
 
   if (lower === "halo" || lower === "hi" || lower === "menu") {
@@ -228,8 +269,202 @@ async function handlePendingMotorMasuk_(pending, bodyText, lower, dataService, m
   return { reply: "Sesi motor masuk tidak valid. Ketik motor masuk untuk mulai ulang.", saveResult: null };
 }
 
+async function handlePendingMotorLaku_(pending, bodyText, lower, dataService, messageMeta, convoKey) {
+  if (lower === "batal") {
+    pendingMotorLakuByConversation_.delete(convoKey);
+    return { reply: "Proses motor laku dibatalkan.", saveResult: null };
+  }
+
+  if (pending.stage === "awaiting_selection") {
+    const selected = parseMotorLakuSelection_(bodyText, pending.options);
+    if (!selected.ok) {
+      return {
+        reply: [
+          selected.error || "Format salah.",
+          "Gunakan format: no <pilihan> laku <harga>",
+          "Contoh: no 2 laku 7000000",
+          "Ketik BATAL untuk membatalkan."
+        ].join("\n"),
+        saveResult: null
+      };
+    }
+
+    pendingMotorLakuByConversation_.set(convoKey, {
+      stage: "awaiting_confirm",
+      createdAt: Date.now(),
+      selected: selected.option,
+      hargaLaku: selected.hargaLaku
+    });
+
+    return {
+      reply:
+        "NO " + selected.option.no +
+        " akan ditandai terjual harga " + selected.hargaLaku +
+        ". OK / BATAL",
+      saveResult: null
+    };
+  }
+
+  if (pending.stage === "awaiting_confirm") {
+    if (lower !== "ok") {
+      return { reply: "Ketik OK untuk simpan / BATAL untuk batal", saveResult: null };
+    }
+
+    const cols = [
+      String((pending.selected && pending.selected.no) || "").trim(),
+      "",
+      String(pending.hargaLaku || "").trim(),
+      "",
+      "terjual"
+    ];
+    const updated = await dataService.updateSold(cols, messageMeta);
+    pendingMotorLakuByConversation_.delete(convoKey);
+    const normalized = normalizeOperationResult_(updated, "Data terupdate");
+    return {
+      reply: normalized.reply,
+      saveResult: normalized.saveResult
+    };
+  }
+
+  pendingMotorLakuByConversation_.delete(convoKey);
+  return { reply: "Sesi motor laku tidak valid. Ketik motor <nama> laku untuk mulai ulang.", saveResult: null };
+}
+
 function isMotorMasukCommand_(text) {
   return /^motor\s+masuk$/i.test(String(text || "").trim());
+}
+
+function parseMotorLakuKeyword_(text) {
+  const m = String(text || "").trim().match(/^motor\s+(.+?)\s+laku$/i);
+  if (!m) return null;
+  return String(m[1] || "").trim();
+}
+
+function parseMotorRowsFromDataReply_(replyText) {
+  const text = String(replyText || "").trim();
+  if (!text) return [];
+
+  const blocks = text.split(/\n\s*\n/);
+  const rows = [];
+  for (let i = 0; i < blocks.length; i++) {
+    const block = String(blocks[i] || "").trim();
+    if (!block) continue;
+
+    const noRaw = extractLabelValue_(block, "NO");
+    const nama = extractLabelValue_(block, "NAMA MOTOR");
+    const tahun = extractLabelValue_(block, "TAHUN");
+    const plat = extractLabelValue_(block, "PLAT");
+    const no = String(noRaw || "").replace(/[^\d]/g, "").trim();
+    if (!no || !nama) continue;
+
+    rows.push({
+      no: no,
+      nama: nama,
+      tahun: tahun || "-",
+      plat: plat || "-"
+    });
+  }
+
+  return rows;
+}
+
+function extractLabelValue_(textBlock, label) {
+  const pattern = new RegExp("^\\s*" + escapeRegex_(label) + "\\s*:\\s*(.*)$", "im");
+  const m = String(textBlock || "").match(pattern);
+  return m ? String(m[1] || "").trim() : "";
+}
+
+function escapeRegex_(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function formatMotorLakuOptionsReply_(keyword, options, totalFound) {
+  const lines = [
+    'Ditemukan ' + totalFound + ' data motor "' + keyword + '".',
+    "Pilih motor yang terjual:"
+  ];
+
+  for (let i = 0; i < options.length; i++) {
+    const item = options[i];
+    const tahun = item.tahun && item.tahun !== "-" ? " " + item.tahun : "";
+    lines.push(
+      (i + 1) +
+      ". NO: " + item.no +
+      " - " + item.nama + tahun +
+      " - Plat " + (item.plat || "-")
+    );
+  }
+
+  if (totalFound > options.length) {
+    lines.push("");
+    lines.push(
+      "Daftar dipotong ke " + options.length +
+      " baris pertama dari total " + totalFound + " data."
+    );
+  }
+
+  lines.push("");
+  lines.push("Balas: no <pilihan> laku <harga>");
+  lines.push("Contoh: no 2 laku 7000000");
+  lines.push("Ketik BATAL untuk batal.");
+  return lines.join("\n");
+}
+
+function parseMotorLakuSelection_(text, options) {
+  const m = String(text || "").trim().match(/^no\s+(\d+)\s+laku\s+(.+)$/i);
+  if (!m) {
+    return { ok: false, error: "Format pilihan tidak sesuai." };
+  }
+
+  const rawSelection = Number(m[1]);
+  if (!rawSelection || rawSelection < 1) {
+    return { ok: false, error: "Nomor pilihan tidak valid." };
+  }
+
+  const hargaLaku = normalizeHargaLaku_(m[2]);
+  if (!hargaLaku) {
+    return { ok: false, error: "Harga laku tidak valid." };
+  }
+
+  const list = Array.isArray(options) ? options : [];
+  let chosen = null;
+
+  if (rawSelection <= list.length) {
+    chosen = list[rawSelection - 1];
+  } else {
+    for (let i = 0; i < list.length; i++) {
+      if (String(list[i].no) === String(rawSelection)) {
+        chosen = list[i];
+        break;
+      }
+    }
+  }
+
+  if (!chosen) {
+    return { ok: false, error: "Pilihan tidak ditemukan di daftar." };
+  }
+
+  return {
+    ok: true,
+    option: chosen,
+    hargaLaku: hargaLaku
+  };
+}
+
+function normalizeHargaLaku_(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+
+  const cleaned = raw
+    .replace(/\./g, "")
+    .replace(",", ".")
+    .replace(/[^\d\-.]/g, "");
+  if (!cleaned) return "";
+
+  const n = Number(cleaned);
+  if (!Number.isFinite(n) || n <= 0) return "";
+  if (Math.round(n) !== n) return String(n);
+  return String(Math.trunc(n));
 }
 
 function formatMotorMasukSummary_(cols) {
@@ -271,6 +506,20 @@ function cleanupPendingMotorMasuk_() {
     const createdAt = Number(state.createdAt || 0);
     if (!createdAt || now - createdAt > MOTOR_MASUK_PENDING_TTL_MS) {
       pendingMotorMasukByConversation_.delete(key);
+    }
+  }
+}
+
+function cleanupPendingMotorLaku_() {
+  const now = Date.now();
+  const entries = Array.from(pendingMotorLakuByConversation_.entries());
+  for (let i = 0; i < entries.length; i++) {
+    const item = entries[i];
+    const key = item[0];
+    const state = item[1] || {};
+    const createdAt = Number(state.createdAt || 0);
+    if (!createdAt || now - createdAt > MOTOR_LAKU_PENDING_TTL_MS) {
+      pendingMotorLakuByConversation_.delete(key);
     }
   }
 }
