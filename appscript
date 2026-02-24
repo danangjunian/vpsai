@@ -1,9 +1,22 @@
-const FONNTE_TOKEN = "PuvpcDVE1wXokszh3GTV"; // ganti kalau perlu
 const SPREADSHEET_ID = "1dp0Mb16-0Zgv8wnzylukw_1_snKtWtb1QI7mT2CkiVQ"; // isi jika script standalone, contoh: 1AbC...
 const SHEET_NAME = "STOK MOTOR"; // ganti sesuai nama sheet kamu
 const DEBUG_MODE = true;
+const ENABLE_WA_REPLY = false; // mode VPS->AppsScript: biarkan bot VPS yang kirim balasan WA
+const FONNTE_TOKEN = ""; // hanya dipakai jika ENABLE_WA_REPLY=true
 
 function doGet(e) {
+  // Fallback untuk endpoint yang hanya menerima GET dari redirect Apps Script.
+  // Jika ada query ?message=..., teruskan ke logika doPost.
+  if (e && e.parameter && String(e.parameter.message || "").trim()) {
+    return doPost({
+      postData: {
+        contents: JSON.stringify({
+          sender: String(e.parameter.sender || "").trim(),
+          message: String(e.parameter.message || "").trim()
+        })
+      }
+    });
+  }
   return ContentService.createTextOutput("OK");
 }
 
@@ -19,7 +32,13 @@ function doPost(e) {
 
     log_("RAW_BODY: " + raw);
 
-    if (!text) return ContentService.createTextOutput("NO_MESSAGE");
+    if (!text) {
+      return jsonOutput_({
+        ok: false,
+        error: "NO_MESSAGE",
+        reply: "NO_MESSAGE"
+      });
+    }
 
     if (lower === "halo" || lower === "hi" || lower === "menu") {
       reply =
@@ -103,17 +122,32 @@ function doPost(e) {
       }
     }
 
-    if (sender) sendWa_(sender, reply);
+    if (ENABLE_WA_REPLY && sender) {
+      sendWa_(sender, reply);
+    }
 
     if (saveResult) {
-      return ContentService.createTextOutput(
-        saveResult.ok ? "OK_SAVED_ROW_" + saveResult.row : "ERROR_" + saveResult.error
-      );
+      return jsonOutput_({
+        ok: saveResult.ok,
+        row: saveResult.ok ? saveResult.row : null,
+        error: saveResult.ok ? "" : saveResult.error,
+        reply: reply
+      });
     }
-    return ContentService.createTextOutput("OK");
+
+    return jsonOutput_({
+      ok: true,
+      row: null,
+      error: "",
+      reply: reply || "OK"
+    });
   } catch (err) {
     log_("doPost error: " + err.message);
-    return ContentService.createTextOutput("ERROR_" + err.message);
+    return jsonOutput_({
+      ok: false,
+      error: err.message,
+      reply: "ERROR_" + err.message
+    });
   }
 }
 
@@ -501,6 +535,7 @@ function mapUpdateLabelToIndex_(key) {
 
 function sendWa_(target, message) {
   if (!target || !message) return;
+  if (!FONNTE_TOKEN) return;
   UrlFetchApp.fetch("https://api.fonnte.com/send", {
     method: "post",
     headers: { Authorization: FONNTE_TOKEN },
@@ -514,4 +549,10 @@ function sendWa_(target, message) {
 
 function log_(message) {
   if (DEBUG_MODE) Logger.log(message);
+}
+
+function jsonOutput_(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj || {}))
+    .setMimeType(ContentService.MimeType.JSON);
 }
