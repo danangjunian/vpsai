@@ -118,6 +118,14 @@ Alur:
    `update#no;;harga laku;;terjual`
    (tanggal terjual otomatis diisi Apps Script jika kosong).
 
+### Cek daftar motor terjual
+```text
+motor terjual
+motor vixion terjual
+```
+Bot akan menampilkan daftar motor yang statusnya terjual.
+Jika pakai keyword nama, daftar difilter sesuai nama motor.
+
 ## 4. Logika
 - Input stok boleh ada field kosong.
 - Jika `HARGA LAKU` terisi, `STATUS` otomatis centang.

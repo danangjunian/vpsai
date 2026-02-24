@@ -114,6 +114,9 @@ function doPost(e) {
         "Format cek data motor:\n" +
         "data motor vixion\n" +
         "cek data motor vixion\n\n" +
+        "Format cek motor terjual:\n" +
+        "motor terjual\n" +
+        "motor vixion terjual\n\n" +
         "Contoh:\n" +
         "input#Vario 125;2022;B1234XYZ;Lengkap hidup;2027;Hidup;22500000;19000000\n" +
         "update#7;22500000;21000000;24/02/2026;terjual\n\n" +
@@ -128,13 +131,17 @@ function doPost(e) {
         "- status otomatis centang jika harga laku / tgl terjual terisi\n" +
         "- status manual: terjual/ya/1 = dicentang";
     } else {
-      const keyword = parseDataMotorKeyword_(text);
-      if (keyword !== null) {
-      if (!keyword) {
-        reply = "Format salah. Gunakan: data motor <nama motor> atau cek data motor <nama motor>";
+      const soldKeyword = parseMotorTerjualKeyword_(text);
+      if (soldKeyword !== null) {
+        reply = findSoldMotorReply_(soldKeyword);
       } else {
-        reply = findMotorDataReply_(keyword);
-      }
+        const keyword = parseDataMotorKeyword_(text);
+        if (keyword !== null) {
+          if (!keyword) {
+            reply = "Format salah. Gunakan: data motor <nama motor> atau cek data motor <nama motor>";
+          } else {
+            reply = findMotorDataReply_(keyword);
+          }
       } else if (lower.startsWith("input#")) {
       const body = text.slice(6).trim();
       const rawCols = body.split(";").map(function (s) { return s.trim(); });
@@ -177,6 +184,7 @@ function doPost(e) {
         }
       } else {
         reply = "Perintah tidak dikenali. Ketik HALO untuk lihat format.";
+      }
       }
       }
       }
@@ -286,6 +294,60 @@ function parseDataMotorKeyword_(text) {
   return m[1] ? String(m[1]).trim() : "";
 }
 
+function parseMotorTerjualKeyword_(text) {
+  const m = String(text || "").trim().match(/^motor(?:\s+(.+?))?\s+terjual$/i);
+  if (!m) return null;
+  return m[1] ? String(m[1]).trim() : "";
+}
+
+function findSoldMotorReply_(keyword) {
+  try {
+    const q = normalizeText_(keyword);
+    const hasKeyword = Boolean(q);
+
+    const ss = getSpreadsheet_();
+    if (!ss) return "Spreadsheet tidak terbaca.";
+
+    const sh = ss.getSheetByName(SHEET_NAME);
+    if (!sh) return 'Sheet "' + SHEET_NAME + '" tidak ditemukan';
+
+    const startRow = 2;
+    const last = sh.getLastRow();
+    if (last < startRow) {
+      return hasKeyword
+        ? 'Data motor terjual "' + keyword + '" tidak ditemukan.'
+        : "Belum ada motor terjual.";
+    }
+
+    const range = sh.getRange(startRow, 1, last - startRow + 1, 13);
+    const displayVals = range.getDisplayValues();
+    const rawVals = range.getValues();
+    const rows = [];
+
+    for (let i = 0; i < displayVals.length; i++) {
+      const row = displayVals[i];
+      const rawRow = rawVals[i];
+      const namaMotor = normalizeText_(row[1]); // kolom B
+      if (!namaMotor) continue;
+      if (hasKeyword && namaMotor.indexOf(q) === -1) continue;
+      if (!isSoldStatusValue_(rawRow, row)) continue;
+      rows.push(formatSoldMotorRow_(row));
+    }
+
+    if (!rows.length) {
+      return hasKeyword
+        ? 'Data motor terjual "' + keyword + '" tidak ditemukan.'
+        : "Belum ada motor terjual.";
+    }
+
+    return hasKeyword
+      ? ('Ditemukan ' + rows.length + ' motor terjual "' + keyword + '":\n\n' + rows.join("\n\n"))
+      : ('Ditemukan ' + rows.length + " motor terjual:\n\n" + rows.join("\n\n"));
+  } catch (err) {
+    return "Gagal ambil data motor terjual: " + err.message;
+  }
+}
+
 function findMotorDataReply_(keyword) {
   try {
     const q = normalizeText_(keyword);
@@ -327,6 +389,17 @@ function findMotorDataReply_(keyword) {
   }
 }
 
+function formatSoldMotorRow_(row) {
+  return [
+    "NO: " + displayCell_(row[0]),         // A
+    "NAMA MOTOR: " + displayCell_(row[1]), // B
+    "TAHUN: " + displayCell_(row[2]),      // C
+    "PLAT: " + displayCell_(row[3]),       // D
+    "HARGA LAKU: " + displayCell_(row[8]), // I
+    "TGL TERJUAL: " + displayCell_(row[9]) // J
+  ].join("\n");
+}
+
 function formatMotorRow_(row) {
   return [
     "NO: " + displayCell_(row[0]),          // A
@@ -344,6 +417,20 @@ function formatMotorRow_(row) {
 function displayCell_(value) {
   const s = String(value === undefined || value === null ? "" : value).trim();
   return s || "-";
+}
+
+function isSoldStatusValue_(rawRow, displayRow) {
+  const rawStatus = rawRow && rawRow.length > 12 ? rawRow[12] : "";
+  if (rawStatus === true) return true;
+
+  const statusText = normalizeText_(displayRow && displayRow.length > 12 ? displayRow[12] : "");
+  if (["true", "1", "ya", "yes", "terjual", "laku", "sold", "done"].indexOf(statusText) !== -1) {
+    return true;
+  }
+
+  const rawHargaLaku = rawRow && rawRow.length > 8 ? rawRow[8] : "";
+  const rawTglTerjual = rawRow && rawRow.length > 9 ? rawRow[9] : "";
+  return isFilledValue_(rawHargaLaku) || isFilledValue_(rawTglTerjual);
 }
 
 function parseDate_(s) {

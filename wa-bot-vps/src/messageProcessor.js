@@ -50,6 +50,18 @@ async function processIncomingText(text, dataService, messageMeta) {
     };
   }
 
+  const motorTerjualKeyword = parseMotorTerjualKeyword_(bodyText);
+  if (motorTerjualKeyword !== null) {
+    const command = motorTerjualKeyword
+      ? ("motor " + motorTerjualKeyword + " terjual")
+      : "motor terjual";
+    const result = await dataService.executeText(command, messageMeta);
+    return {
+      reply: String((result && result.reply) || "OK"),
+      saveResult: result && result.saveResult ? result.saveResult : null
+    };
+  }
+
   const motorLakuKeyword = parseMotorLakuKeyword_(bodyText);
   if (motorLakuKeyword !== null) {
     if (!motorLakuKeyword) {
@@ -203,6 +215,12 @@ function toWebhookResult(saveResult) {
 
 function parseDataMotorKeyword_(text) {
   const m = String(text || "").trim().match(/^(?:cek\s+)?data\s+motor(?:\s+(.+))?$/i);
+  if (!m) return null;
+  return m[1] ? String(m[1]).trim() : "";
+}
+
+function parseMotorTerjualKeyword_(text) {
+  const m = String(text || "").trim().match(/^motor(?:\s+(.+?))?\s+terjual$/i);
   if (!m) return null;
   return m[1] ? String(m[1]).trim() : "";
 }
