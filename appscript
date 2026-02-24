@@ -48,7 +48,8 @@ function doPost(e) {
         "input#Vario 125;2022;B1234XYZ;Lengkap hidup;2027;Hidup;22500000;19000000\n" +
         "update#7;22500000;21000000;24/02/2026;terjual\n\n" +
         "Catatan:\n" +
-        "- WAJIB input stok: nama motor, tahun, plat, surat-surat, tahun plat, pajak, harga beli\n" +
+        "- input stok boleh kosong di field manapun, data tetap tersimpan\n" +
+        "- disarankan minimal isi NAMA MOTOR/PLAT agar mudah dicari\n" +
         "- surat-surat hanya: Lengkap hidup / Lengkap mati / BPKB ONLY\n" +
         "- PAJAK boleh kirim tahun (contoh 2027) atau status Hidup/Mati\n" +
         "- update pakai NO (kolom A), bukan PLAT\n" +
@@ -220,31 +221,17 @@ function isFilledValue_(value) {
 }
 
 function validateInput_(cols) {
-  const required = [
-    { idx: 0, name: "NAMA MOTOR" },
-    { idx: 1, name: "TAHUN" },
-    { idx: 2, name: "PLAT" },
-    { idx: 3, name: "SURAT-SURAT" },
-    { idx: 4, name: "TAHUN PLAT" },
-    { idx: 5, name: "PAJAK" },
-    { idx: 8, name: "HARGA BELI" }
-  ];
-
-  for (let i = 0; i < required.length; i++) {
-    const r = required[i];
-    if (!String(cols[r.idx] || "").trim()) {
-      return { ok: false, error: r.name + " wajib diisi." };
-    }
-  }
-
-  const surat = normalizeSurat_(cols[3]);
-  if (!surat) {
-    return { ok: false, error: 'SURAT-SURAT harus "Lengkap hidup", "Lengkap mati", atau "BPKB ONLY".' };
-  }
-
-  // normalisasi nilai sebelum simpan
   const normalized = cols.slice();
-  normalized[3] = surat;
+
+  // SURAT-SURAT opsional; jika diisi harus sesuai pilihan yang diizinkan.
+  const suratRaw = String(cols[3] || "").trim();
+  if (suratRaw) {
+    const surat = normalizeSurat_(suratRaw);
+    if (!surat) {
+      return { ok: false, error: 'SURAT-SURAT harus "Lengkap hidup", "Lengkap mati", atau "BPKB ONLY".' };
+    }
+    normalized[3] = surat;
+  }
 
   return { ok: true, data: normalized };
 }
@@ -303,6 +290,8 @@ function normalizePajakInput_(value, tahunPlat) {
 
 function normalizeWithValidation_(sheet, row, col, value, fieldName) {
   const raw = String(value || "").trim();
+  if (!raw) return "";
+
   const range = sheet.getRange(row, col);
   const options = getValidationOptions_(range);
 
@@ -440,9 +429,9 @@ function parseLabeledInput_(text) {
     recognized++;
   }
 
-  const hasCore = cols[0] || cols[2] || cols[8];
+  const hasCore = cols.some(function (v) { return String(v || "").trim() !== ""; });
   return {
-    matched: recognized >= 3 && Boolean(hasCore),
+    matched: recognized >= 1 && Boolean(hasCore),
     cols: cols
   };
 }
