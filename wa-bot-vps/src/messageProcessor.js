@@ -6,7 +6,7 @@ const {
   validateStockCols
 } = require("./utils");
 
-async function processIncomingText(text, dataService) {
+async function processIncomingText(text, dataService, messageMeta) {
   const bodyText = String(text || "").trim();
   const lower = bodyText.toLowerCase();
 
@@ -18,6 +18,20 @@ async function processIncomingText(text, dataService) {
     return { reply: menuText, saveResult: null };
   }
 
+  const keyword = parseDataMotorKeyword_(bodyText);
+  if (keyword !== null) {
+    if (!keyword) {
+      return { reply: "Format salah. Gunakan: data motor <nama motor> atau cek data motor <nama motor>", saveResult: null };
+    }
+
+    // Kirim format kanonik ke Apps Script agar konsisten lintas deployment.
+    const result = await dataService.executeText("data motor " + keyword, messageMeta);
+    return {
+      reply: String((result && result.reply) || "OK"),
+      saveResult: result && result.saveResult ? result.saveResult : null
+    };
+  }
+
   if (lower.startsWith("input#")) {
     const body = bodyText.slice(6).trim();
     const rawCols = body.split(";").map(function (s) { return s.trim(); });
@@ -27,7 +41,7 @@ async function processIncomingText(text, dataService) {
       return { reply: "Format salah: " + validation.error, saveResult: null };
     }
 
-    const saved = await dataService.saveStock(validation.data);
+    const saved = await dataService.saveStock(validation.data, messageMeta);
     const normalized = normalizeOperationResult_(saved, "Data tersimpan");
     return {
       reply: normalized.reply,
@@ -38,7 +52,7 @@ async function processIncomingText(text, dataService) {
   if (lower.startsWith("update#")) {
     const body = bodyText.slice(7).trim();
     const cols = body.split(";").map(function (s) { return s.trim(); });
-    const updated = await dataService.updateSold(cols);
+    const updated = await dataService.updateSold(cols, messageMeta);
     const normalized = normalizeOperationResult_(updated, "Data terupdate");
     return {
       reply: normalized.reply,
@@ -48,7 +62,7 @@ async function processIncomingText(text, dataService) {
 
   const parsedUpdate = parseLabeledUpdate(bodyText);
   if (parsedUpdate.matched) {
-    const updated = await dataService.updateSold(parsedUpdate.cols);
+    const updated = await dataService.updateSold(parsedUpdate.cols, messageMeta);
     const normalized = normalizeOperationResult_(updated, "Data terupdate");
     return {
       reply: normalized.reply,
@@ -63,7 +77,7 @@ async function processIncomingText(text, dataService) {
       return { reply: "Format salah: " + validation.error, saveResult: null };
     }
 
-    const saved = await dataService.saveStock(validation.data);
+    const saved = await dataService.saveStock(validation.data, messageMeta);
     const normalized = normalizeOperationResult_(saved, "Data tersimpan");
     return {
       reply: normalized.reply,
@@ -108,6 +122,12 @@ function normalizeOperationResult_(result, defaultPrefix) {
 function toWebhookResult(saveResult) {
   if (!saveResult) return "OK";
   return saveResult.ok ? "OK_SAVED_ROW_" + saveResult.row : "ERROR_" + saveResult.error;
+}
+
+function parseDataMotorKeyword_(text) {
+  const m = String(text || "").trim().match(/^(?:cek\s+)?data\s+motor(?:\s+(.+))?$/i);
+  if (!m) return null;
+  return m[1] ? String(m[1]).trim() : "";
 }
 
 module.exports = {

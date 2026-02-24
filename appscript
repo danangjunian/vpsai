@@ -3,6 +3,15 @@ const SHEET_NAME = "STOK MOTOR"; // ganti sesuai nama sheet kamu
 const DEBUG_MODE = true;
 const ENABLE_WA_REPLY = false; // mode VPS->AppsScript: biarkan bot VPS yang kirim balasan WA
 const FONNTE_TOKEN = ""; // hanya dipakai jika ENABLE_WA_REPLY=true
+const ENABLE_WA_SOURCE_FILTER = true; // filter sumber WA di Apps Script (lapis pengaman)
+const BOT_WA_NUMBER = "201507007785"; // nomor bot utama, tanpa tanda +
+const ADMIN_WA_NUMBERS = [
+  "6285974035215",
+  "201507007785",
+  "6289521503899",
+  "6282228597780",
+  "6285655002277"
+];
 
 function doGet(e) {
   // Fallback untuk endpoint yang hanya menerima GET dari redirect Apps Script.
@@ -12,7 +21,11 @@ function doGet(e) {
       postData: {
         contents: JSON.stringify({
           sender: String(e.parameter.sender || "").trim(),
-          message: String(e.parameter.message || "").trim()
+          message: String(e.parameter.message || "").trim(),
+          chat_jid: String(e.parameter.chat_jid || e.parameter.chatJid || "").trim(),
+          bot_jid: String(e.parameter.bot_jid || e.parameter.botJid || "").trim(),
+          from_me: String(e.parameter.from_me || e.parameter.fromMe || "").trim(),
+          source: String(e.parameter.source || "").trim()
         })
       }
     });
@@ -26,6 +39,10 @@ function doPost(e) {
     const data = JSON.parse(raw);
     const sender = String(data.sender || "").trim();
     const text = String(data.message || "").trim();
+    const chatJid = String(data.chat_jid || data.chatJid || "").trim();
+    const botJid = String(data.bot_jid || data.botJid || BOT_WA_NUMBER).trim();
+    const fromMe = parseBoolLike_(data.from_me !== undefined ? data.from_me : data.fromMe);
+    const source = String(data.source || "").trim();
     const lower = text.toLowerCase();
     let reply = "";
     let saveResult = null;
@@ -37,6 +54,28 @@ function doPost(e) {
         ok: false,
         error: "NO_MESSAGE",
         reply: "NO_MESSAGE"
+      });
+    }
+
+    const waFilter = evaluateWaSourceFilter_({
+      sender: sender,
+      chatJid: chatJid,
+      botJid: botJid,
+      fromMe: fromMe
+    });
+    if (!waFilter.ok) {
+      log_("WA_FILTER_BLOCK: " + JSON.stringify({
+        sender: sender,
+        chatJid: chatJid,
+        botJid: botJid,
+        fromMe: fromMe,
+        source: source,
+        reason: waFilter.error
+      }));
+      return jsonOutput_({
+        ok: false,
+        error: waFilter.error,
+        reply: waFilter.reply || waFilter.error
       });
     }
 
@@ -63,6 +102,9 @@ function doPost(e) {
         "input#nama motor;tahun;plat;surat-surat;tahun plat;pajak;harga jual;harga beli\n\n" +
         "Format update saat terjual:\n" +
         "update#no;harga jual;harga laku;tgl terjual;status\n\n" +
+        "Format cek data motor:\n" +
+        "data motor vixion\n" +
+        "cek data motor vixion\n\n" +
         "Contoh:\n" +
         "input#Vario 125;2022;B1234XYZ;Lengkap hidup;2027;Hidup;22500000;19000000\n" +
         "update#7;22500000;21000000;24/02/2026;terjual\n\n" +
@@ -76,7 +118,15 @@ function doPost(e) {
         "- tgl terjual dan status boleh dikosongkan\n" +
         "- status otomatis centang jika harga laku / tgl terjual terisi\n" +
         "- status manual: terjual/ya/1 = dicentang";
-    } else if (lower.startsWith("input#")) {
+    } else {
+      const keyword = parseDataMotorKeyword_(text);
+      if (keyword !== null) {
+      if (!keyword) {
+        reply = "Format salah. Gunakan: data motor <nama motor> atau cek data motor <nama motor>";
+      } else {
+        reply = findMotorDataReply_(keyword);
+      }
+      } else if (lower.startsWith("input#")) {
       const body = text.slice(6).trim();
       const rawCols = body.split(";").map(function (s) { return s.trim(); });
       const cols = normalizeInputCols_(rawCols);
@@ -90,14 +140,14 @@ function doPost(e) {
           ? "Data tersimpan di baris " + saveResult.row
           : "Gagal simpan: " + saveResult.error;
       }
-    } else if (lower.startsWith("update#")) {
+      } else if (lower.startsWith("update#")) {
       const body = text.slice(7).trim();
       const cols = body.split(";").map(function (s) { return s.trim(); });
       saveResult = updateSoldData_(cols);
       reply = saveResult.ok
         ? "Data terupdate di baris " + saveResult.row
         : "Gagal update: " + saveResult.error;
-    } else {
+      } else {
       const parsedUpdate = parseLabeledUpdate_(text);
       if (parsedUpdate.matched) {
         saveResult = updateSoldData_(parsedUpdate.cols);
@@ -118,6 +168,7 @@ function doPost(e) {
         }
       } else {
         reply = "Perintah tidak dikenali. Ketik HALO untuk lihat format.";
+      }
       }
       }
     }
@@ -218,6 +269,72 @@ function findFirstEmptyRow_(sheet, startRow, col) {
     if (!vals[i][0]) return startRow + i;
   }
   return last + 1;
+}
+
+function parseDataMotorKeyword_(text) {
+  const m = String(text || "").trim().match(/^(?:cek\s+)?data\s+motor(?:\s+(.+))?$/i);
+  if (!m) return null;
+  return m[1] ? String(m[1]).trim() : "";
+}
+
+function findMotorDataReply_(keyword) {
+  try {
+    const q = normalizeText_(keyword);
+    if (!q) return "Format salah. Gunakan: data motor <nama motor> atau cek data motor <nama motor>";
+
+    const ss = getSpreadsheet_();
+    if (!ss) return "Spreadsheet tidak terbaca.";
+
+    const sh = ss.getSheetByName(SHEET_NAME);
+    if (!sh) return 'Sheet "' + SHEET_NAME + '" tidak ditemukan';
+
+    const startRow = 2;
+    const last = sh.getLastRow();
+    if (last < startRow) {
+      return 'Data motor "' + keyword + '" tidak ditemukan.';
+    }
+
+    const vals = sh.getRange(startRow, 1, last - startRow + 1, 13).getDisplayValues();
+    const rows = [];
+
+    for (let i = 0; i < vals.length; i++) {
+      const row = vals[i];
+      const namaMotor = normalizeText_(row[1]); // kolom B
+      if (!namaMotor) continue;
+      if (namaMotor.indexOf(q) === -1) continue;
+      rows.push(formatMotorRow_(row));
+    }
+
+    if (!rows.length) {
+      return 'Data motor "' + keyword + '" tidak ditemukan.';
+    }
+
+    return (
+      'Ditemukan ' + rows.length + ' data motor "' + keyword + '":\n\n' +
+      rows.join("\n\n")
+    );
+  } catch (err) {
+    return "Gagal ambil data motor: " + err.message;
+  }
+}
+
+function formatMotorRow_(row) {
+  return [
+    "NO: " + displayCell_(row[0]),          // A
+    "NAMA MOTOR: " + displayCell_(row[1]),  // B
+    "TAHUN: " + displayCell_(row[2]),       // C
+    "PLAT: " + displayCell_(row[3]),        // D
+    "SURAT-SURAT: " + displayCell_(row[4]), // E
+    "TAHUN PLAT: " + displayCell_(row[5]),  // F
+    "PAJAK: " + displayCell_(row[6]),       // G
+    "HARGA JUAL: " + displayCell_(row[7]),  // H
+    "HARGA BELI: " + displayCell_(row[11])  // L
+  ].join("\n");
+}
+
+function displayCell_(value) {
+  const s = String(value === undefined || value === null ? "" : value).trim();
+  return s || "-";
 }
 
 function parseDate_(s) {
@@ -555,4 +672,90 @@ function jsonOutput_(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj || {}))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function evaluateWaSourceFilter_(ctx) {
+  if (!ENABLE_WA_SOURCE_FILTER) return { ok: true };
+
+  const adminSet = buildWaNumberSet_(ADMIN_WA_NUMBERS);
+  const sender = normalizeWaIdentity_(ctx && ctx.sender);
+  const chatJid = normalizeWaIdentity_(ctx && ctx.chatJid);
+  const botId = normalizeWaIdentity_((ctx && ctx.botJid) || BOT_WA_NUMBER);
+  const fromMe = Boolean(ctx && ctx.fromMe);
+
+  // Kalau bot ID kosong, jangan blokir agar tidak mematikan service.
+  if (!botId) return { ok: true };
+
+  const isSenderBot = sender && sender === botId;
+  const isSelfChat = chatJid && chatJid === botId;
+  const isAdminSender = Boolean(sender && adminSet.has(sender));
+
+  // Izinkan self-chat bot (sesuai requirement).
+  if (isSenderBot && isSelfChat) return { ok: true };
+
+  // Tolak pesan keluar dari bot ke nomor lain.
+  if (isSenderBot && chatJid && !isSelfChat) {
+    return {
+      ok: false,
+      error: "WA_FILTER_BLOCK_BOT_OUTBOUND",
+      reply: "IGNORED: bot outbound message"
+    };
+  }
+
+  // Izinkan nomor admin.
+  if (isAdminSender) return { ok: true };
+
+  // Fallback: jika ditandai fromMe dan bukan self-chat, tolak juga.
+  if (fromMe && chatJid && !isSelfChat) {
+    return {
+      ok: false,
+      error: "WA_FILTER_BLOCK_FROM_ME_OUTBOUND",
+      reply: "IGNORED: fromMe outbound message"
+    };
+  }
+
+  // Selain admin/self, tolak.
+  return {
+    ok: false,
+    error: "WA_FILTER_BLOCK_NON_ADMIN",
+    reply: "IGNORED: non-admin sender"
+  };
+}
+
+function normalizeWaIdentity_(value) {
+  const raw = String(value || "").trim().toLowerCase();
+  if (!raw) return "";
+
+  // Group JID tidak dipakai untuk compare bot personal.
+  if (raw.indexOf("@g.us") !== -1) {
+    return "group:" + raw.split("@")[0];
+  }
+
+  const noPlus = raw.replace(/^\+/, "");
+  const beforeAt = noPlus.split("@")[0];
+  const beforeDevice = beforeAt.split(":")[0];
+  const digits = beforeDevice.replace(/[^\d]/g, "");
+  return digits || beforeDevice;
+}
+
+function parseBoolLike_(value) {
+  if (value === true || value === false) return value;
+  const v = String(value === undefined || value === null ? "" : value).trim().toLowerCase();
+  if (!v) return false;
+  return ["1", "true", "yes", "y", "on"].indexOf(v) !== -1;
+}
+
+function buildWaNumberSet_(values) {
+  const list = Array.isArray(values) ? values : [];
+  const out = {};
+  for (let i = 0; i < list.length; i++) {
+    const n = normalizeWaIdentity_(list[i]);
+    if (n) out[n] = true;
+  }
+  return {
+    has: function (value) {
+      const n = normalizeWaIdentity_(value);
+      return Boolean(n && out[n]);
+    }
+  };
 }

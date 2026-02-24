@@ -25,6 +25,10 @@ module.exports = [
   "Format update saat terjual:",
   "update#no;harga jual;harga laku;tgl terjual;status",
   "",
+  "Format cek data motor:",
+  "data motor vixion",
+  "cek data motor vixion",
+  "",
   "Contoh:",
   "input#Vario 125;2022;B1234XYZ;Lengkap hidup;2027;Hidup;22500000;19000000",
   "update#7;22500000;21000000;24/02/2026;terjual",
@@ -40,4 +44,3 @@ module.exports = [
   "- status otomatis centang jika harga laku / tgl terjual terisi",
   "- status manual: terjual/ya/1 = dicentang"
 ].join("\n");
-

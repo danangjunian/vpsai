@@ -11,25 +11,30 @@ class AppScriptService {
     }
   }
 
-  async saveStock(cols) {
+  async saveStock(cols, messageMeta) {
     const message = "input#" + normalizeCols_(cols, 11).join(";");
-    const result = await this.sendMessage_(message);
+    const result = await this.sendMessage_(message, messageMeta);
     assertCommandProcessed_(result, "input");
     return result;
   }
 
-  async updateSold(cols) {
+  async updateSold(cols, messageMeta) {
     const message = "update#" + normalizeCols_(cols, 5).join(";");
-    const result = await this.sendMessage_(message);
+    const result = await this.sendMessage_(message, messageMeta);
     assertCommandProcessed_(result, "update");
     return result;
   }
 
-  async sendMessage_(message) {
-    const payload = {
-      sender: "",
-      message: message
-    };
+  async executeText(text, messageMeta) {
+    const message = String(text || "").trim();
+    if (!message) {
+      return { row: null, reply: "NO_MESSAGE", saveResult: null };
+    }
+    return this.sendMessage_(message, messageMeta);
+  }
+
+  async sendMessage_(message, messageMeta) {
+    const payload = buildPayload_(message, messageMeta);
 
     try {
       const res = await postJsonPreserveRedirects_(this.webhookUrl, payload, this.timeoutMs);
@@ -56,6 +61,40 @@ class AppScriptService {
       }
     }
   }
+}
+
+function buildPayload_(message, messageMeta) {
+  const meta = normalizeMessageMeta_(messageMeta);
+  return {
+    sender: meta.sender,
+    message: String(message || ""),
+    chat_jid: meta.chatJid,
+    bot_jid: meta.botJid,
+    from_me: meta.fromMe ? "1" : "0",
+    source: meta.source
+  };
+}
+
+function normalizeMessageMeta_(messageMeta) {
+  const meta = messageMeta && typeof messageMeta === "object" ? messageMeta : {};
+  return {
+    sender: normalizeText_(meta.sender),
+    chatJid: normalizeText_(meta.chatJid || meta.chat_jid),
+    botJid: normalizeText_(meta.botJid || meta.bot_jid),
+    fromMe: toBool_(meta.fromMe !== undefined ? meta.fromMe : meta.from_me),
+    source: normalizeText_(meta.source)
+  };
+}
+
+function normalizeText_(value) {
+  return String(value === undefined || value === null ? "" : value).trim();
+}
+
+function toBool_(value) {
+  if (value === true || value === false) return value;
+  const v = String(value === undefined || value === null ? "" : value).trim().toLowerCase();
+  if (!v) return false;
+  return ["1", "true", "yes", "y", "on"].indexOf(v) !== -1;
 }
 
 async function postJsonPreserveRedirects_(url, payload, timeoutMs) {

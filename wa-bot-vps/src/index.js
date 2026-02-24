@@ -12,6 +12,10 @@ const APPS_SCRIPT_TIMEOUT_MS = Number(process.env.APPS_SCRIPT_TIMEOUT_MS || 1500
 
 const WA_SESSION_DIR = String(process.env.WA_SESSION_DIR || "./auth_info_baileys").trim();
 const ALLOW_GROUP_MESSAGES = parseBool(process.env.ALLOW_GROUP_MESSAGES, false);
+const ALLOW_SELF_CHAT_MESSAGES = parseBool(process.env.ALLOW_SELF_CHAT_MESSAGES, true);
+const DEBUG_WA_FILTER = parseBool(process.env.DEBUG_WA_FILTER, false);
+const ADMIN_NUMBERS = parseList(process.env.ADMIN_NUMBERS);
+const BOT_NUMBER = String(process.env.BOT_NUMBER || "").trim();
 
 start().catch(function (err) {
   console.error("[startup] error:", err.message);
@@ -19,6 +23,13 @@ start().catch(function (err) {
 });
 
 async function start() {
+  if (ADMIN_NUMBERS.length === 0) {
+    throw new Error("ADMIN_NUMBERS belum diisi. Set minimal 1 nomor admin di .env");
+  }
+  if (!BOT_NUMBER) {
+    throw new Error("BOT_NUMBER belum diisi di .env");
+  }
+
   const dataService = buildDataService_();
 
   console.log("Mode:", BOT_MODE);
@@ -29,6 +40,8 @@ async function start() {
     startWebhookMode({
       port: PORT,
       fonnteToken: FONNTE_TOKEN,
+      adminNumbers: ADMIN_NUMBERS,
+      botNumber: BOT_NUMBER,
       dataService: dataService
     });
     return;
@@ -37,6 +50,10 @@ async function start() {
   await startBaileysMode({
     sessionDir: WA_SESSION_DIR,
     allowGroupMessages: ALLOW_GROUP_MESSAGES,
+    allowSelfChatMessages: ALLOW_SELF_CHAT_MESSAGES,
+    debugWaFilter: DEBUG_WA_FILTER,
+    adminNumbers: ADMIN_NUMBERS,
+    botNumber: BOT_NUMBER,
     dataService: dataService
   });
 }
@@ -52,4 +69,11 @@ function parseBool(value, defaultValue) {
   if (value === undefined || value === null || value === "") return defaultValue;
   const v = String(value).trim().toLowerCase();
   return ["1", "true", "yes", "y", "on"].indexOf(v) !== -1;
+}
+
+function parseList(value) {
+  return String(value || "")
+    .split(",")
+    .map(function (v) { return v.trim(); })
+    .filter(function (v) { return v !== ""; });
 }

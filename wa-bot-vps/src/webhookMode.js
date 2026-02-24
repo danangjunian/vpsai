@@ -4,6 +4,8 @@ const { processIncomingText, toWebhookResult } = require("./messageProcessor");
 
 function startWebhookMode(options) {
   const cfg = options || {};
+  const adminNumberSet = buildNumberSet(cfg.adminNumbers);
+  const botNumber = normalizeWaNumber(cfg.botNumber);
   const app = express();
 
   app.use(express.json({ limit: "1mb" }));
@@ -22,7 +24,25 @@ function startWebhookMode(options) {
       const payload = parseIncomingPayload(req.body);
       const sender = String(payload.sender || "").trim();
       const text = String(payload.message || "").trim();
-      const result = await processIncomingText(text, cfg.dataService);
+      const senderNumber = normalizeWaNumber(sender);
+      const chatNumber = normalizeWaNumber(String(payload.chat_jid || payload.chatJid || payload.target || sender).trim());
+      const isSenderBot = Boolean(senderNumber && botNumber && senderNumber === botNumber);
+      const isSelfChat = Boolean(senderNumber && chatNumber && botNumber && senderNumber === botNumber && chatNumber === botNumber);
+      const isAdminSender = adminNumberSet.has(senderNumber);
+
+      if ((isSenderBot && !isSelfChat) || (!isAdminSender && !isSelfChat)) {
+        // Abaikan diam-diam: tidak simpan dan tidak balas.
+        return res.type("text/plain").send("OK");
+      }
+
+      const messageMeta = {
+        sender: sender,
+        chatJid: String(payload.chat_jid || payload.chatJid || "").trim(),
+        botJid: String(payload.bot_jid || payload.botJid || "").trim(),
+        fromMe: toBool(payload.from_me !== undefined ? payload.from_me : payload.fromMe),
+        source: "WEBHOOK"
+      };
+      const result = await processIncomingText(text, cfg.dataService, messageMeta);
 
       if (sender && result.reply) {
         await sendWaReply(sender, result.reply, cfg.fonnteToken);
@@ -38,6 +58,38 @@ function startWebhookMode(options) {
   app.listen(cfg.port, function () {
     console.log("WA bot WEBHOOK mode running on port " + cfg.port);
   });
+}
+
+function toBool(value) {
+  if (value === true || value === false) return value;
+  const v = String(value === undefined || value === null ? "" : value).trim().toLowerCase();
+  if (!v) return false;
+  return ["1", "true", "yes", "y", "on"].indexOf(v) !== -1;
+}
+
+function normalizeWaNumber(value) {
+  const raw = String(value || "").trim().toLowerCase();
+  if (!raw) return "";
+  const noPlus = raw.replace(/^\+/, "");
+  const beforeAt = noPlus.split("@")[0];
+  const beforeDevice = beforeAt.split(":")[0];
+  const digits = beforeDevice.replace(/[^\d]/g, "");
+  return digits || beforeDevice;
+}
+
+function buildNumberSet(numbers) {
+  const out = {};
+  const list = Array.isArray(numbers) ? numbers : [];
+  for (let i = 0; i < list.length; i++) {
+    const n = normalizeWaNumber(list[i]);
+    if (n) out[n] = true;
+  }
+  return {
+    has: function (value) {
+      const n = normalizeWaNumber(value);
+      return Boolean(n && out[n]);
+    }
+  };
 }
 
 function parseIncomingPayload(body) {
