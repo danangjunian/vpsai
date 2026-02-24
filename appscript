@@ -22,6 +22,7 @@ function doGet(e) {
         contents: JSON.stringify({
           sender: String(e.parameter.sender || "").trim(),
           message: String(e.parameter.message || "").trim(),
+          message_id: String(e.parameter.message_id || e.parameter.messageId || "").trim(),
           chat_jid: String(e.parameter.chat_jid || e.parameter.chatJid || "").trim(),
           bot_jid: String(e.parameter.bot_jid || e.parameter.botJid || "").trim(),
           from_me: String(e.parameter.from_me || e.parameter.fromMe || "").trim(),
@@ -34,11 +35,13 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  let messageId = "";
   try {
     const raw = (e && e.postData && e.postData.contents) || "{}";
     const data = JSON.parse(raw);
     const sender = String(data.sender || "").trim();
     const text = String(data.message || "").trim();
+    messageId = String(data.message_id || data.messageId || "").trim();
     const chatJid = String(data.chat_jid || data.chatJid || "").trim();
     const botJid = String(data.bot_jid || data.botJid || BOT_WA_NUMBER).trim();
     const fromMe = parseBoolLike_(data.from_me !== undefined ? data.from_me : data.fromMe);
@@ -50,11 +53,11 @@ function doPost(e) {
     log_("RAW_BODY: " + raw);
 
     if (!text) {
-      return jsonOutput_({
+      return jsonOutputWithDedup_({
         ok: false,
         error: "NO_MESSAGE",
         reply: "NO_MESSAGE"
-      });
+      }, messageId);
     }
 
     const waFilter = evaluateWaSourceFilter_({
@@ -72,11 +75,17 @@ function doPost(e) {
         source: source,
         reason: waFilter.error
       }));
-      return jsonOutput_({
+      return jsonOutputWithDedup_({
         ok: false,
         error: waFilter.error,
         reply: waFilter.reply || waFilter.error
-      });
+      }, messageId);
+    }
+
+    const dedupHit = getDedupResponseByMessageId_(messageId);
+    if (dedupHit) {
+      log_("DEDUP_HIT message_id=" + messageId);
+      return jsonOutput_(dedupHit);
     }
 
     if (lower === "halo" || lower === "hi" || lower === "menu") {
@@ -178,27 +187,27 @@ function doPost(e) {
     }
 
     if (saveResult) {
-      return jsonOutput_({
+      return jsonOutputWithDedup_({
         ok: saveResult.ok,
         row: saveResult.ok ? saveResult.row : null,
         error: saveResult.ok ? "" : saveResult.error,
         reply: reply
-      });
+      }, messageId);
     }
 
-    return jsonOutput_({
+    return jsonOutputWithDedup_({
       ok: true,
       row: null,
       error: "",
       reply: reply || "OK"
-    });
+    }, messageId);
   } catch (err) {
     log_("doPost error: " + err.message);
-    return jsonOutput_({
+    return jsonOutputWithDedup_({
       ok: false,
       error: err.message,
       reply: "ERROR_" + err.message
-    });
+    }, messageId);
   }
 }
 
@@ -672,6 +681,42 @@ function jsonOutput_(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj || {}))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function jsonOutputWithDedup_(obj, messageId) {
+  const payload = obj || {};
+  setDedupResponseByMessageId_(messageId, payload);
+  return jsonOutput_(payload);
+}
+
+function getDedupResponseByMessageId_(messageId) {
+  const key = dedupCacheKey_(messageId);
+  if (!key) return null;
+  try {
+    const cache = CacheService.getScriptCache();
+    const raw = cache.get(key);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (err) {
+    return null;
+  }
+}
+
+function setDedupResponseByMessageId_(messageId, payload) {
+  const key = dedupCacheKey_(messageId);
+  if (!key) return;
+  try {
+    const cache = CacheService.getScriptCache();
+    cache.put(key, JSON.stringify(payload || {}), 6 * 60 * 60); // 6 jam
+  } catch (err) {
+    // abaikan error cache agar proses utama tidak terganggu
+  }
+}
+
+function dedupCacheKey_(messageId) {
+  const id = String(messageId || "").trim();
+  if (!id) return "";
+  return "wa:msg:" + id.slice(0, 200);
 }
 
 function evaluateWaSourceFilter_(ctx) {

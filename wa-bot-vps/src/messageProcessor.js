@@ -6,12 +6,48 @@ const {
   validateStockCols
 } = require("./utils");
 
+const pendingMotorMasukByConversation_ = new Map();
+const MOTOR_MASUK_PENDING_TTL_MS = 6 * 60 * 60 * 1000;
+
+const MOTOR_MASUK_TEMPLATE_TEXT = [
+  "NAMA MOTOR:",
+  "TAHUN:",
+  "PLAT:",
+  "SURAT-SURAT:",
+  "TAHUN PLAT:",
+  "PAJAK:",
+  "HARGA JUAL:",
+  "HARGA BELI:"
+].join("\n");
+
 async function processIncomingText(text, dataService, messageMeta) {
   const bodyText = String(text || "").trim();
   const lower = bodyText.toLowerCase();
+  const convoKey = getConversationKey_(messageMeta);
 
   if (!bodyText) {
     return { reply: "NO_MESSAGE", saveResult: null };
+  }
+
+  cleanupPendingMotorMasuk_();
+
+  if (isMotorMasukCommand_(bodyText)) {
+    pendingMotorMasukByConversation_.set(convoKey, {
+      stage: "awaiting_details",
+      createdAt: Date.now()
+    });
+    return {
+      reply: [
+        "Silakan isi template motor masuk berikut:",
+        MOTOR_MASUK_TEMPLATE_TEXT
+      ].join("\n\n"),
+      saveResult: null
+    };
+  }
+
+  const pending = pendingMotorMasukByConversation_.get(convoKey);
+  if (pending) {
+    return handlePendingMotorMasuk_(pending, bodyText, lower, dataService, messageMeta, convoKey);
   }
 
   if (lower === "halo" || lower === "hi" || lower === "menu") {
@@ -128,6 +164,115 @@ function parseDataMotorKeyword_(text) {
   const m = String(text || "").trim().match(/^(?:cek\s+)?data\s+motor(?:\s+(.+))?$/i);
   if (!m) return null;
   return m[1] ? String(m[1]).trim() : "";
+}
+
+async function handlePendingMotorMasuk_(pending, bodyText, lower, dataService, messageMeta, convoKey) {
+  if (lower === "batal") {
+    pendingMotorMasukByConversation_.delete(convoKey);
+    return { reply: "Input motor masuk dibatalkan.", saveResult: null };
+  }
+
+  if (pending.stage === "awaiting_details") {
+    const parsed = parseLabeledInput(bodyText);
+    if (!parsed.matched) {
+      return {
+        reply: [
+          "Format belum sesuai template motor masuk.",
+          "Kirim ulang sesuai format berikut:",
+          MOTOR_MASUK_TEMPLATE_TEXT,
+          "",
+          "Atau ketik BATAL untuk membatalkan."
+        ].join("\n"),
+        saveResult: null
+      };
+    }
+
+    const validation = validateStockCols(parsed.cols);
+    if (!validation.ok) {
+      return { reply: "Format salah: " + validation.error, saveResult: null };
+    }
+
+    const cols = validation.data;
+    pendingMotorMasukByConversation_.set(convoKey, {
+      stage: "awaiting_confirm",
+      createdAt: Date.now(),
+      cols: cols
+    });
+
+    return {
+      reply: [
+        "Konfirmasi data motor masuk:",
+        formatMotorMasukSummary_(cols),
+        "",
+        "Ketik OK untuk simpan / BATAL untuk batal"
+      ].join("\n"),
+      saveResult: null
+    };
+  }
+
+  if (pending.stage === "awaiting_confirm") {
+    if (lower !== "ok") {
+      return { reply: "Ketik OK untuk simpan / BATAL untuk batal", saveResult: null };
+    }
+
+    const saved = await dataService.saveStock(pending.cols || [], messageMeta);
+    pendingMotorMasukByConversation_.delete(convoKey);
+    const normalized = normalizeOperationResult_(saved, "Data tersimpan");
+    return {
+      reply: normalized.reply,
+      saveResult: normalized.saveResult
+    };
+  }
+
+  pendingMotorMasukByConversation_.delete(convoKey);
+  return { reply: "Sesi motor masuk tidak valid. Ketik motor masuk untuk mulai ulang.", saveResult: null };
+}
+
+function isMotorMasukCommand_(text) {
+  return /^motor\s+masuk$/i.test(String(text || "").trim());
+}
+
+function formatMotorMasukSummary_(cols) {
+  return [
+    "NAMA MOTOR: " + displayValue_(cols[0]),
+    "TAHUN: " + displayValue_(cols[1]),
+    "PLAT: " + displayValue_(cols[2]),
+    "SURAT-SURAT: " + displayValue_(cols[3]),
+    "TAHUN PLAT: " + displayValue_(cols[4]),
+    "PAJAK: " + displayValue_(cols[5]),
+    "HARGA JUAL: " + displayValue_(cols[6]),
+    "HARGA BELI: " + displayValue_(cols[8])
+  ].join("\n");
+}
+
+function displayValue_(value) {
+  const s = String(value === undefined || value === null ? "" : value).trim();
+  return s || "-";
+}
+
+function getConversationKey_(messageMeta) {
+  const meta = messageMeta && typeof messageMeta === "object" ? messageMeta : {};
+  const sender = normalizeId_(meta.sender);
+  const chat = normalizeId_(meta.chatJid || meta.chat_jid);
+  return sender + "|" + chat;
+}
+
+function normalizeId_(value) {
+  return String(value === undefined || value === null ? "" : value).trim().toLowerCase();
+}
+
+function cleanupPendingMotorMasuk_() {
+  const now = Date.now();
+  const entries = Array.from(pendingMotorMasukByConversation_.entries());
+  for (let i = 0; i < entries.length; i++) {
+    const item = entries[i];
+    const key = item[0];
+    const state = item[1] || {};
+    const createdAt = Number(state.createdAt || 0);
+    if (!createdAt || now - createdAt > MOTOR_MASUK_PENDING_TTL_MS) {
+      pendingMotorMasukByConversation_.delete(key);
+    }
+  }
 }
 
 module.exports = {

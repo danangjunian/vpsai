@@ -68,6 +68,7 @@ function buildPayload_(message, messageMeta) {
   return {
     sender: meta.sender,
     message: String(message || ""),
+    message_id: meta.messageId,
     chat_jid: meta.chatJid,
     bot_jid: meta.botJid,
     from_me: meta.fromMe ? "1" : "0",
@@ -79,6 +80,7 @@ function normalizeMessageMeta_(messageMeta) {
   const meta = messageMeta && typeof messageMeta === "object" ? messageMeta : {};
   return {
     sender: normalizeText_(meta.sender),
+    messageId: normalizeText_(meta.messageId || meta.message_id),
     chatJid: normalizeText_(meta.chatJid || meta.chat_jid),
     botJid: normalizeText_(meta.botJid || meta.bot_jid),
     fromMe: toBool_(meta.fromMe !== undefined ? meta.fromMe : meta.from_me),

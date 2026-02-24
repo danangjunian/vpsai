@@ -10,6 +10,9 @@ const {
 } = require("@whiskeysockets/baileys");
 const { processIncomingText } = require("./messageProcessor");
 
+const seenInboundMessageIds_ = new Map();
+const MESSAGE_DEDUP_TTL_MS = 6 * 60 * 60 * 1000;
+
 async function startBaileysMode(options) {
   const cfg = options || {};
   const sessionDir = path.resolve(process.cwd(), cfg.sessionDir || "./auth_info_baileys");
@@ -117,6 +120,14 @@ async function startBaileysMode(options) {
         if (!text) continue;
         const textLower = text.toLowerCase();
         const traceThisMessage = debugWaFilter && isCommandLike_(textLower);
+        const msgId = normalizeMessageId_(msg.key && msg.key.id);
+
+        if (isDuplicateMessage_(remoteJid, msgId)) {
+          if (traceThisMessage) {
+            console.log("[wa-dedup] skip duplicate message id=" + msgId + " remote=" + remoteJid);
+          }
+          continue;
+        }
 
         // Aturan keamanan:
         // - bot -> nomor lain: selalu diabaikan
@@ -157,6 +168,7 @@ async function startBaileysMode(options) {
 
         const messageMeta = {
           sender: senderJid,
+          messageId: msgId,
           chatJid: remoteJid,
           botJid: botJid,
           fromMe: fromMe,
@@ -223,6 +235,7 @@ function isCommandLike_(textLower) {
   const t = String(textLower || "").trim();
   if (!t) return false;
   if (t === "halo" || t === "hi" || t === "menu") return true;
+  if (t === "motor masuk" || t === "ok" || t === "batal") return true;
   if (t.indexOf("data motor") === 0) return true;
   if (t.indexOf("cek data motor") === 0) return true;
   if (t.indexOf("input#") === 0 || t.indexOf("update#") === 0) return true;
@@ -257,6 +270,35 @@ function buildNumberSet_(numbers) {
       return Boolean(n && out[n]);
     }
   };
+}
+
+function normalizeMessageId_(value) {
+  return String(value || "").trim();
+}
+
+function isDuplicateMessage_(remoteJid, messageId) {
+  const id = normalizeMessageId_(messageId);
+  if (!id) return false;
+
+  cleanupSeenInboundMessages_();
+
+  const key = normalizeJid_(remoteJid) + "|" + id;
+  if (seenInboundMessageIds_.has(key)) return true;
+
+  seenInboundMessageIds_.set(key, Date.now());
+  return false;
+}
+
+function cleanupSeenInboundMessages_() {
+  const now = Date.now();
+  const entries = Array.from(seenInboundMessageIds_.entries());
+  for (let i = 0; i < entries.length; i++) {
+    const key = entries[i][0];
+    const ts = Number(entries[i][1] || 0);
+    if (!ts || now - ts > MESSAGE_DEDUP_TTL_MS) {
+      seenInboundMessageIds_.delete(key);
+    }
+  }
 }
 
 module.exports = {

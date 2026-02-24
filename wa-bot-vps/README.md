@@ -96,6 +96,16 @@ cek data motor vixion
 ```
 Bot akan mengembalikan daftar motor yang nama motornya mengandung keyword tersebut.
 
+### Motor masuk 2 tahap (`motor masuk`)
+```text
+motor masuk
+```
+Alur:
+1. Bot kirim template label.
+2. Admin isi template dan kirim.
+3. Bot kirim ringkasan + minta konfirmasi.
+4. Admin kirim `OK` untuk simpan atau `BATAL` untuk membatalkan.
+
 ## 4. Logika
 - Input stok boleh ada field kosong.
 - Jika `HARGA LAKU` terisi, `STATUS` otomatis centang.

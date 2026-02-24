@@ -37,6 +37,7 @@ function startWebhookMode(options) {
 
       const messageMeta = {
         sender: sender,
+        messageId: String(payload.message_id || payload.messageId || "").trim(),
         chatJid: String(payload.chat_jid || payload.chatJid || "").trim(),
         botJid: String(payload.bot_jid || payload.botJid || "").trim(),
         fromMe: toBool(payload.from_me !== undefined ? payload.from_me : payload.fromMe),
