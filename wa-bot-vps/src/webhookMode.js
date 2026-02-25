@@ -43,7 +43,7 @@ function startWebhookMode(options) {
         fromMe: toBool(payload.from_me !== undefined ? payload.from_me : payload.fromMe),
         source: "WEBHOOK"
       };
-      const result = await processIncomingText(text, cfg.dataService, messageMeta);
+      const result = await processIncomingText(text, cfg.dataService, messageMeta, cfg.aiCommandParser);
 
       if (sender && result.reply) {
         await sendWaReply(sender, result.reply, cfg.fonnteToken);

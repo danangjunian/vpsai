@@ -204,8 +204,11 @@ STEP 9 — NOTIFIKASI PENGELUARAN HARIAN
 ALUR:
 	•	Trigger jam tertentu (misal 22:00)
 	•	Bot kirim ke ADMIN: “Pengeluaran hari ini berapa?”
+	dan bot kirim template seperti ini :
+	- keterangan :
+	- total pengeluaran :
 	•	Admin balas
-	•	Script simpan ke PENGELUARAN HARIAN
+	• Script simpan ke PENGELUARAN HARIAN dan bot kirim konfirmasi ke admin
 
 TEST:
 	•	Jalankan trigger manual

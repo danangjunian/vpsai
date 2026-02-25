@@ -65,15 +65,22 @@ class AppScriptService {
 
 function buildPayload_(message, messageMeta) {
   const meta = normalizeMessageMeta_(messageMeta);
+  const messageId = meta.messageId || buildClientMessageId_();
   return {
     sender: meta.sender,
     message: String(message || ""),
-    message_id: meta.messageId,
+    message_id: messageId,
     chat_jid: meta.chatJid,
     bot_jid: meta.botJid,
     from_me: meta.fromMe ? "1" : "0",
     source: meta.source
   };
+}
+
+function buildClientMessageId_() {
+  const ts = Date.now().toString(36);
+  const rnd = Math.random().toString(36).slice(2, 10);
+  return "vps_" + ts + "_" + rnd;
 }
 
 function normalizeMessageMeta_(messageMeta) {

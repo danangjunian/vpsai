@@ -3,6 +3,8 @@ const SHEET_NAME = "STOK MOTOR"; // ganti sesuai nama sheet kamu
 const DEBUG_MODE = true;
 const ENABLE_WA_REPLY = false; // mode VPS->AppsScript: biarkan bot VPS yang kirim balasan WA
 const FONNTE_TOKEN = ""; // hanya dipakai jika ENABLE_WA_REPLY=true
+const EXPENSE_SHEET_NAME = "PENGELUARAN HARIAN";
+const TOTAL_ASET_SHEET_NAME = "TOTAL ASET";
 const ENABLE_WA_SOURCE_FILTER = true; // filter sumber WA di Apps Script (lapis pengaman)
 const BOT_WA_NUMBER = "201507007785"; // nomor bot utama, tanpa tanda +
 const ADMIN_WA_NUMBERS = [
@@ -12,6 +14,29 @@ const ADMIN_WA_NUMBERS = [
   "6282228597780",
   "6285655002277"
 ];
+const MOTOR_MASUK_SESSION_TTL_SECONDS = 6 * 60 * 60;
+const MOTOR_MASUK_TEMPLATE_TEXT = [
+  "NAMA MOTOR:",
+  "TAHUN:",
+  "PLAT:",
+  "SURAT-SURAT:",
+  "TAHUN PLAT:",
+  "PAJAK:",
+  "HARGA JUAL:",
+  "HARGA BELI:"
+].join("\n");
+const MOTOR_LAKU_SESSION_TTL_SECONDS = 6 * 60 * 60;
+const MOTOR_LAKU_LIST_MAX = 20;
+const EDIT_HARGA_JUAL_SESSION_TTL_SECONDS = 6 * 60 * 60;
+const EDIT_DATA_MOTOR_SESSION_TTL_SECONDS = 6 * 60 * 60;
+const DAILY_EXPENSE_SESSION_TTL_SECONDS = 12 * 60 * 60;
+const DAILY_EXPENSE_TEMPLATE_TEXT = [
+  "Pengeluaran hari ini berapa?",
+  "- keterangan :",
+  "- total pengeluaran :",
+  "",
+  "Kirim sesuai format di atas, atau ketik BATAL."
+].join("\n");
 
 function doGet(e) {
   // Fallback untuk endpoint yang hanya menerima GET dari redirect Apps Script.
@@ -88,107 +113,14 @@ function doPost(e) {
       return jsonOutput_(dedupHit);
     }
 
-    if (lower === "halo" || lower === "hi" || lower === "menu") {
-      reply =
-        "Format input stok:\n" +
-        "input#nama motor;tahun;plat;surat-surat;tahun plat;pajak;harga jual;harga laku;harga beli;tgl terjual;status\n\n" +
-        "Format label (lebih mudah):\n" +
-        "NAMA MOTOR: Vario 125\n" +
-        "TAHUN: 2022\n" +
-        "PLAT: B1234XYZ\n" +
-        "SURAT-SURAT: Lengkap hidup\n" +
-        "TAHUN PLAT: 2027\n" +
-        "PAJAK: Hidup\n" +
-        "HARGA JUAL: 22500000\n" +
-        "HARGA BELI: 19000000\n\n" +
-        "Format update label:\n" +
-        "NO: 7\n" +
-        "HARGA JUAL: 22500000\n" +
-        "HARGA LAKU: 21000000\n" +
-        "TGL TERJUAL: 24/02/2026\n" +
-        "STATUS: terjual\n\n" +
-        "Format input singkat (stok awal):\n" +
-        "input#nama motor;tahun;plat;surat-surat;tahun plat;pajak;harga jual;harga beli\n\n" +
-        "Format update saat terjual:\n" +
-        "update#no;harga jual;harga laku;tgl terjual;status\n\n" +
-        "Format cek data motor:\n" +
-        "data motor vixion\n" +
-        "cek data motor vixion\n\n" +
-        "Format cek motor terjual:\n" +
-        "motor terjual\n" +
-        "motor vixion terjual\n\n" +
-        "Contoh:\n" +
-        "input#Vario 125;2022;B1234XYZ;Lengkap hidup;2027;Hidup;22500000;19000000\n" +
-        "update#7;22500000;21000000;24/02/2026;terjual\n\n" +
-        "Catatan:\n" +
-        "- input stok boleh kosong di field manapun, data tetap tersimpan\n" +
-        "- disarankan minimal isi NAMA MOTOR/PLAT agar mudah dicari\n" +
-        "- surat-surat hanya: Lengkap hidup / Lengkap mati / BPKB ONLY\n" +
-        "- PAJAK boleh kirim tahun (contoh 2027) atau status Hidup/Mati\n" +
-        "- update pakai NO (kolom A), bukan PLAT\n" +
-        "- jika update HARGA LAKU tanpa TGL TERJUAL, tanggal otomatis hari ini\n" +
-        "- tgl terjual dan status boleh dikosongkan\n" +
-        "- status otomatis centang jika harga laku / tgl terjual terisi\n" +
-        "- status manual: terjual/ya/1 = dicentang";
-    } else {
-      const soldKeyword = parseMotorTerjualKeyword_(text);
-      if (soldKeyword !== null) {
-        reply = findSoldMotorReply_(soldKeyword);
-      } else {
-        const keyword = parseDataMotorKeyword_(text);
-        if (keyword !== null) {
-          if (!keyword) {
-            reply = "Format salah. Gunakan: data motor <nama motor> atau cek data motor <nama motor>";
-          } else {
-            reply = findMotorDataReply_(keyword);
-          }
-      } else if (lower.startsWith("input#")) {
-      const body = text.slice(6).trim();
-      const rawCols = body.split(";").map(function (s) { return s.trim(); });
-      const cols = normalizeInputCols_(rawCols);
-
-      const validation = validateInput_(cols);
-      if (!validation.ok) {
-        reply = "Format salah: " + validation.error;
-      } else {
-        saveResult = saveToSheet_(validation.data);
-        reply = saveResult.ok
-          ? "Data tersimpan di baris " + saveResult.row
-          : "Gagal simpan: " + saveResult.error;
-      }
-      } else if (lower.startsWith("update#")) {
-      const body = text.slice(7).trim();
-      const cols = body.split(";").map(function (s) { return s.trim(); });
-      saveResult = updateSoldData_(cols);
-      reply = saveResult.ok
-        ? "Data terupdate di baris " + saveResult.row
-        : "Gagal update: " + saveResult.error;
-      } else {
-      const parsedUpdate = parseLabeledUpdate_(text);
-      if (parsedUpdate.matched) {
-        saveResult = updateSoldData_(parsedUpdate.cols);
-        reply = saveResult.ok
-          ? "Data terupdate di baris " + saveResult.row
-          : "Gagal update: " + saveResult.error;
-      } else {
-      const parsed = parseLabeledInput_(text);
-      if (parsed.matched) {
-        const validation = validateInput_(parsed.cols);
-        if (!validation.ok) {
-          reply = "Format salah: " + validation.error;
-        } else {
-          saveResult = saveToSheet_(validation.data);
-          reply = saveResult.ok
-            ? "Data tersimpan di baris " + saveResult.row
-            : "Gagal simpan: " + saveResult.error;
-        }
-      } else {
-        reply = "Perintah tidak dikenali. Ketik HALO untuk lihat format.";
-      }
-      }
-      }
-      }
-    }
+    const routed = routeIncomingMessage_({
+      sender: sender,
+      chatJid: chatJid,
+      text: text,
+      lower: lower
+    });
+    reply = routed.reply;
+    saveResult = routed.saveResult;
 
     if (ENABLE_WA_REPLY && sender) {
       sendWa_(sender, reply);
@@ -217,6 +149,269 @@ function doPost(e) {
       reply: "ERROR_" + err.message
     }, messageId);
   }
+}
+
+function routeIncomingMessage_(ctx) {
+  const sender = String((ctx && ctx.sender) || "").trim();
+  const chatJid = String((ctx && ctx.chatJid) || "").trim();
+  const text = String((ctx && ctx.text) || "").trim();
+  const lower = String((ctx && ctx.lower) || "").trim();
+
+  let reply = "";
+  let saveResult = null;
+
+  const convoKey = buildConversationKey_(sender, chatJid);
+  const pendingMotorMasuk = getMotorMasukSession_(convoKey);
+  const pendingMotorLaku = getMotorLakuSession_(convoKey);
+  const pendingEditHargaJual = getEditHargaJualSession_(convoKey);
+  const pendingEditDataMotor = getEditDataMotorSession_(convoKey);
+  const pendingDailyExpense = getDailyExpenseSession_(convoKey);
+
+  if (pendingMotorMasuk) {
+    const sessionResult = handleMotorMasukSession_(pendingMotorMasuk, text, lower, convoKey);
+    return { reply: sessionResult.reply, saveResult: sessionResult.saveResult };
+  }
+
+  if (pendingMotorLaku) {
+    const sessionResult = handleMotorLakuSession_(pendingMotorLaku, text, lower, convoKey);
+    return { reply: sessionResult.reply, saveResult: sessionResult.saveResult };
+  }
+
+  if (pendingEditHargaJual) {
+    const sessionResult = handleEditHargaJualSession_(pendingEditHargaJual, text, lower, convoKey);
+    return { reply: sessionResult.reply, saveResult: sessionResult.saveResult };
+  }
+
+  if (pendingEditDataMotor) {
+    const sessionResult = handleEditDataMotorSession_(pendingEditDataMotor, text, lower, convoKey);
+    return { reply: sessionResult.reply, saveResult: sessionResult.saveResult };
+  }
+
+  if (pendingDailyExpense) {
+    const sessionResult = handleDailyExpenseSession_(pendingDailyExpense, text, lower, convoKey);
+    return { reply: sessionResult.reply, saveResult: sessionResult.saveResult };
+  }
+
+  if (isMotorMasukCommand_(text)) {
+    clearMotorLakuSession_(convoKey);
+    clearEditHargaJualSession_(convoKey);
+    clearEditDataMotorSession_(convoKey);
+    clearDailyExpenseSession_(convoKey);
+    setMotorMasukSession_(convoKey, { stage: "awaiting_details" });
+    return {
+      reply: [
+        "Silakan isi template motor masuk berikut:",
+        MOTOR_MASUK_TEMPLATE_TEXT
+      ].join("\n\n"),
+      saveResult: null
+    };
+  }
+
+  if (isDailyExpensePromptCommand_(text)) {
+    clearMotorMasukSession_(convoKey);
+    clearMotorLakuSession_(convoKey);
+    clearEditHargaJualSession_(convoKey);
+    clearEditDataMotorSession_(convoKey);
+    setDailyExpenseSession_(convoKey, { stage: "awaiting_input" });
+    return { reply: DAILY_EXPENSE_TEMPLATE_TEXT, saveResult: null };
+  }
+
+  if (lower === "halo" || lower === "hi" || lower === "menu") {
+    return { reply: getMenuReply_(), saveResult: null };
+  }
+
+  const soldKeyword = parseSoldReportKeyword_(text);
+  if (soldKeyword !== null) {
+    return { reply: findSoldMotorReply_(soldKeyword), saveResult: null };
+  }
+
+  const motorLakuCommand = parseMotorLakuCommand_(text);
+  if (motorLakuCommand) {
+    if (motorLakuCommand.type === "ask_keyword") {
+      clearMotorMasukSession_(convoKey);
+      clearEditHargaJualSession_(convoKey);
+      clearEditDataMotorSession_(convoKey);
+      clearDailyExpenseSession_(convoKey);
+      setMotorLakuSession_(convoKey, {
+        stage: "awaiting_keyword"
+      });
+      return { reply: "Motor apa?", saveResult: null };
+    }
+
+    const motorLakuKeyword = String(motorLakuCommand.keyword || "").trim();
+    if (!motorLakuKeyword) {
+      return { reply: "Format salah. Gunakan: motor <nama> laku", saveResult: null };
+    }
+
+    const options = findActiveMotorRowsByKeyword_(motorLakuKeyword);
+    if (!options.length) {
+      return { reply: 'Data motor "' + motorLakuKeyword + '" tidak ditemukan.', saveResult: null };
+    }
+
+    const shownOptions = options.slice(0, MOTOR_LAKU_LIST_MAX);
+    clearMotorMasukSession_(convoKey);
+    clearEditHargaJualSession_(convoKey);
+    clearEditDataMotorSession_(convoKey);
+    clearDailyExpenseSession_(convoKey);
+    setMotorLakuSession_(convoKey, {
+      stage: "awaiting_selection",
+      keyword: motorLakuKeyword,
+      options: shownOptions
+    });
+    return {
+      reply: formatMotorLakuOptionsReply_(motorLakuKeyword, shownOptions, options.length),
+      saveResult: null
+    };
+  }
+
+  const editHargaJualKeyword = parseEditHargaJualByNameCommand_(text);
+  if (editHargaJualKeyword !== null) {
+    if (!editHargaJualKeyword) {
+      return { reply: "Format salah. Gunakan: edit harga jual motor <nama>", saveResult: null };
+    }
+
+    const options = findActiveMotorRowsByKeyword_(editHargaJualKeyword);
+    if (!options.length) {
+      return { reply: 'Data motor "' + editHargaJualKeyword + '" tidak ditemukan.', saveResult: null };
+    }
+
+    const shownOptions = options.slice(0, MOTOR_LAKU_LIST_MAX);
+    clearMotorMasukSession_(convoKey);
+    clearMotorLakuSession_(convoKey);
+    clearEditDataMotorSession_(convoKey);
+    clearDailyExpenseSession_(convoKey);
+    setEditHargaJualSession_(convoKey, {
+      stage: "awaiting_selection",
+      keyword: editHargaJualKeyword,
+      options: shownOptions
+    });
+    return {
+      reply: formatEditHargaJualOptionsReply_(editHargaJualKeyword, shownOptions, options.length),
+      saveResult: null
+    };
+  }
+
+  const editDataMotorCommand = parseEditDataMotorCommand_(text);
+  if (editDataMotorCommand) {
+    if (editDataMotorCommand.type === "ask_keyword") {
+      clearMotorMasukSession_(convoKey);
+      clearMotorLakuSession_(convoKey);
+      clearEditHargaJualSession_(convoKey);
+      clearDailyExpenseSession_(convoKey);
+      setEditDataMotorSession_(convoKey, { stage: "awaiting_keyword" });
+      return { reply: "Motor apa?", saveResult: null };
+    }
+
+    const keyword = String(editDataMotorCommand.keyword || "").trim();
+    if (!keyword) {
+      return { reply: "Format salah. Gunakan: edit data motor <nama>", saveResult: null };
+    }
+
+    const options = findAllMotorRowsByKeyword_(keyword);
+    if (!options.length) {
+      return { reply: 'Data motor "' + keyword + '" tidak ditemukan.', saveResult: null };
+    }
+
+    const shownOptions = options.slice(0, MOTOR_LAKU_LIST_MAX);
+    clearMotorMasukSession_(convoKey);
+    clearMotorLakuSession_(convoKey);
+    clearEditHargaJualSession_(convoKey);
+    clearDailyExpenseSession_(convoKey);
+    setEditDataMotorSession_(convoKey, {
+      stage: "awaiting_selection",
+      keyword: keyword,
+      options: shownOptions
+    });
+    return {
+      reply: formatEditDataMotorOptionsReply_(keyword, shownOptions, options.length),
+      saveResult: null
+    };
+  }
+
+  const expenseCommand = parseExpenseReportCommand_(text);
+  if (expenseCommand) {
+    return { reply: findExpenseReportReply_(expenseCommand), saveResult: null };
+  }
+
+  const profitCommand = parseProfitReportCommand_(text);
+  if (profitCommand) {
+    return { reply: findProfitReportReply_(profitCommand), saveResult: null };
+  }
+
+  const assetModalCommand = parseAssetModalCommand_(text);
+  if (assetModalCommand) {
+    return { reply: findAssetModalReply_(assetModalCommand), saveResult: null };
+  }
+
+  if (lower.startsWith("pengeluaran#")) {
+    const body = text.slice("pengeluaran#".length).trim();
+    const cols = body.split(";").map(function (s) { return s.trim(); });
+    saveResult = saveDailyExpenseData_(cols);
+    reply = saveResult.ok
+      ? "Pengeluaran harian tersimpan di baris " + saveResult.row
+      : "Gagal simpan pengeluaran: " + saveResult.error;
+    return { reply: reply, saveResult: saveResult };
+  }
+
+  const keyword = parseDataMotorKeyword_(text);
+  if (keyword !== null) {
+    if (!keyword) {
+      return {
+        reply: "Format salah. Gunakan: data motor <nama>, cek stok motor <nama>, atau cek motor <nama>",
+        saveResult: null
+      };
+    }
+    return { reply: findMotorDataReply_(keyword), saveResult: null };
+  }
+
+  if (lower.startsWith("input#")) {
+    const body = text.slice(6).trim();
+    const rawCols = body.split(";").map(function (s) { return s.trim(); });
+    const cols = normalizeInputCols_(rawCols);
+    const validation = validateInput_(cols);
+    if (!validation.ok) {
+      return { reply: "Format salah: " + validation.error, saveResult: null };
+    }
+    saveResult = saveToSheet_(validation.data);
+    reply = saveResult.ok
+      ? "Data tersimpan di baris " + saveResult.row
+      : "Gagal simpan: " + saveResult.error;
+    return { reply: reply, saveResult: saveResult };
+  }
+
+  if (lower.startsWith("update#")) {
+    const body = text.slice(7).trim();
+    const cols = body.split(";").map(function (s) { return s.trim(); });
+    saveResult = updateSoldData_(cols);
+    reply = saveResult.ok
+      ? "Data terupdate di baris " + saveResult.row
+      : "Gagal update: " + saveResult.error;
+    return { reply: reply, saveResult: saveResult };
+  }
+
+  const parsedUpdate = parseLabeledUpdate_(text);
+  if (parsedUpdate.matched) {
+    saveResult = updateSoldData_(parsedUpdate.cols);
+    reply = saveResult.ok
+      ? "Data terupdate di baris " + saveResult.row
+      : "Gagal update: " + saveResult.error;
+    return { reply: reply, saveResult: saveResult };
+  }
+
+  const parsed = parseLabeledInput_(text);
+  if (parsed.matched) {
+    const validation = validateInput_(parsed.cols);
+    if (!validation.ok) {
+      return { reply: "Format salah: " + validation.error, saveResult: null };
+    }
+    saveResult = saveToSheet_(validation.data);
+    reply = saveResult.ok
+      ? "Data tersimpan di baris " + saveResult.row
+      : "Gagal simpan: " + saveResult.error;
+    return { reply: reply, saveResult: saveResult };
+  }
+
+  return { reply: "Perintah tidak dikenali. Ketik HALO untuk lihat format.", saveResult: null };
 }
 
 function saveToSheet_(cols) {
@@ -272,6 +467,76 @@ function saveToSheet_(cols) {
   }
 }
 
+function saveDailyExpenseData_(cols) {
+  try {
+    const ss = getSpreadsheet_();
+    if (!ss) {
+      return { ok: false, error: "Spreadsheet tidak terbaca." };
+    }
+
+    const sh = ss.getSheetByName(EXPENSE_SHEET_NAME);
+    if (!sh) return { ok: false, error: 'Sheet "' + EXPENSE_SHEET_NAME + '" tidak ditemukan' };
+
+    const keterangan = String(cols[0] || "").trim();
+    if (!keterangan) {
+      return { ok: false, error: "Keterangan wajib diisi." };
+    }
+
+    const total = parseNumber_(cols[1]);
+    if (typeof total !== "number" || !isFinite(total) || total <= 0) {
+      return { ok: false, error: "Total pengeluaran tidak valid." };
+    }
+
+    const tanggal = resolveExpenseDate_(cols[2]);
+    const map = detectExpenseInputColumns_(sh);
+    const row = findFirstEmptyExpenseRow_(sh, 2, map.amountCol);
+
+    sh.getRange(row, map.dateCol).setValue(tanggal);
+    sh.getRange(row, map.descCol).setValue(keterangan);
+    sh.getRange(row, map.amountCol).setValue(total);
+
+    return { ok: true, row: row };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+function resolveExpenseDate_(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return new Date();
+
+  const fromParseDate = parseDate_(raw);
+  if (fromParseDate instanceof Date && !isNaN(fromParseDate.getTime())) {
+    return fromParseDate;
+  }
+
+  const fromCell = parseDateCell_(raw, raw);
+  if (fromCell instanceof Date && !isNaN(fromCell.getTime())) {
+    return fromCell;
+  }
+
+  return new Date();
+}
+
+function detectExpenseInputColumns_(sheet) {
+  const lastCol = Math.max(sheet.getLastColumn(), 3);
+  const header = sheet.getRange(1, 1, 1, lastCol).getDisplayValues()[0] || [];
+  const dateIndex = findHeaderIndex_(header, ["tanggal", "tgl", "date"]);
+  const descIndex = findHeaderIndex_(header, ["keterangan", "catatan", "deskripsi", "detail", "keperluan"]);
+  const amountIndex = findHeaderIndex_(header, ["total pengeluaran", "pengeluaran", "nominal", "jumlah", "biaya", "total", "amount"]);
+
+  return {
+    dateCol: dateIndex >= 0 ? (dateIndex + 1) : 1,
+    descCol: descIndex >= 0 ? (descIndex + 1) : 2,
+    amountCol: amountIndex >= 0 ? (amountIndex + 1) : 3
+  };
+}
+
+function findFirstEmptyExpenseRow_(sheet, startRow, amountCol) {
+  const col = Number(amountCol || 3);
+  return findFirstEmptyRow_(sheet, startRow, col);
+}
+
 function getSpreadsheet_() {
   if (SPREADSHEET_ID) {
     return SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -289,15 +554,702 @@ function findFirstEmptyRow_(sheet, startRow, col) {
 }
 
 function parseDataMotorKeyword_(text) {
-  const m = String(text || "").trim().match(/^(?:cek\s+)?data\s+motor(?:\s+(.+))?$/i);
-  if (!m) return null;
-  return m[1] ? String(m[1]).trim() : "";
+  const raw = String(text || "").trim();
+  if (!raw) return null;
+
+  const patterns = [
+    /^(?:cek\s+)?data\s+motor(?:\s+(.+))?$/i,
+    /^cek\s+stok\s+motor(?:\s+(.+))?$/i,
+    /^cek\s+motor(?:\s+(.+))?$/i
+  ];
+
+  for (let i = 0; i < patterns.length; i++) {
+    const m = raw.match(patterns[i]);
+    if (!m) continue;
+    return m[1] ? String(m[1]).trim() : "";
+  }
+
+  return null;
 }
 
-function parseMotorTerjualKeyword_(text) {
-  const m = String(text || "").trim().match(/^motor(?:\s+(.+?))?\s+terjual$/i);
+function parseExpenseReportCommand_(text) {
+  const normalized = String(text || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (normalized === "pengeluaran hari ini" || normalized === "cek pengeluaran hari ini") {
+    return "today";
+  }
+  if (normalized === "pengeluaran minggu ini" || normalized === "cek pengeluaran minggu ini") {
+    return "last_7_days";
+  }
+  if (normalized === "pengeluaran bulan ini" || normalized === "cek pengeluaran bulan ini") {
+    return "last_30_days";
+  }
+  return "";
+}
+
+function parseProfitReportCommand_(text) {
+  const normalized = String(text || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (
+    normalized === "laba hari ini" ||
+    normalized === "cek laba hari ini" ||
+    normalized === "keuntungan hari ini" ||
+    normalized === "cek keuntungan hari ini"
+  ) {
+    return "today";
+  }
+
+  if (
+    normalized === "laba minggu ini" ||
+    normalized === "cek laba minggu ini" ||
+    normalized === "keuntungan minggu ini" ||
+    normalized === "cek keuntungan minggu ini" ||
+    normalized === "keuntungan mingu ini" ||
+    normalized === "cek keuntungan mingu ini"
+  ) {
+    return "last_7_days";
+  }
+
+  if (
+    normalized === "laba bulan ini" ||
+    normalized === "cek laba bulan ini" ||
+    normalized === "keuntungan bulan ini" ||
+    normalized === "cek keuntungan bulan ini"
+  ) {
+    return "last_30_days";
+  }
+
+  return "";
+}
+
+function parseAssetModalCommand_(text) {
+  const normalized = String(text || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (normalized === "total aset kendaraan" || normalized === "total kendaraan") {
+    return "aset_kendaraan";
+  }
+
+  if (normalized === "total modal" || normalized === "total modal sekarang") {
+    return "modal_sekarang";
+  }
+
+  return "";
+}
+
+function findExpenseReportReply_(scope) {
+  try {
+    const ss = getSpreadsheet_();
+    if (!ss) return "Spreadsheet tidak terbaca.";
+
+    const sh = ss.getSheetByName(EXPENSE_SHEET_NAME);
+    if (!sh) return 'Sheet "' + EXPENSE_SHEET_NAME + '" tidak ditemukan';
+
+    const rangeInfo = getExpenseDateRange_(scope);
+    const startRow = 2;
+    const last = sh.getLastRow();
+    if (last < startRow) {
+      return rangeInfo.emptyReply;
+    }
+
+    const lastCol = Math.max(sh.getLastColumn(), 1);
+    const header = sh.getRange(1, 1, 1, lastCol).getDisplayValues()[0] || [];
+    const columnMap = detectExpenseColumns_(header);
+    const rowCount = last - startRow + 1;
+    const rawVals = sh.getRange(startRow, 1, rowCount, lastCol).getValues();
+    const displayVals = sh.getRange(startRow, 1, rowCount, lastCol).getDisplayValues();
+
+    const rows = [];
+    let total = 0;
+
+    for (let i = 0; i < displayVals.length; i++) {
+      const picked = extractExpenseRow_(rawVals[i], displayVals[i], columnMap);
+      if (!picked.date) continue;
+
+      const rowDate = stripTime_(picked.date);
+      if (rowDate.getTime() < rangeInfo.start.getTime() || rowDate.getTime() > rangeInfo.end.getTime()) {
+        continue;
+      }
+
+      if (picked.amount === null || !isFinite(picked.amount) || picked.amount <= 0) {
+        continue;
+      }
+
+      total += picked.amount;
+      rows.push({
+        date: rowDate,
+        description: picked.description || "-",
+        amount: picked.amount
+      });
+    }
+
+    if (!rows.length) {
+      return rangeInfo.emptyReply;
+    }
+
+    rows.sort(function (a, b) {
+      return a.date.getTime() - b.date.getTime();
+    });
+
+    const lines = [rangeInfo.title + ":"];
+    for (let i = 0; i < rows.length; i++) {
+      lines.push(
+        (i + 1) + ". " +
+        formatDateForReport_(rows[i].date) + " | " +
+        rows[i].description + " | Rp" + formatRupiah_(rows[i].amount)
+      );
+    }
+    lines.push("");
+    lines.push("Total: Rp" + formatRupiah_(total));
+    lines.push("Jumlah data: " + rows.length);
+    return lines.join("\n");
+  } catch (err) {
+    return "Gagal ambil laporan pengeluaran: " + err.message;
+  }
+}
+
+function findProfitReportReply_(scope) {
+  try {
+    const ss = getSpreadsheet_();
+    if (!ss) return "Spreadsheet tidak terbaca.";
+
+    const sh = ss.getSheetByName(SHEET_NAME);
+    if (!sh) return 'Sheet "' + SHEET_NAME + '" tidak ditemukan';
+
+    const rangeInfo = getProfitDateRange_(scope);
+    const startRow = 2;
+    const last = sh.getLastRow();
+    if (last < startRow) {
+      return rangeInfo.emptyReply;
+    }
+
+    const range = sh.getRange(startRow, 1, last - startRow + 1, 13);
+    const rawVals = range.getValues();
+    const displayVals = range.getDisplayValues();
+    const rows = [];
+    let total = 0;
+
+    for (let i = 0; i < rawVals.length; i++) {
+      const rawRow = rawVals[i];
+      const displayRow = displayVals[i];
+      const soldDate = parseDateCell_(rawRow[9], displayRow[9]); // J TGL TERJUAL
+      if (!soldDate) continue;
+
+      const soldDay = stripTime_(soldDate);
+      if (soldDay.getTime() < rangeInfo.start.getTime() || soldDay.getTime() > rangeInfo.end.getTime()) {
+        continue;
+      }
+
+      const profit = parseProfitValue_(rawRow[10], displayRow[10]); // K LABA/RUGI
+      if (profit === null || !isFinite(profit)) continue;
+
+      total += profit;
+      rows.push({
+        no: displayCell_(displayRow[0]),
+        nama: displayCell_(displayRow[1]),
+        plat: displayCell_(displayRow[3]),
+        soldDate: soldDay,
+        profit: profit
+      });
+    }
+
+    if (!rows.length) {
+      return rangeInfo.emptyReply;
+    }
+
+    rows.sort(function (a, b) {
+      return a.soldDate.getTime() - b.soldDate.getTime();
+    });
+
+    const lines = [rangeInfo.title + ":"];
+    for (let i = 0; i < rows.length; i++) {
+      lines.push(
+        (i + 1) + ". " +
+        formatDateForReport_(rows[i].soldDate) +
+        " | NO " + rows[i].no +
+        " | " + rows[i].nama +
+        " | " + rows[i].plat +
+        " | " + formatSignedRupiah_(rows[i].profit)
+      );
+    }
+    lines.push("");
+    lines.push("Total bersih: " + formatSignedRupiah_(total));
+    lines.push("Jumlah data: " + rows.length);
+    return lines.join("\n");
+  } catch (err) {
+    return "Gagal ambil laporan laba/rugi: " + err.message;
+  }
+}
+
+function findAssetModalReply_(scope) {
+  try {
+    const ss = getSpreadsheet_();
+    if (!ss) return "Spreadsheet tidak terbaca.";
+
+    if (scope === "aset_kendaraan") {
+      const asetSheet = ss.getSheetByName(TOTAL_ASET_SHEET_NAME);
+      if (!asetSheet) return 'Sheet "' + TOTAL_ASET_SHEET_NAME + '" tidak ditemukan';
+
+      const stockSheet = ss.getSheetByName(SHEET_NAME);
+      if (!stockSheet) return 'Sheet "' + SHEET_NAME + '" tidak ditemukan';
+
+      const asetValue = readNamedMetricFromSheet_(asetSheet, [
+        "total aset kendaraan"
+      ]);
+      const totalUnits = countActiveVehicleUnits_(stockSheet);
+
+      const lines = [
+        "Laporan aset kendaraan:",
+        "Total aset kendaraan: " + formatMaybeCurrency_(asetValue),
+        "Total jumlah kendaraan (stok aktif): " + totalUnits + " unit"
+      ];
+      return lines.join("\n");
+    }
+
+    if (scope === "modal_sekarang") {
+      const asetSheet = ss.getSheetByName(TOTAL_ASET_SHEET_NAME);
+      if (!asetSheet) return 'Sheet "' + TOTAL_ASET_SHEET_NAME + '" tidak ditemukan';
+
+      const modalValue = readNamedMetricFromSheet_(asetSheet, [
+        "total modal sekarang",
+        "total modal"
+      ]);
+
+      return [
+        "Laporan modal:",
+        "Total modal sekarang: " + formatMaybeCurrency_(modalValue)
+      ].join("\n");
+    }
+
+    return "Perintah tidak dikenali.";
+  } catch (err) {
+    return "Gagal ambil laporan aset/modal: " + err.message;
+  }
+}
+
+function readNamedMetricFromSheet_(sheet, labelCandidates) {
+  const lastRow = Math.max(sheet.getLastRow(), 1);
+  const lastCol = Math.max(sheet.getLastColumn(), 1);
+  const rawVals = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+  const displayVals = sheet.getRange(1, 1, lastRow, lastCol).getDisplayValues();
+  const labels = Array.isArray(labelCandidates) ? labelCandidates : [];
+
+  for (let r = 0; r < displayVals.length; r++) {
+    for (let c = 0; c < displayVals[r].length; c++) {
+      const cellText = normalizeText_(displayVals[r][c]);
+      if (!cellText) continue;
+      if (!matchesAnyLabel_(cellText, labels)) continue;
+
+      const found = findNearestNumericValue_(rawVals, displayVals, r, c);
+      if (found !== null) return found;
+    }
+  }
+
+  return null;
+}
+
+function matchesAnyLabel_(cellText, labels) {
+  for (let i = 0; i < labels.length; i++) {
+    if (cellText.indexOf(normalizeText_(labels[i])) !== -1) return true;
+  }
+  return false;
+}
+
+function findNearestNumericValue_(rawVals, displayVals, r, c) {
+  const positions = [
+    [r, c + 1],
+    [r + 1, c],
+    [r, c + 2],
+    [r + 2, c],
+    [r + 1, c + 1]
+  ];
+
+  for (let i = 0; i < positions.length; i++) {
+    const rr = positions[i][0];
+    const cc = positions[i][1];
+    if (rr < 0 || cc < 0) continue;
+    if (rr >= rawVals.length) continue;
+    if (cc >= rawVals[rr].length) continue;
+
+    const n = toNumberOrNull_(rawVals[rr][cc], displayVals[rr][cc]);
+    if (n !== null) return n;
+  }
+
+  return null;
+}
+
+function toNumberOrNull_(rawValue, displayValue) {
+  if (typeof rawValue === "number" && isFinite(rawValue)) {
+    return rawValue;
+  }
+  const parsed = parseNumber_(displayValue !== undefined ? displayValue : rawValue);
+  if (typeof parsed === "number" && isFinite(parsed)) {
+    return parsed;
+  }
+  return null;
+}
+
+function countActiveVehicleUnits_(sheet) {
+  const startRow = 2;
+  const last = sheet.getLastRow();
+  if (last < startRow) return 0;
+
+  const range = sheet.getRange(startRow, 1, last - startRow + 1, 13);
+  const rawVals = range.getValues();
+  const displayVals = range.getDisplayValues();
+
+  let count = 0;
+  for (let i = 0; i < rawVals.length; i++) {
+    const row = displayVals[i];
+    const rawRow = rawVals[i];
+    const nama = normalizeText_(row[1]);
+    const plat = normalizeText_(row[3]);
+    if (!nama && !plat) continue;
+    if (isSoldStatusValue_(rawRow, row)) continue;
+    count++;
+  }
+
+  return count;
+}
+
+function formatMaybeCurrency_(value) {
+  if (value === null || value === undefined || value === "") return "-";
+  if (typeof value === "number" && isFinite(value)) {
+    return "Rp" + formatRupiah_(value);
+  }
+  const n = parseNumber_(value);
+  if (typeof n === "number" && isFinite(n)) {
+    return "Rp" + formatRupiah_(n);
+  }
+  return String(value);
+}
+
+function getExpenseDateRange_(scope) {
+  const today = stripTime_(new Date());
+  if (scope === "today") {
+    return {
+      start: today,
+      end: today,
+      title: "Laporan pengeluaran hari ini (" + formatDateForReport_(today) + ")",
+      emptyReply: "Belum ada data pengeluaran hari ini."
+    };
+  }
+
+  if (scope === "last_7_days") {
+    const start7 = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+    return {
+      start: start7,
+      end: today,
+      title: "Laporan pengeluaran minggu ini (" + formatDateForReport_(start7) + " s/d " + formatDateForReport_(today) + ")",
+      emptyReply: "Belum ada data pengeluaran untuk 7 hari terakhir."
+    };
+  }
+
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
+  return {
+    start: start,
+    end: today,
+    title: "Laporan pengeluaran bulan ini (" + formatDateForReport_(start) + " s/d " + formatDateForReport_(today) + ")",
+    emptyReply: "Belum ada data pengeluaran untuk 30 hari terakhir."
+  };
+}
+
+function getProfitDateRange_(scope) {
+  const today = stripTime_(new Date());
+  if (scope === "today") {
+    return {
+      start: today,
+      end: today,
+      title: "Laporan laba/rugi hari ini (" + formatDateForReport_(today) + ")",
+      emptyReply: "Belum ada data laba/rugi hari ini."
+    };
+  }
+
+  if (scope === "last_7_days") {
+    const start7 = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+    return {
+      start: start7,
+      end: today,
+      title: "Laporan laba/rugi minggu ini (" + formatDateForReport_(start7) + " s/d " + formatDateForReport_(today) + ")",
+      emptyReply: "Belum ada data laba/rugi untuk 7 hari terakhir."
+    };
+  }
+
+  const start30 = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
+  return {
+    start: start30,
+    end: today,
+    title: "Laporan laba/rugi bulan ini (" + formatDateForReport_(start30) + " s/d " + formatDateForReport_(today) + ")",
+    emptyReply: "Belum ada data laba/rugi untuk 30 hari terakhir."
+  };
+}
+
+function detectExpenseColumns_(headerRow) {
+  const headers = Array.isArray(headerRow) ? headerRow : [];
+  return {
+    dateIndex: findHeaderIndex_(headers, ["tanggal", "tgl", "date"]),
+    amountIndex: findHeaderIndex_(headers, ["nominal", "jumlah", "pengeluaran", "biaya", "total", "amount"]),
+    descIndex: findHeaderIndex_(headers, ["keterangan", "catatan", "deskripsi", "detail", "keperluan"])
+  };
+}
+
+function findHeaderIndex_(headers, keywords) {
+  const keys = Array.isArray(keywords) ? keywords : [];
+  for (let i = 0; i < headers.length; i++) {
+    const h = normalizeText_(headers[i]);
+    if (!h) continue;
+    for (let j = 0; j < keys.length; j++) {
+      if (h.indexOf(keys[j]) !== -1) return i;
+    }
+  }
+  return -1;
+}
+
+function extractExpenseRow_(rawRow, displayRow, columnMap) {
+  const raw = Array.isArray(rawRow) ? rawRow : [];
+  const disp = Array.isArray(displayRow) ? displayRow : [];
+  const map = columnMap || {};
+
+  let date = null;
+  let dateIndex = map.dateIndex;
+
+  if (dateIndex >= 0 && dateIndex < raw.length) {
+    date = parseDateCell_(raw[dateIndex], disp[dateIndex]);
+  }
+  if (!date) {
+    for (let i = 0; i < raw.length; i++) {
+      const guessed = parseDateCell_(raw[i], disp[i]);
+      if (guessed) {
+        date = guessed;
+        dateIndex = i;
+        break;
+      }
+    }
+  }
+
+  let amount = null;
+  let amountIndex = map.amountIndex;
+
+  if (amountIndex >= 0 && amountIndex < raw.length) {
+    amount = parseAmountCell_(raw[amountIndex], disp[amountIndex]);
+  }
+  if (amount === null) {
+    for (let i = raw.length - 1; i >= 0; i--) {
+      if (i === dateIndex) continue;
+      const guessed = parseAmountCell_(raw[i], disp[i]);
+      if (guessed !== null && guessed > 0) {
+        amount = guessed;
+        amountIndex = i;
+        break;
+      }
+    }
+  }
+
+  let description = "";
+  const descIndex = map.descIndex;
+  if (descIndex >= 0 && descIndex < disp.length) {
+    description = String(disp[descIndex] || "").trim();
+  }
+  if (!description) {
+    for (let i = 0; i < disp.length; i++) {
+      if (i === dateIndex || i === amountIndex) continue;
+      const text = String(disp[i] || "").trim();
+      if (!text) continue;
+      if (parseDateCell_(raw[i], disp[i])) continue;
+      if (parseAmountCell_(raw[i], disp[i]) !== null) continue;
+      description = text;
+      break;
+    }
+  }
+
+  return {
+    date: date,
+    amount: amount,
+    description: description
+  };
+}
+
+function parseDateCell_(rawValue, displayValue) {
+  if (rawValue instanceof Date && !isNaN(rawValue.getTime())) {
+    return stripTime_(rawValue);
+  }
+
+  const text = String(displayValue || rawValue || "").trim();
+  if (!text) return null;
+
+  let m = text.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (m) {
+    let year = Number(m[3]);
+    if (year < 100) year = year + 2000;
+    const d = new Date(year, Number(m[2]) - 1, Number(m[1]));
+    return isNaN(d.getTime()) ? null : stripTime_(d);
+  }
+
+  m = text.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if (m) {
+    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    return isNaN(d.getTime()) ? null : stripTime_(d);
+  }
+
+  return null;
+}
+
+function parseAmountCell_(rawValue, displayValue) {
+  if (typeof rawValue === "number" && isFinite(rawValue)) {
+    return rawValue;
+  }
+
+  const parsed = parseNumber_(displayValue !== undefined ? displayValue : rawValue);
+  if (typeof parsed === "number" && isFinite(parsed)) {
+    return parsed;
+  }
+  return null;
+}
+
+function parseProfitValue_(rawValue, displayValue) {
+  if (typeof rawValue === "number" && isFinite(rawValue)) {
+    return rawValue;
+  }
+
+  const parsed = parseNumber_(displayValue !== undefined ? displayValue : rawValue);
+  if (typeof parsed === "number" && isFinite(parsed)) {
+    return parsed;
+  }
+  return null;
+}
+
+function stripTime_(dateObj) {
+  if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) return null;
+  return new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+}
+
+function formatDateForReport_(dateObj) {
+  const tz = Session.getScriptTimeZone ? Session.getScriptTimeZone() : "Asia/Jakarta";
+  return Utilities.formatDate(dateObj, tz, "dd/MM/yyyy");
+}
+
+function formatRupiah_(value) {
+  const n = Math.round(Number(value) || 0);
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(n);
+  return sign + String(abs).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+function formatSignedRupiah_(value) {
+  const n = Math.round(Number(value) || 0);
+  if (n > 0) return "+Rp" + formatRupiah_(n);
+  if (n < 0) return "-Rp" + formatRupiah_(Math.abs(n));
+  return "Rp0";
+}
+
+function getMenuReply_() {
+  return [
+    "Menu Bot Arjun Motor:",
+    "",
+    "1. Motor masuk (2 tahap)",
+    "motor masuk",
+    "",
+    "2. Motor laku (pilih dari daftar)",
+    "motor <nama> laku",
+    "motor laku <nama>",
+    "motor terjual <nama>",
+    "motor <nama> terjual",
+    "motor laku",
+    "motor terjual",
+    "ada motor laku",
+    "ada motor terjual",
+    "no <pilihan> laku <harga>",
+    "<pilihan> <harga> (format singkat)",
+    "OK / BATAL",
+    "",
+    "3. Cek stok motor",
+    "data motor <nama>",
+    "cek data motor <nama>",
+    "cek stok motor <nama>",
+    "cek motor <nama>",
+    "",
+    "4. Cek motor terjual",
+    "data motor yang sudah terjual",
+    "data motor yang sudah laku",
+    "cek data motor yang sudah terjual",
+    "cek data motor yang sudah laku",
+    "cek motor yang sudah laku",
+    "cek motor yang sudah terjual",
+    "data motor <nama> yang sudah terjual",
+    "data motor <nama> yang sudah laku",
+    "cek data motor <nama> yang sudah terjual",
+    "cek data motor <nama> yang sudah laku",
+    "cek motor <nama> yang sudah laku",
+    "cek motor <nama> yang sudah terjual",
+    "motor <nama> yang sudah laku",
+    "motor <nama> yang sudah terjual",
+    "",
+    "5. Laporan pengeluaran",
+    "pengeluaran hari ini",
+    "cek pengeluaran hari ini",
+    "pengeluaran minggu ini",
+    "cek pengeluaran minggu ini",
+    "pengeluaran bulan ini",
+    "cek pengeluaran bulan ini",
+    "",
+    "6. Laporan laba/rugi",
+    "laba hari ini / cek laba hari ini",
+    "keuntungan hari ini / cek keuntungan hari ini",
+    "laba minggu ini / cek laba minggu ini",
+    "keuntungan minggu ini / cek keuntungan minggu ini",
+    "laba bulan ini / cek laba bulan ini",
+    "keuntungan bulan ini / cek keuntungan bulan ini",
+    "",
+    "7. Laporan aset & modal",
+    "total aset kendaraan / total kendaraan",
+    "total modal / total modal sekarang",
+    "",
+    "8. Notifikasi pengeluaran harian",
+    "otomatis jam 22:00 (default)",
+    "manual input: pengeluaran / pengeluaran harian / pengeluaran hari ini",
+    "untuk report tetap pakai: cek pengeluaran hari ini",
+    "manual test trigger: trigger pengeluaran harian",
+    "balas template:",
+    "- keterangan :",
+    "- total pengeluaran :",
+    "",
+    "9. Input cepat (opsional)",
+    "input#nama motor;tahun;plat;surat-surat;tahun plat;pajak;harga jual;harga beli",
+    "",
+    "10. Update cepat (opsional)",
+    "update#no;harga jual;harga laku;tgl terjual;status",
+    "",
+    "11. Edit harga jual",
+    "edit harga jual motor <nama>",
+    "edit harga jual <nama>",
+    "balasan: no <no> <harga> atau <no> <harga>",
+    "pakai urutan list: pilih <urutan> <harga>",
+    "",
+    "12. Edit data motor",
+    "edit data motor <nama>",
+    "edit data motor",
+    "jika diminta: balas nama motor (contoh: shogun / motor shogun)",
+    "pilih data: nomor <urutan> / no <no> / pilih <urutan>",
+    "kirim ulang template yang sudah diedit, lalu OK / BATAL"
+  ].join("\n");
+}
+
+function parseSoldReportKeyword_(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return null;
+
+  const m = raw.match(/^(?:cek\s+)?(?:data\s+)?motor(?:\s+(.+?))?\s+yang\s+sudah\s+(?:terjual|laku)$/i);
   if (!m) return null;
   return m[1] ? String(m[1]).trim() : "";
+
 }
 
 function findSoldMotorReply_(keyword) {
@@ -351,7 +1303,7 @@ function findSoldMotorReply_(keyword) {
 function findMotorDataReply_(keyword) {
   try {
     const q = normalizeText_(keyword);
-    if (!q) return "Format salah. Gunakan: data motor <nama motor> atau cek data motor <nama motor>";
+    if (!q) return "Format salah. Gunakan: data motor <nama>, cek stok motor <nama>, atau cek motor <nama>";
 
     const ss = getSpreadsheet_();
     if (!ss) return "Spreadsheet tidak terbaca.";
@@ -365,14 +1317,18 @@ function findMotorDataReply_(keyword) {
       return 'Data motor "' + keyword + '" tidak ditemukan.';
     }
 
-    const vals = sh.getRange(startRow, 1, last - startRow + 1, 13).getDisplayValues();
+    const range = sh.getRange(startRow, 1, last - startRow + 1, 13);
+    const vals = range.getDisplayValues();
+    const rawVals = range.getValues();
     const rows = [];
 
     for (let i = 0; i < vals.length; i++) {
       const row = vals[i];
+      const rawRow = rawVals[i];
       const namaMotor = normalizeText_(row[1]); // kolom B
       if (!namaMotor) continue;
       if (namaMotor.indexOf(q) === -1) continue;
+      if (isSoldStatusValue_(rawRow, row)) continue; // stok aktif saja (belum terjual)
       rows.push(formatMotorRow_(row));
     }
 
@@ -637,6 +1593,66 @@ function updateSoldData_(cols) {
   }
 }
 
+function updateMotorDataByNo_(noInput, cols) {
+  try {
+    const ss = getSpreadsheet_();
+    if (!ss) {
+      return { ok: false, error: "Spreadsheet tidak terbaca." };
+    }
+    const sh = ss.getSheetByName(SHEET_NAME);
+    if (!sh) return { ok: false, error: 'Sheet "' + SHEET_NAME + '" tidak ditemukan' };
+
+    const no = normalizeNo_(noInput);
+    if (!no) return { ok: false, error: "NO wajib diisi untuk edit data motor." };
+
+    const row = findRowByNo_(sh, no);
+    if (!row) return { ok: false, error: "NO tidak ditemukan: " + no };
+
+    const list = Array.isArray(cols) ? cols : [];
+    const currentRaw = sh.getRange(row, 1, 1, 13).getValues()[0] || [];
+    const currentDisplay = sh.getRange(row, 1, 1, 13).getDisplayValues()[0] || [];
+
+    const namaMotor = hasInputValue_(list[0]) ? String(list[0] || "").trim() : String(currentDisplay[1] || "").trim();
+    const tahun = hasInputValue_(list[1]) ? String(list[1] || "").trim() : String(currentDisplay[2] || "").trim();
+    const plat = hasInputValue_(list[2]) ? String(list[2] || "").trim().toUpperCase() : String(currentDisplay[3] || "").trim().toUpperCase();
+    const suratInput = hasInputValue_(list[3]) ? list[3] : currentDisplay[4];
+    const tahunPlatInput = hasInputValue_(list[4]) ? list[4] : currentDisplay[5];
+    const pajakSource = hasInputValue_(list[5]) ? list[5] : currentDisplay[6];
+
+    const suratSurat = normalizeWithValidation_(sh, row, 5, suratInput, "SURAT-SURAT");
+    const tahunPlat = normalizeWithValidation_(sh, row, 6, tahunPlatInput, "TAHUN PLAT");
+    const pajakInput = normalizePajakInput_(pajakSource, tahunPlat);
+    const pajak = normalizeWithValidation_(sh, row, 7, pajakInput, "PAJAK");
+
+    const hargaJual = hasInputValue_(list[6]) ? parseNumber_(list[6]) : currentRaw[7];
+    const hargaLaku = hasInputValue_(list[7]) ? parseNumber_(list[7]) : currentRaw[8];
+    const hargaBeli = hasInputValue_(list[8]) ? parseNumber_(list[8]) : currentRaw[11];
+    const tglTerjual = hasInputValue_(list[9]) ? parseDate_(list[9]) : currentRaw[9];
+    const statusInput = hasInputValue_(list[10]) ? list[10] : currentRaw[12];
+    const status = parseStatus_(statusInput, hargaLaku, tglTerjual);
+
+    sh.getRange(row, 2).setValue(namaMotor);  // B NAMA MOTOR
+    sh.getRange(row, 3).setValue(tahun);      // C TAHUN
+    sh.getRange(row, 4).setValue(plat);       // D PLAT
+    sh.getRange(row, 5).setValue(suratSurat); // E SURAT-SURAT
+    sh.getRange(row, 6).setValue(tahunPlat);  // F TAHUN PLAT
+    sh.getRange(row, 7).setValue(pajak);      // G PAJAK
+    sh.getRange(row, 8).setValue(hargaJual);  // H HARGA JUAL
+    sh.getRange(row, 9).setValue(hargaLaku);  // I HARGA LAKU
+    sh.getRange(row, 10).setValue(tglTerjual);// J TGL TERJUAL
+    sh.getRange(row, 12).setValue(hargaBeli); // L HARGA BELI
+    sh.getRange(row, 13).setValue(status);    // M STATUS
+
+    if (!sh.getRange(row, 1).getValue()) {
+      sh.getRange(row, 1).setValue(row - 1);
+    }
+
+    return { ok: true, row: row };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
 function findRowByNo_(sheet, noInput) {
   const target = normalizeNo_(noInput);
   if (target === "") return 0;
@@ -658,21 +1674,17 @@ function normalizeNo_(value) {
 }
 
 function parseLabeledInput_(text) {
-  const lines = String(text || "").split(/\r?\n/);
   const cols = ["", "", "", "", "", "", "", "", "", "", ""];
+  const fields = extractLabeledFields_(text, function (key) {
+    return mapLabelToIndex_(key) !== -1;
+  });
   let recognized = 0;
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = String(lines[i] || "").trim();
-    if (!line || line.indexOf(":") === -1) continue;
-
-    const parts = line.split(":");
-    const key = normalizeLabelKey_(parts.shift());
-    const value = parts.join(":").trim();
-    const idx = mapLabelToIndex_(key);
+  for (let i = 0; i < fields.length; i++) {
+    const item = fields[i] || {};
+    const idx = mapLabelToIndex_(item.key);
     if (idx === -1) continue;
-
-    cols[idx] = value;
+    cols[idx] = String(item.value || "").trim();
     recognized++;
   }
 
@@ -687,6 +1699,77 @@ function normalizeLabelKey_(value) {
   return String(value || "")
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");
+}
+
+function extractLabeledFields_(text, acceptKeyFn) {
+  const raw = String(text || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n");
+  const accept = typeof acceptKeyFn === "function"
+    ? acceptKeyFn
+    : function () { return true; };
+  const points = [];
+  const colonRegex = /:/g;
+  let m = null;
+  let lastColon = -1;
+
+  while ((m = colonRegex.exec(raw)) !== null) {
+    const colonIndex = m.index;
+    const beforeRaw = raw.slice(lastColon + 1, colonIndex);
+    const words = [];
+    const wordRegex = /[A-Za-z][A-Za-z-]*/g;
+    let w = null;
+
+    while ((w = wordRegex.exec(beforeRaw)) !== null) {
+      words.push({
+        word: String(w[0] || ""),
+        index: Number(w.index || 0)
+      });
+    }
+
+    const maxWords = Math.min(3, words.length);
+    let resolved = null;
+
+    for (let count = maxWords; count >= 1; count--) {
+      const slice = words.slice(words.length - count);
+      if (!slice.length) continue;
+      const candidate = slice.map(function (item) { return item.word; }).join(" ");
+      const key = normalizeLabelKey_(candidate);
+      if (!key || !accept(key)) continue;
+
+      resolved = {
+        key: key,
+        keyStart: (lastColon + 1) + slice[0].index
+      };
+      break;
+    }
+
+    if (resolved) {
+      points.push({
+        key: resolved.key,
+        start: resolved.keyStart,
+        valueStart: colonIndex + 1
+      });
+    }
+
+    lastColon = colonIndex;
+  }
+
+  const fields = [];
+  for (let i = 0; i < points.length; i++) {
+    const nextStart = i + 1 < points.length ? points[i + 1].start : raw.length;
+    const value = raw
+      .slice(points[i].valueStart, nextStart)
+      .replace(/\s*\n\s*/g, " ")
+      .trim();
+
+    fields.push({
+      key: points[i].key,
+      value: value
+    });
+  }
+
+  return fields;
 }
 
 function mapLabelToIndex_(key) {
@@ -705,21 +1788,17 @@ function mapLabelToIndex_(key) {
 }
 
 function parseLabeledUpdate_(text) {
-  const lines = String(text || "").split(/\r?\n/);
   const cols = ["", "", "", "", ""];
+  const fields = extractLabeledFields_(text, function (key) {
+    return mapUpdateLabelToIndex_(key) !== -1;
+  });
   let recognized = 0;
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = String(lines[i] || "").trim();
-    if (!line || line.indexOf(":") === -1) continue;
-
-    const parts = line.split(":");
-    const key = normalizeLabelKey_(parts.shift());
-    const value = parts.join(":").trim();
-    const idx = mapUpdateLabelToIndex_(key);
+  for (let i = 0; i < fields.length; i++) {
+    const item = fields[i] || {};
+    const idx = mapUpdateLabelToIndex_(item.key);
     if (idx === -1) continue;
-
-    cols[idx] = value;
+    cols[idx] = String(item.value || "").trim();
     recognized++;
   }
 
@@ -744,6 +1823,1346 @@ function mapUpdateLabelToIndex_(key) {
   if (key === "tglterjual" || key === "tanggalterjual") return 3;
   if (key === "status") return 4;
   return -1;
+}
+
+function isMotorMasukCommand_(text) {
+  const normalized = String(text || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!normalized) return false;
+
+  if (normalized === "motor masuk") return true;
+  if (/^(?:ada\s+)?motor\s+masuk(?:\s+.*)?$/.test(normalized)) return true;
+  if (/^(?:mau|tolong|please|pls)\s+(?:input|isi|catat)?\s*motor\s+masuk(?:\s+.*)?$/.test(normalized)) {
+    return true;
+  }
+  return false;
+}
+
+function handleMotorMasukSession_(session, text, lower, convoKey) {
+  if (lower === "batal") {
+    clearMotorMasukSession_(convoKey);
+    return { reply: "Input motor masuk dibatalkan.", saveResult: null };
+  }
+
+  const stage = String((session && session.stage) || "").trim();
+
+  if (stage === "awaiting_details") {
+    const parsed = parseLabeledInput_(text);
+    if (!parsed.matched) {
+      return {
+        reply: [
+          "Format belum sesuai template motor masuk.",
+          "Kirim ulang sesuai format berikut:",
+          MOTOR_MASUK_TEMPLATE_TEXT,
+          "",
+          "Atau ketik BATAL untuk membatalkan."
+        ].join("\n"),
+        saveResult: null
+      };
+    }
+
+    const validation = validateInput_(parsed.cols);
+    if (!validation.ok) {
+      return { reply: "Format salah: " + validation.error, saveResult: null };
+    }
+
+    setMotorMasukSession_(convoKey, {
+      stage: "awaiting_confirm",
+      cols: validation.data
+    });
+
+    return {
+      reply: [
+        "Konfirmasi data motor masuk:",
+        formatMotorMasukSummary_(validation.data),
+        "",
+        "Ketik OK untuk simpan / BATAL untuk batal"
+      ].join("\n"),
+      saveResult: null
+    };
+  }
+
+  if (stage === "awaiting_confirm") {
+    if (lower !== "ok") {
+      return { reply: "Ketik OK untuk simpan / BATAL untuk batal", saveResult: null };
+    }
+
+    const saved = saveToSheet_((session && session.cols) || []);
+    clearMotorMasukSession_(convoKey);
+    return {
+      reply: saved.ok
+        ? "Data tersimpan di baris " + saved.row
+        : "Gagal simpan: " + saved.error,
+      saveResult: saved
+    };
+  }
+
+  clearMotorMasukSession_(convoKey);
+  return {
+    reply: "Sesi motor masuk tidak valid. Ketik motor masuk untuk mulai ulang.",
+    saveResult: null
+  };
+}
+
+function formatMotorMasukSummary_(cols) {
+  const list = Array.isArray(cols) ? cols : [];
+  return [
+    "NAMA MOTOR: " + displayCell_(list[0]),
+    "TAHUN: " + displayCell_(list[1]),
+    "PLAT: " + displayCell_(list[2]),
+    "SURAT-SURAT: " + displayCell_(list[3]),
+    "TAHUN PLAT: " + displayCell_(list[4]),
+    "PAJAK: " + displayCell_(list[5]),
+    "HARGA JUAL: " + displayCell_(list[6]),
+    "HARGA BELI: " + displayCell_(list[8])
+  ].join("\n");
+}
+
+function parseMotorLakuCommand_(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return null;
+
+  if (/^(?:ada\s+)?motor\s+laku$/i.test(raw)) {
+    return { type: "ask_keyword", keyword: "" };
+  }
+  if (/^(?:ada\s+)?motor\s+terjual$/i.test(raw)) {
+    return { type: "ask_keyword", keyword: "" };
+  }
+
+  let m = raw.match(/^motor\s+(.+?)\s+laku$/i);
+  if (m) return { type: "keyword", keyword: String(m[1] || "").trim() };
+
+  m = raw.match(/^motor\s+laku\s+(.+)$/i);
+  if (m) return { type: "keyword", keyword: String(m[1] || "").trim() };
+
+  m = raw.match(/^motor\s+terjual\s+(.+)$/i);
+  if (m) return { type: "keyword", keyword: String(m[1] || "").trim() };
+
+  m = raw.match(/^motor\s+(.+?)\s+terjual$/i);
+  if (m) return { type: "keyword", keyword: String(m[1] || "").trim() };
+
+  return null;
+}
+
+function parseMotorLakuKeywordReply_(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return "";
+  if (/^(ok|batal|menu|halo|hi)$/i.test(raw)) return "";
+
+  const m = raw.match(/^motor\s+(.+)$/i);
+  if (m) return String(m[1] || "").trim();
+  return raw;
+}
+
+function findActiveMotorRowsByKeyword_(keyword) {
+  const q = normalizeText_(keyword);
+  if (!q) return [];
+
+  const ss = getSpreadsheet_();
+  if (!ss) return [];
+
+  const sh = ss.getSheetByName(SHEET_NAME);
+  if (!sh) return [];
+
+  const startRow = 2;
+  const last = sh.getLastRow();
+  if (last < startRow) return [];
+
+  const range = sh.getRange(startRow, 1, last - startRow + 1, 13);
+  const displayVals = range.getDisplayValues();
+  const rawVals = range.getValues();
+  const rows = [];
+
+  for (let i = 0; i < displayVals.length; i++) {
+    const row = displayVals[i];
+    const rawRow = rawVals[i];
+    const nama = normalizeText_(row[1]);
+    if (!nama || nama.indexOf(q) === -1) continue;
+    if (isSoldStatusValue_(rawRow, row)) continue;
+
+    const no = String(row[0] || "").replace(/[^\d]/g, "").trim();
+    if (!no) continue;
+
+    rows.push({
+      no: no,
+      nama: String(row[1] || "").trim(),
+      tahun: String(row[2] || "").trim() || "-",
+      plat: String(row[3] || "").trim() || "-"
+    });
+  }
+
+  return rows;
+}
+
+function findAllMotorRowsByKeyword_(keyword) {
+  const q = normalizeText_(keyword);
+  if (!q) return [];
+
+  const ss = getSpreadsheet_();
+  if (!ss) return [];
+
+  const sh = ss.getSheetByName(SHEET_NAME);
+  if (!sh) return [];
+
+  const startRow = 2;
+  const last = sh.getLastRow();
+  if (last < startRow) return [];
+
+  const range = sh.getRange(startRow, 1, last - startRow + 1, 13);
+  const displayVals = range.getDisplayValues();
+  const rawVals = range.getValues();
+  const rows = [];
+
+  for (let i = 0; i < displayVals.length; i++) {
+    const row = displayVals[i];
+    const rawRow = rawVals[i];
+    const nama = normalizeText_(row[1]);
+    if (!nama || nama.indexOf(q) === -1) continue;
+
+    const no = String(row[0] || "").replace(/[^\d]/g, "").trim();
+    if (!no) continue;
+
+    rows.push({
+      row: startRow + i,
+      no: no,
+      nama: String(row[1] || "").trim(),
+      tahun: String(row[2] || "").trim() || "-",
+      plat: String(row[3] || "").trim() || "-",
+      suratSurat: String(row[4] || "").trim(),
+      tahunPlat: String(row[5] || "").trim(),
+      pajak: String(row[6] || "").trim(),
+      hargaJual: String(row[7] || "").trim(),
+      hargaLaku: String(row[8] || "").trim(),
+      tglTerjual: String(row[9] || "").trim(),
+      hargaBeli: String(row[11] || "").trim(),
+      status: String(row[12] || "").trim(),
+      isSold: isSoldStatusValue_(rawRow, row)
+    });
+  }
+
+  return rows;
+}
+
+function formatEditDataMotorOptionsReply_(keyword, options, totalFound) {
+  const list = Array.isArray(options) ? options : [];
+  const total = Number(totalFound || 0);
+  const lines = [
+    'Ditemukan ' + total + ' data motor "' + keyword + '".',
+    "Motor yang mana? Pilih dari daftar berikut:"
+  ];
+
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i] || {};
+    const tahun = item.tahun && item.tahun !== "-" ? " " + item.tahun : "";
+    const soldTag = item.isSold ? "TERJUAL" : "AKTIF";
+    lines.push(
+      (i + 1) +
+      ". NO: " + displayCell_(item.no) +
+      " - " + displayCell_(item.nama) + tahun +
+      " - Plat " + displayCell_(item.plat) +
+      " - " + soldTag
+    );
+  }
+
+  if (total > list.length) {
+    lines.push("");
+    lines.push(
+      "Daftar dipotong ke " + list.length +
+      " baris pertama dari total " + total + " data."
+    );
+  }
+
+  lines.push("");
+  lines.push("Balas: nomor <urutan> (contoh: nomor 1)");
+  lines.push("Atau: pilih <urutan> / no <no> / <angka>");
+  lines.push("Ketik BATAL untuk batal.");
+  return lines.join("\n");
+}
+
+function formatMotorLakuOptionsReply_(keyword, options, totalFound) {
+  const list = Array.isArray(options) ? options : [];
+  const total = Number(totalFound || 0);
+  const lines = [
+    'Ditemukan ' + total + ' data motor "' + keyword + '".',
+    "Pilih motor yang terjual:"
+  ];
+
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i] || {};
+    const tahun = item.tahun && item.tahun !== "-" ? " " + item.tahun : "";
+    lines.push(
+      (i + 1) +
+      ". NO: " + displayCell_(item.no) +
+      " - " + displayCell_(item.nama) + tahun +
+      " - Plat " + displayCell_(item.plat)
+    );
+  }
+
+  if (total > list.length) {
+    lines.push("");
+    lines.push(
+      "Daftar dipotong ke " + list.length +
+      " baris pertama dari total " + total + " data."
+    );
+  }
+
+  lines.push("");
+  lines.push("Balas: no <pilihan> laku <harga>");
+  lines.push("Atau singkat: <pilihan> <harga> (format singkat)");
+  lines.push("Jika ingin pakai urutan list: pilih <urutan> laku <harga>");
+  lines.push("Contoh: no 2 laku 7000000");
+  lines.push("Contoh singkat: 2 7000000");
+  lines.push("Contoh urutan list: pilih 2 laku 7000000");
+  lines.push("Ketik BATAL untuk batal.");
+  return lines.join("\n");
+}
+
+function findSelectionOptionByNo_(rawSelection, options) {
+  const list = Array.isArray(options) ? options : [];
+  if (!rawSelection || rawSelection < 1) return null;
+
+  for (let i = 0; i < list.length; i++) {
+    if (String(list[i].no || "").trim() === String(rawSelection)) {
+      return list[i];
+    }
+  }
+
+  return null;
+}
+
+function findSelectionOptionByIndex_(rawSelection, options) {
+  const list = Array.isArray(options) ? options : [];
+  if (!rawSelection || rawSelection < 1) return null;
+  if (rawSelection <= list.length) return list[rawSelection - 1];
+  return null;
+}
+
+function resolveSelectionOption_(rawSelection, options, mode) {
+  const pickMode = String(mode || "auto").trim().toLowerCase();
+  if (pickMode === "no") {
+    return findSelectionOptionByNo_(rawSelection, options);
+  }
+  if (pickMode === "index") {
+    return findSelectionOptionByIndex_(rawSelection, options);
+  }
+  const byNo = findSelectionOptionByNo_(rawSelection, options);
+  if (byNo) return byNo;
+  const byIndex = findSelectionOptionByIndex_(rawSelection, options);
+  if (byIndex) return byIndex;
+  return null;
+}
+
+function normalizeMotorLakuPrice_(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const parsed = parseNumber_(raw);
+  if (typeof parsed !== "number" || !isFinite(parsed) || parsed <= 0) return "";
+  if (Math.round(parsed) !== parsed) return String(parsed);
+  return String(Math.trunc(parsed));
+}
+
+function parseMotorLakuSelection_(text, options) {
+  const raw = String(text || "").trim();
+  let mode = "auto";
+  let m = raw.match(/^pilih\s+(\d+)\s+laku\s+(.+)$/i);
+  if (m) {
+    mode = "index";
+  }
+  if (!m) {
+    m = raw.match(/^pilih\s+(\d+)\s+(.+)$/i);
+    if (m) mode = "index";
+  }
+  if (!m) {
+    m = raw.match(/^no\s+(\d+)\s+laku\s+(.+)$/i);
+    if (m) mode = "no";
+  }
+  if (!m) {
+    m = raw.match(/^no\s+(\d+)\s+(.+)$/i);
+    if (m) mode = "no";
+  }
+  if (!m) {
+    m = raw.match(/^(\d+)\s+(.+)$/);
+    if (m) mode = "auto";
+  }
+  if (!m) {
+    return { ok: false, error: "Format pilihan tidak sesuai." };
+  }
+
+  const rawSelection = Number(m[1]);
+  if (!rawSelection || rawSelection < 1) {
+    return { ok: false, error: "Nomor pilihan tidak valid." };
+  }
+
+  const hargaLaku = normalizeMotorLakuPrice_(m[2]);
+  if (!hargaLaku) {
+    return { ok: false, error: "Harga laku tidak valid." };
+  }
+
+  const chosen = resolveSelectionOption_(rawSelection, options, mode);
+  if (!chosen) {
+    return { ok: false, error: "Pilihan tidak ditemukan di daftar." };
+  }
+
+  return {
+    ok: true,
+    option: chosen,
+    hargaLaku: hargaLaku
+  };
+}
+
+function handleMotorLakuSession_(session, text, lower, convoKey) {
+  if (lower === "batal") {
+    clearMotorLakuSession_(convoKey);
+    return { reply: "Proses motor laku dibatalkan.", saveResult: null };
+  }
+
+  const stage = String((session && session.stage) || "").trim();
+
+  if (stage === "awaiting_keyword") {
+    const command = parseMotorLakuCommand_(text);
+    if (command && command.type === "ask_keyword") {
+      return { reply: "Motor apa?", saveResult: null };
+    }
+
+    const keyword = command && command.type === "keyword"
+      ? String(command.keyword || "").trim()
+      : parseMotorLakuKeywordReply_(text);
+    if (!keyword) {
+      return {
+        reply: [
+          "Motor apa?",
+          "Balas dengan nama motor. Contoh: beat atau motor beat.",
+          "Ketik BATAL untuk membatalkan."
+        ].join("\n"),
+        saveResult: null
+      };
+    }
+
+    const options = findActiveMotorRowsByKeyword_(keyword);
+    if (!options.length) {
+      return {
+        reply: 'Data motor "' + keyword + '" tidak ditemukan. Coba nama lain atau ketik BATAL.',
+        saveResult: null
+      };
+    }
+
+    const shownOptions = options.slice(0, MOTOR_LAKU_LIST_MAX);
+    setMotorLakuSession_(convoKey, {
+      stage: "awaiting_selection",
+      keyword: keyword,
+      options: shownOptions
+    });
+
+    return {
+      reply: formatMotorLakuOptionsReply_(keyword, shownOptions, options.length),
+      saveResult: null
+    };
+  }
+
+  if (stage === "awaiting_selection") {
+    const parsed = parseMotorLakuSelection_(text, session.options);
+    if (!parsed.ok) {
+      return {
+        reply: [
+          parsed.error || "Format salah.",
+          "Gunakan format: no <pilihan> laku <harga>",
+          "Atau format singkat: <pilihan> <harga>",
+          "Jika mau pakai urutan list: pilih <urutan> laku <harga>",
+          "Contoh: no 2 laku 7000000",
+          "Contoh singkat: 2 7000000",
+          "Contoh urutan list: pilih 2 laku 7000000",
+          "Ketik BATAL untuk membatalkan."
+        ].join("\n"),
+        saveResult: null
+      };
+    }
+
+    setMotorLakuSession_(convoKey, {
+      stage: "awaiting_confirm",
+      selected: parsed.option,
+      hargaLaku: parsed.hargaLaku
+    });
+
+    return {
+      reply:
+        "NO " + parsed.option.no +
+        " akan ditandai terjual harga " + parsed.hargaLaku +
+        ". OK / BATAL",
+      saveResult: null
+    };
+  }
+
+  if (stage === "awaiting_confirm") {
+    if (lower !== "ok") {
+      return { reply: "Ketik OK untuk simpan / BATAL untuk batal", saveResult: null };
+    }
+
+    const cols = [
+      String((session.selected && session.selected.no) || "").trim(),
+      "",
+      String(session.hargaLaku || "").trim(),
+      "",
+      "terjual"
+    ];
+    const updated = updateSoldData_(cols);
+    clearMotorLakuSession_(convoKey);
+    return {
+      reply: updated.ok
+        ? "Data terupdate di baris " + updated.row
+        : "Gagal update: " + updated.error,
+      saveResult: updated
+    };
+  }
+
+  clearMotorLakuSession_(convoKey);
+  return {
+    reply: "Sesi motor laku tidak valid. Ketik motor <nama> laku untuk mulai ulang.",
+    saveResult: null
+  };
+}
+
+function parseEditDataMotorCommand_(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return null;
+
+  if (/^edit\s+data\s+motor$/i.test(raw)) {
+    return { type: "ask_keyword", keyword: "" };
+  }
+
+  const m = raw.match(/^edit\s+data\s+motor\s+(.+)$/i);
+  if (!m) return null;
+  return { type: "keyword", keyword: String(m[1] || "").trim() };
+}
+
+function parseEditDataMotorKeywordReply_(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return "";
+  if (/^(ok|batal|menu|halo|hi)$/i.test(raw)) return "";
+
+  const m = raw.match(/^motor\s+(.+)$/i);
+  if (m) return String(m[1] || "").trim();
+  return raw;
+}
+
+function parseEditDataMotorSelection_(text, options) {
+  const raw = String(text || "").trim().replace(/[.]+$/, "");
+  let mode = "auto";
+  let m = raw.match(/^nomor\s+(\d+)$/i);
+  if (m) mode = "index";
+
+  if (!m) {
+    m = raw.match(/^pilih\s+(\d+)$/i);
+    if (m) mode = "index";
+  }
+
+  if (!m) {
+    m = raw.match(/^no\s+(\d+)$/i);
+    if (m) mode = "no";
+  }
+
+  if (!m) {
+    m = raw.match(/^(\d+)$/);
+    if (m) mode = "auto";
+  }
+
+  if (!m) {
+    return { ok: false, error: "Format pilihan tidak sesuai." };
+  }
+
+  const rawSelection = Number(m[1]);
+  if (!rawSelection || rawSelection < 1) {
+    return { ok: false, error: "Nomor pilihan tidak valid." };
+  }
+
+  const chosen = resolveSelectionOption_(rawSelection, options, mode);
+  if (!chosen) {
+    return { ok: false, error: "Pilihan tidak ditemukan di daftar." };
+  }
+
+  return {
+    ok: true,
+    option: chosen
+  };
+}
+
+function parseEditDataMotorTemplate_(text) {
+  const cols = ["", "", "", "", "", "", "", "", "", "", ""];
+  const fields = extractLabeledFields_(text, function (key) {
+    return key === "no" || key === "nomor" || mapLabelToIndex_(key) !== -1;
+  });
+  let no = "";
+  let recognized = 0;
+
+  for (let i = 0; i < fields.length; i++) {
+    const item = fields[i] || {};
+    const key = item.key;
+    const value = String(item.value || "").trim();
+
+    if (key === "no" || key === "nomor") {
+      no = normalizeNo_(value);
+      recognized++;
+      continue;
+    }
+
+    const idx = mapLabelToIndex_(key);
+    if (idx === -1) continue;
+    cols[idx] = value;
+    recognized++;
+  }
+
+  const hasEditableValue = cols.some(function (v) {
+    return String(v || "").trim() !== "";
+  });
+
+  if (!recognized || !hasEditableValue) {
+    return { ok: false, error: "Format edit data belum sesuai template." };
+  }
+
+  const validation = validateInput_(cols);
+  if (!validation.ok) {
+    return { ok: false, error: validation.error };
+  }
+
+  return {
+    ok: true,
+    no: no,
+    cols: validation.data
+  };
+}
+
+function hasInputValue_(value) {
+  return String(value || "").trim() !== "";
+}
+
+function buildEditDataMotorMergedCols_(selected, inputCols) {
+  const src = selected || {};
+  const incoming = Array.isArray(inputCols) ? inputCols : [];
+  const current = [
+    String(src.nama || "").trim(),
+    String(src.tahun || "").trim(),
+    String(src.plat || "").trim(),
+    String(src.suratSurat || "").trim(),
+    String(src.tahunPlat || "").trim(),
+    String(src.pajak || "").trim(),
+    String(src.hargaJual || "").trim(),
+    "",
+    String(src.hargaBeli || "").trim(),
+    "",
+    ""
+  ];
+
+  const out = current.slice();
+  for (let i = 0; i < out.length; i++) {
+    if (hasInputValue_(incoming[i])) {
+      out[i] = String(incoming[i] || "").trim();
+    }
+  }
+  return out;
+}
+
+function formatEditCurrencyCell_(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "-";
+  if (/^rp/i.test(raw)) return raw;
+
+  const parsed = parseNumber_(raw);
+  if (typeof parsed === "number" && isFinite(parsed)) {
+    return "Rp" + formatRupiah_(parsed);
+  }
+  return raw;
+}
+
+function buildEditDataMotorTemplateReply_(selected) {
+  const item = selected || {};
+  return [
+    "NO: " + displayCell_(item.no),
+    "NAMA MOTOR: " + displayCell_(item.nama),
+    "TAHUN: " + displayCell_(item.tahun),
+    "PLAT: " + displayCell_(item.plat),
+    "SURAT-SURAT: " + displayCell_(item.suratSurat),
+    "TAHUN PLAT: " + displayCell_(item.tahunPlat),
+    "PAJAK: " + displayCell_(item.pajak),
+    "HARGA JUAL: " + formatEditCurrencyCell_(item.hargaJual),
+    "HARGA BELI: " + formatEditCurrencyCell_(item.hargaBeli),
+    "SILAKAN DIEDIT.."
+  ].join("\n");
+}
+
+function formatEditDataMotorSummary_(no, cols) {
+  const list = Array.isArray(cols) ? cols : [];
+  return [
+    "NO: " + displayCell_(no),
+    "NAMA MOTOR: " + displayCell_(list[0]),
+    "TAHUN: " + displayCell_(list[1]),
+    "PLAT: " + displayCell_(list[2]),
+    "SURAT-SURAT: " + displayCell_(list[3]),
+    "TAHUN PLAT: " + displayCell_(list[4]),
+    "PAJAK: " + displayCell_(list[5]),
+    "HARGA JUAL: " + formatEditCurrencyCell_(list[6]),
+    "HARGA BELI: " + formatEditCurrencyCell_(list[8])
+  ].join("\n");
+}
+
+function handleEditDataMotorSession_(session, text, lower, convoKey) {
+  if (lower === "batal") {
+    clearEditDataMotorSession_(convoKey);
+    return { reply: "Proses edit data motor dibatalkan.", saveResult: null };
+  }
+
+  const stage = String((session && session.stage) || "").trim();
+
+  if (stage === "awaiting_keyword") {
+    const command = parseEditDataMotorCommand_(text);
+    if (command && command.type === "ask_keyword") {
+      return { reply: "Motor apa?", saveResult: null };
+    }
+
+    const keyword = command && command.type === "keyword"
+      ? String(command.keyword || "").trim()
+      : parseEditDataMotorKeywordReply_(text);
+
+    if (!keyword) {
+      return {
+        reply: [
+          "Motor apa?",
+          "Balas dengan nama motor. Contoh: shogun atau motor shogun.",
+          "Ketik BATAL untuk membatalkan."
+        ].join("\n"),
+        saveResult: null
+      };
+    }
+
+    const options = findAllMotorRowsByKeyword_(keyword);
+    if (!options.length) {
+      return {
+        reply: 'Data motor "' + keyword + '" tidak ditemukan. Coba nama lain atau ketik BATAL.',
+        saveResult: null
+      };
+    }
+
+    const shownOptions = options.slice(0, MOTOR_LAKU_LIST_MAX);
+    setEditDataMotorSession_(convoKey, {
+      stage: "awaiting_selection",
+      keyword: keyword,
+      options: shownOptions
+    });
+
+    return {
+      reply: formatEditDataMotorOptionsReply_(keyword, shownOptions, options.length),
+      saveResult: null
+    };
+  }
+
+  if (stage === "awaiting_selection") {
+    const parsed = parseEditDataMotorSelection_(text, session.options);
+    if (!parsed.ok) {
+      return {
+        reply: [
+          parsed.error || "Format pilihan tidak sesuai.",
+          "Balas: nomor <urutan> (contoh: nomor 1)",
+          "Atau: pilih <urutan> / no <no> / <angka>",
+          "Ketik BATAL untuk membatalkan."
+        ].join("\n"),
+        saveResult: null
+      };
+    }
+
+    setEditDataMotorSession_(convoKey, {
+      stage: "awaiting_details",
+      selected: parsed.option
+    });
+
+    return {
+      reply: [
+        buildEditDataMotorTemplateReply_(parsed.option),
+        "",
+        "Kirim ulang template di atas setelah diedit.",
+        "Setelah itu bot akan minta konfirmasi OK / BATAL."
+      ].join("\n"),
+      saveResult: null
+    };
+  }
+
+  if (stage === "awaiting_details") {
+    const parsed = parseEditDataMotorTemplate_(text);
+    if (!parsed.ok) {
+      return {
+        reply: [
+          parsed.error || "Format edit data belum sesuai.",
+          "Kirim ulang sesuai template berikut:",
+          buildEditDataMotorTemplateReply_(session.selected || {}),
+          "",
+          "Ketik BATAL untuk membatalkan."
+        ].join("\n"),
+        saveResult: null
+      };
+    }
+
+    const selectedNo = normalizeNo_((session.selected && session.selected.no) || "");
+    if (parsed.no && selectedNo && parsed.no !== selectedNo) {
+      return {
+        reply: "NO pada template tidak sesuai dengan data terpilih. Gunakan NO: " + selectedNo,
+        saveResult: null
+      };
+    }
+
+    const mergedCols = buildEditDataMotorMergedCols_(session.selected, parsed.cols);
+    const validation = validateInput_(mergedCols);
+    if (!validation.ok) {
+      return { reply: "Format salah: " + validation.error, saveResult: null };
+    }
+
+    setEditDataMotorSession_(convoKey, {
+      stage: "awaiting_confirm",
+      selected: session.selected,
+      cols: validation.data
+    });
+
+    return {
+      reply: [
+        "Konfirmasi edit data motor:",
+        formatEditDataMotorSummary_(selectedNo, validation.data),
+        "",
+        "Ketik OK untuk simpan / BATAL untuk batal"
+      ].join("\n"),
+      saveResult: null
+    };
+  }
+
+  if (stage === "awaiting_confirm") {
+    if (lower !== "ok") {
+      return { reply: "Ketik OK untuk simpan / BATAL untuk batal", saveResult: null };
+    }
+
+    const selectedNo = normalizeNo_((session.selected && session.selected.no) || "");
+    const updated = updateMotorDataByNo_(selectedNo, (session && session.cols) || []);
+    clearEditDataMotorSession_(convoKey);
+    return {
+      reply: updated.ok
+        ? "Data motor terupdate di baris " + updated.row
+        : "Gagal update data motor: " + updated.error,
+      saveResult: updated
+    };
+  }
+
+  clearEditDataMotorSession_(convoKey);
+  return {
+    reply: "Sesi edit data motor tidak valid. Ketik edit data motor <nama> untuk mulai ulang.",
+    saveResult: null
+  };
+}
+
+function parseEditHargaJualByNameCommand_(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return null;
+
+  let m = raw.match(/^edit\s+harga\s+jual\s+motor(?:\s+(.+))?$/i);
+  if (!m) {
+    m = raw.match(/^edit\s+harga\s+jual(?:\s+(.+))?$/i);
+  }
+  if (!m) return null;
+  return m[1] ? String(m[1]).trim() : "";
+}
+
+function formatEditHargaJualOptionsReply_(keyword, options, totalFound) {
+  const list = Array.isArray(options) ? options : [];
+  const total = Number(totalFound || 0);
+  const lines = [
+    'Ditemukan ' + total + ' data motor "' + keyword + '" (belum terjual).',
+    "Pilih motor untuk edit harga jual:"
+  ];
+
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i] || {};
+    const tahun = item.tahun && item.tahun !== "-" ? " " + item.tahun : "";
+    lines.push(
+      (i + 1) +
+      ". NO: " + displayCell_(item.no) +
+      " - " + displayCell_(item.nama) + tahun +
+      " - Plat " + displayCell_(item.plat)
+    );
+  }
+
+  if (total > list.length) {
+    lines.push("");
+    lines.push(
+      "Daftar dipotong ke " + list.length +
+      " baris pertama dari total " + total + " data."
+    );
+  }
+
+  lines.push("");
+  lines.push("Balas berdasarkan NO motor: no <no> <harga>");
+  lines.push("Atau singkat (otomatis NO dulu): <no> <harga>");
+  lines.push("Jika ingin berdasarkan urutan list: pilih <urutan> <harga>");
+  lines.push("Contoh: no 7 23500000");
+  lines.push("Contoh singkat: 7 23500000");
+  lines.push("Contoh urutan list: pilih 2 23500000");
+  lines.push("Ketik BATAL untuk batal.");
+  return lines.join("\n");
+}
+
+function parseEditHargaJualSelection_(text, options) {
+  const raw = String(text || "").trim();
+  let mode = "auto";
+  let m = raw.match(/^pilih\s+(\d+)\s+(.+)$/i);
+  if (m) {
+    mode = "index";
+  }
+  if (!m) {
+    m = raw.match(/^no\s+(\d+)\s+(.+)$/i);
+    if (m) mode = "no";
+  }
+  if (!m) {
+    m = raw.match(/^(\d+)\s+(.+)$/);
+    if (m) mode = "auto";
+  }
+  if (!m) {
+    return { ok: false, error: "Format pilihan tidak sesuai." };
+  }
+
+  const rawSelection = Number(m[1]);
+  if (!rawSelection || rawSelection < 1) {
+    return { ok: false, error: "Nomor pilihan tidak valid." };
+  }
+
+  const hargaJual = normalizeMotorLakuPrice_(m[2]);
+  if (!hargaJual) {
+    return { ok: false, error: "Harga jual tidak valid." };
+  }
+
+  const chosen = resolveSelectionOption_(rawSelection, options, mode);
+  if (!chosen) {
+    return { ok: false, error: "Pilihan tidak ditemukan di daftar." };
+  }
+
+  return {
+    ok: true,
+    option: chosen,
+    hargaJual: hargaJual
+  };
+}
+
+function handleEditHargaJualSession_(session, text, lower, convoKey) {
+  if (lower === "batal") {
+    clearEditHargaJualSession_(convoKey);
+    return { reply: "Proses edit harga jual dibatalkan.", saveResult: null };
+  }
+
+  const stage = String((session && session.stage) || "").trim();
+
+  if (stage === "awaiting_selection") {
+    const parsed = parseEditHargaJualSelection_(text, session.options);
+    if (!parsed.ok) {
+      return {
+        reply: [
+          parsed.error || "Format pilihan tidak sesuai.",
+          "Gunakan format NO motor: no <no> <harga>",
+          "Atau format singkat (otomatis NO dulu): <no> <harga>",
+          "Jika mau urutan list: pilih <urutan> <harga>",
+          "Contoh: no 7 23500000",
+          "Contoh singkat: 7 23500000",
+          "Contoh urutan list: pilih 2 23500000",
+          "Ketik BATAL untuk membatalkan."
+        ].join("\n"),
+        saveResult: null
+      };
+    }
+
+    const updated = updateSoldData_([
+      String((parsed.option && parsed.option.no) || "").trim(),
+      parsed.hargaJual,
+      "",
+      "",
+      ""
+    ]);
+    clearEditHargaJualSession_(convoKey);
+    return {
+      reply: updated.ok
+        ? "Harga jual terupdate di baris " + updated.row
+        : "Gagal update: " + updated.error,
+      saveResult: updated
+    };
+  }
+
+  clearEditHargaJualSession_(convoKey);
+  return {
+    reply: "Sesi edit harga jual tidak valid. Ketik edit harga jual motor <nama> untuk mulai ulang.",
+    saveResult: null
+  };
+}
+
+function isDailyExpensePromptCommand_(text) {
+  const normalized = String(text || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return (
+    normalized === "pengeluaran" ||
+    normalized === "pengeluaran hari ini" ||
+    normalized === "trigger pengeluaran harian" ||
+    normalized === "pengeluaran harian" ||
+    normalized === "input pengeluaran harian" ||
+    normalized === "isi pengeluaran harian"
+  );
+}
+
+function parseDailyExpenseTemplate_(text) {
+  const fields = extractLabeledFields_(text, function (key) {
+    return (
+      key === "keterangan" ||
+      key === "ket" ||
+      key === "totalpengeluaran" ||
+      key === "pengeluaran" ||
+      key === "total" ||
+      key === "nominal" ||
+      key === "jumlah"
+    );
+  });
+  let keterangan = "";
+  let total = "";
+
+  for (let i = 0; i < fields.length; i++) {
+    const item = fields[i] || {};
+    const key = normalizeExpenseKey_(item.key);
+    const value = String(item.value || "").trim();
+    if (!value) continue;
+
+    if (key === "keterangan" || key === "ket") {
+      keterangan = value.replace(/\s*[-–—]+\s*$/, "").trim();
+      continue;
+    }
+    if (
+      key === "totalpengeluaran" ||
+      key === "pengeluaran" ||
+      key === "total" ||
+      key === "nominal" ||
+      key === "jumlah"
+    ) {
+      total = value;
+    }
+  }
+
+  if (!keterangan) {
+    return { ok: false, error: "Keterangan wajib diisi." };
+  }
+
+  const parsedTotal = normalizeMotorLakuPrice_(total);
+  if (!parsedTotal) {
+    return { ok: false, error: "Total pengeluaran tidak valid." };
+  }
+
+  return {
+    ok: true,
+    keterangan: keterangan,
+    totalPengeluaran: parsedTotal
+  };
+}
+
+function normalizeExpenseKey_(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .trim();
+}
+
+function buildDailyExpenseSaveCommand_(keterangan, totalPengeluaran) {
+  const safeKet = String(keterangan || "").replace(/;/g, ",").trim();
+  const safeTotal = String(totalPengeluaran || "").trim();
+  return "pengeluaran#" + safeKet + ";" + safeTotal;
+}
+
+function handleDailyExpenseSession_(session, text, lower, convoKey) {
+  if (lower === "batal") {
+    clearDailyExpenseSession_(convoKey);
+    return { reply: "Input pengeluaran harian dibatalkan.", saveResult: null };
+  }
+
+  const parsed = parseDailyExpenseTemplate_(text);
+  if (!parsed.ok) {
+    return {
+      reply: [
+        parsed.error || "Format pengeluaran belum sesuai.",
+        "Gunakan format:",
+        "- keterangan :",
+        "- total pengeluaran :",
+        "Contoh:",
+        "- keterangan : beli bensin, parkir",
+        "- total pengeluaran : 350000",
+        "Ketik BATAL untuk membatalkan."
+      ].join("\n"),
+      saveResult: null
+    };
+  }
+
+  const command = buildDailyExpenseSaveCommand_(parsed.keterangan, parsed.totalPengeluaran);
+  const body = command.slice("pengeluaran#".length).trim();
+  const cols = body.split(";").map(function (s) { return s.trim(); });
+  const saved = saveDailyExpenseData_(cols);
+  clearDailyExpenseSession_(convoKey);
+
+  return {
+    reply: saved.ok
+      ? "Pengeluaran harian tersimpan di baris " + saved.row
+      : "Gagal simpan pengeluaran: " + saved.error,
+    saveResult: saved
+  };
+}
+
+function buildConversationKey_(sender, chatJid) {
+  const s = normalizeWaIdentity_(sender);
+  const c = normalizeWaIdentity_(chatJid);
+  return (s || "-") + "|" + (c || "-");
+}
+
+function getMotorMasukSession_(convoKey) {
+  const key = motorMasukSessionCacheKey_(convoKey);
+  return getSessionObject_(key);
+}
+
+function setMotorMasukSession_(convoKey, value) {
+  const key = motorMasukSessionCacheKey_(convoKey);
+  if (!key) return;
+
+  const payload = value && typeof value === "object" ? value : {};
+  payload.createdAt = Date.now();
+
+  setSessionObject_(key, payload, MOTOR_MASUK_SESSION_TTL_SECONDS);
+}
+
+function clearMotorMasukSession_(convoKey) {
+  const key = motorMasukSessionCacheKey_(convoKey);
+  clearSessionObject_(key);
+}
+
+function motorMasukSessionCacheKey_(convoKey) {
+  const id = String(convoKey || "").trim().toLowerCase();
+  if (!id) return "";
+  return "wa:session:motor_masuk:" + id.slice(0, 200);
+}
+
+function getMotorLakuSession_(convoKey) {
+  const key = motorLakuSessionCacheKey_(convoKey);
+  return getSessionObject_(key);
+}
+
+function setMotorLakuSession_(convoKey, value) {
+  const key = motorLakuSessionCacheKey_(convoKey);
+  if (!key) return;
+
+  const payload = value && typeof value === "object" ? value : {};
+  payload.createdAt = Date.now();
+
+  setSessionObject_(key, payload, MOTOR_LAKU_SESSION_TTL_SECONDS);
+}
+
+function clearMotorLakuSession_(convoKey) {
+  const key = motorLakuSessionCacheKey_(convoKey);
+  clearSessionObject_(key);
+}
+
+function motorLakuSessionCacheKey_(convoKey) {
+  const id = String(convoKey || "").trim().toLowerCase();
+  if (!id) return "";
+  return "wa:session:motor_laku:" + id.slice(0, 200);
+}
+
+function getEditHargaJualSession_(convoKey) {
+  const key = editHargaJualSessionCacheKey_(convoKey);
+  return getSessionObject_(key);
+}
+
+function setEditHargaJualSession_(convoKey, value) {
+  const key = editHargaJualSessionCacheKey_(convoKey);
+  if (!key) return;
+
+  const payload = value && typeof value === "object" ? value : {};
+  payload.createdAt = Date.now();
+
+  setSessionObject_(key, payload, EDIT_HARGA_JUAL_SESSION_TTL_SECONDS);
+}
+
+function clearEditHargaJualSession_(convoKey) {
+  const key = editHargaJualSessionCacheKey_(convoKey);
+  clearSessionObject_(key);
+}
+
+function editHargaJualSessionCacheKey_(convoKey) {
+  const id = String(convoKey || "").trim().toLowerCase();
+  if (!id) return "";
+  return "wa:session:edit_harga_jual:" + id.slice(0, 200);
+}
+
+function getEditDataMotorSession_(convoKey) {
+  const key = editDataMotorSessionCacheKey_(convoKey);
+  return getSessionObject_(key);
+}
+
+function setEditDataMotorSession_(convoKey, value) {
+  const key = editDataMotorSessionCacheKey_(convoKey);
+  if (!key) return;
+
+  const payload = value && typeof value === "object" ? value : {};
+  payload.createdAt = Date.now();
+
+  setSessionObject_(key, payload, EDIT_DATA_MOTOR_SESSION_TTL_SECONDS);
+}
+
+function clearEditDataMotorSession_(convoKey) {
+  const key = editDataMotorSessionCacheKey_(convoKey);
+  clearSessionObject_(key);
+}
+
+function editDataMotorSessionCacheKey_(convoKey) {
+  const id = String(convoKey || "").trim().toLowerCase();
+  if (!id) return "";
+  return "wa:session:edit_data_motor:" + id.slice(0, 200);
+}
+
+function getDailyExpenseSession_(convoKey) {
+  const key = dailyExpenseSessionCacheKey_(convoKey);
+  return getSessionObject_(key);
+}
+
+function setDailyExpenseSession_(convoKey, value) {
+  const key = dailyExpenseSessionCacheKey_(convoKey);
+  if (!key) return;
+
+  const payload = value && typeof value === "object" ? value : {};
+  payload.createdAt = Date.now();
+
+  setSessionObject_(key, payload, DAILY_EXPENSE_SESSION_TTL_SECONDS);
+}
+
+function clearDailyExpenseSession_(convoKey) {
+  const key = dailyExpenseSessionCacheKey_(convoKey);
+  clearSessionObject_(key);
+}
+
+function dailyExpenseSessionCacheKey_(convoKey) {
+  const id = String(convoKey || "").trim().toLowerCase();
+  if (!id) return "";
+  return "wa:session:daily_expense:" + id.slice(0, 200);
+}
+
+function getSessionObject_(key) {
+  const k = String(key || "").trim();
+  if (!k) return null;
+  const now = Date.now();
+
+  // Fast path: CacheService
+  try {
+    const cache = CacheService.getScriptCache();
+    const rawCache = cache.get(k);
+    if (rawCache) {
+      const parsedCache = parseSessionEnvelope_(rawCache);
+      if (parsedCache && parsedCache.expiresAt > now) {
+        return parsedCache.data;
+      }
+      if (parsedCache && parsedCache.expiresAt <= now) {
+        clearSessionObject_(k);
+        return null;
+      }
+    }
+  } catch (err) {
+    // lanjut ke ScriptProperties
+  }
+
+  // Fallback kuat: ScriptProperties
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const rawProp = props.getProperty(k);
+    if (!rawProp) return null;
+
+    const parsedProp = parseSessionEnvelope_(rawProp);
+    if (!parsedProp) {
+      props.deleteProperty(k);
+      return null;
+    }
+
+    if (parsedProp.expiresAt <= now) {
+      props.deleteProperty(k);
+      try {
+        CacheService.getScriptCache().remove(k);
+      } catch (cacheErr) {
+        // abaikan
+      }
+      return null;
+    }
+
+    try {
+      const ttlSec = Math.max(30, Math.floor((parsedProp.expiresAt - now) / 1000));
+      CacheService.getScriptCache().put(k, JSON.stringify(parsedProp), ttlSec);
+    } catch (cacheErr) {
+      // abaikan
+    }
+
+    return parsedProp.data;
+  } catch (err) {
+    return null;
+  }
+}
+
+function setSessionObject_(key, data, ttlSeconds) {
+  const k = String(key || "").trim();
+  if (!k) return;
+
+  const ttlSec = Math.max(30, Number(ttlSeconds || 0));
+  const expiresAt = Date.now() + ttlSec * 1000;
+  const envelope = {
+    expiresAt: expiresAt,
+    data: data && typeof data === "object" ? data : {}
+  };
+  const raw = JSON.stringify(envelope);
+
+  // Simpan ke properti dulu supaya durable, cache jadi akselerator.
+  try {
+    PropertiesService.getScriptProperties().setProperty(k, raw);
+  } catch (err) {
+    // abaikan; tetap coba cache
+  }
+
+  try {
+    CacheService.getScriptCache().put(k, raw, ttlSec);
+  } catch (err) {
+    // abaikan
+  }
+}
+
+function clearSessionObject_(key) {
+  const k = String(key || "").trim();
+  if (!k) return;
+
+  try {
+    PropertiesService.getScriptProperties().deleteProperty(k);
+  } catch (err) {
+    // abaikan
+  }
+
+  try {
+    CacheService.getScriptCache().remove(k);
+  } catch (err) {
+    // abaikan
+  }
+}
+
+function parseSessionEnvelope_(raw) {
+  try {
+    const parsed = JSON.parse(String(raw || ""));
+    if (!parsed || typeof parsed !== "object") return null;
+    if (!parsed.data || typeof parsed.data !== "object") return null;
+    const exp = Number(parsed.expiresAt || 0);
+    if (!isFinite(exp) || exp <= 0) return null;
+    return {
+      expiresAt: exp,
+      data: parsed.data
+    };
+  } catch (err) {
+    return null;
+  }
 }
 
 function sendWa_(target, message) {

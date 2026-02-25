@@ -1,11 +1,24 @@
-# WA Bot VPS (Bot Sendiri -> Apps Script)
+# WA Bot VPS (Bridge ke Apps Script)
 
-Project ini difokuskan ke arsitektur:
-- Bot WA sendiri di VPS (Baileys)
-- Data dikirim ke Apps Script
-- Apps Script yang menulis ke Google Sheet
+VPS ini hanya berfungsi sebagai:
+- penerima pesan WA (Baileys / Webhook),
+- forward pesan ke Apps Script,
+- pengirim balasan WA.
 
-## 1. Setup
+Semua parsing, validasi, session, dan logic bisnis ada di `appscript`.
+
+## Arsitektur
+- `wa-bot-vps/src/messageProcessor.js`:
+  forward text mentah ke Apps Script via `dataService.executeText(...)`.
+  Jika reply `perintah tidak dikenali/format salah`, bisa fallback ke AI text normalizer (opsional).
+- `wa-bot-vps/src/appScriptService.js`:
+  client HTTP ke endpoint Web App (`/exec`), termasuk fallback GET bila POST tidak diterima.
+- `wa-bot-vps/src/baileysMode.js`:
+  koneksi WhatsApp, filter admin/self, dan scheduler reminder pengeluaran harian.
+- `wa-bot-vps/src/webhookMode.js`:
+  mode opsional jika memakai webhook provider.
+
+## Setup
 ```bash
 cd wa-bot-vps
 npm install
@@ -13,7 +26,6 @@ cp .env.example .env
 ```
 
 Isi `.env`:
-
 ```env
 BOT_MODE=BAILEYS
 APPS_SCRIPT_WEBHOOK_URL=https://script.google.com/macros/s/xxxx/exec
@@ -24,6 +36,24 @@ WA_SESSION_DIR=./auth_info_baileys
 ALLOW_GROUP_MESSAGES=false
 ALLOW_SELF_CHAT_MESSAGES=true
 DEBUG_WA_FILTER=false
+DAILY_EXPENSE_REMINDER_ENABLED=true
+DAILY_EXPENSE_REMINDER_TIME=22:00
+DAILY_EXPENSE_REMINDER_TZ=Asia/Jakarta
+HEALTH_SERVER_ENABLED=true
+HEALTH_SERVER_HOST=127.0.0.1
+HEALTH_SERVER_PORT=3100
+APPSCRIPT_MONITOR_ENABLED=true
+APPSCRIPT_MONITOR_INTERVAL_SEC=180
+APPSCRIPT_MONITOR_FAILURE_THRESHOLD=3
+APPSCRIPT_MONITOR_ALERT_COOLDOWN_SEC=900
+APPSCRIPT_MONITOR_EXIT_ON_FAILURE=false
+AI_TEXT_ENABLED=false
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4o-mini
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_TIMEOUT_MS=15000
+AI_TEXT_MIN_CONFIDENCE=0.55
+AI_TEXT_DEBUG=false
 ```
 
 Jalankan:
@@ -31,112 +61,89 @@ Jalankan:
 npm start
 ```
 
-Scan QR di terminal:
-`WhatsApp > Linked devices > Link a device`.
-
-## 2. Kebutuhan Apps Script
-Apps Script web app harus:
-1. Deploy Web App (`/exec`).
-2. Menerima POST JSON:
+## Kebutuhan Apps Script
+- Web App harus sudah deploy (`/exec`) dan bisa diakses.
+- `doPost/doGet` menerima payload berikut:
 ```json
 {
   "sender": "62812xxxx@s.whatsapp.net",
   "chat_jid": "62812xxxx@s.whatsapp.net",
   "bot_jid": "201507007785@s.whatsapp.net",
   "from_me": "0",
-  "message": "input#..."
+  "message": "menu"
 }
 ```
-3. Menulis data ke sheet.
-4. Balikkan response:
-- `OK_SAVED_ROW_<n>` untuk sukses simpan/update
-- `ERROR_<pesan>` untuk error
+- Response utama yang dipakai VPS:
+  - `reply`: teks balasan ke WA.
+  - `ok`, `row`, `error`, `saveResult` bila ada operasi simpan/update.
 
-Catatan:
-- Balasan WA dikirim oleh bot VPS.
-- Di Apps Script tidak perlu kirim balasan WA lagi.
-- Jika ingin filter sumber WA di Apps Script, set `BOT_WA_NUMBER` di file `appscript`.
+## Catatan Operasional
+- Command format user dikelola penuh di `appscript`.
+- Jika menambah/mengubah command, update di Apps Script saja (umumnya tanpa ubah VPS).
+- Untuk arsitektur bridge ini, Apps Script sebaiknya `ENABLE_WA_REPLY=false` agar tidak double-reply.
 
-## 3. Format pesan WA
+## AI Text Fallback (Opsional)
+- Mode ini dipakai jika user kirim kalimat bebas dan Apps Script membalas `perintah tidak dikenali` atau `format salah`.
+- VPS akan minta OpenAI untuk menormalkan kalimat menjadi command whitelist, lalu kirim ulang ke Apps Script.
+- Jika AI nonaktif atau confidence rendah, bot tetap pakai reply asli dari Apps Script.
 
-### Input stok (`input#`)
-```text
-input#nama motor;tahun;plat;surat-surat;tahun plat;pajak;harga jual;harga laku;harga beli;tgl terjual;status
+## PM2 (disarankan)
+```bash
+pm2 start src/index.js --name wa-bot
+pm2 save
+pm2 startup
 ```
 
-### Input label
-```text
-NAMA MOTOR: Vario 125
-TAHUN: 2022
-PLAT: B1234XYZ
-SURAT-SURAT: Lengkap hidup
-TAHUN PLAT: 2027
-PAJAK: Hidup
-HARGA JUAL: 22500000
-HARGA BELI: 19000000
+Atau pakai ecosystem config (lebih stabil untuk production):
+```bash
+pm2 startOrRestart ecosystem.config.js --only wa-bot
+pm2 save
+pm2 startup
 ```
 
-### Update (`update#`)
-```text
-update#7;22500000;21000000;;terjual
+Detail policy PM2 ada di `wa-bot-vps/ecosystem.config.js`:
+- autorestart aktif
+- restart delay dan backoff
+- max memory restart `300M`
+- timestamp log aktif
+
+Monitoring:
+```bash
+pm2 status
+pm2 logs wa-bot --lines 100
 ```
-Urutan: `update#no;harga jual;harga laku;tgl terjual;status`
 
-### Update label
-```text
-NO: 7
-HARGA LAKU: 21000000
-STATUS: terjual
+Smoke test Apps Script:
+```bash
+npm run smoke:appscript
 ```
 
-### Cek data motor (`data motor`)
-```text
-data motor vixion
-cek data motor vixion
+UAT Step 9 (regression non-destruktif):
+```bash
+npm run uat:step9
 ```
-Bot akan mengembalikan daftar motor yang nama motornya mengandung keyword tersebut.
 
-### Motor masuk 2 tahap (`motor masuk`)
-```text
-motor masuk
+## Apps Script Monitor (Alert Admin)
+- Monitor kirim probe `menu` berkala ke Apps Script.
+- Jika gagal beruntun sesuai threshold, bot kirim alert ke semua `ADMIN_NUMBERS`.
+- Opsi `APPSCRIPT_MONITOR_EXIT_ON_FAILURE=true` akan `process.exit(1)` agar PM2 auto-restart.
+
+Konfigurasi monitor:
+```env
+APPSCRIPT_MONITOR_ENABLED=true
+APPSCRIPT_MONITOR_INTERVAL_SEC=180
+APPSCRIPT_MONITOR_FAILURE_THRESHOLD=3
+APPSCRIPT_MONITOR_ALERT_COOLDOWN_SEC=900
+APPSCRIPT_MONITOR_EXIT_ON_FAILURE=false
 ```
-Alur:
-1. Bot kirim template label.
-2. Admin isi template dan kirim.
-3. Bot kirim ringkasan + minta konfirmasi.
-4. Admin kirim `OK` untuk simpan atau `BATAL` untuk membatalkan.
 
-### Motor terjual pilih daftar (`motor <nama> laku`)
-```text
-motor vixion laku
+## Health Check
+Endpoint health server terpisah dari mode bot utama:
+- `GET /health` status proses dan status WA terakhir.
+- `GET /health/appscript` probe koneksi ke Apps Script (`menu`).
+
+Contoh:
+```bash
+curl http://127.0.0.1:3100/health
+curl http://127.0.0.1:3100/health/appscript
 ```
-Alur:
-1. Bot kirim daftar kandidat motor sesuai nama.
-2. Admin pilih item dengan format `no <pilihan> laku <harga>`.
-3. Bot minta konfirmasi `OK / BATAL`.
-4. Jika `OK`, bot kirim update ke Apps Script:
-   `update#no;;harga laku;;terjual`
-   (tanggal terjual otomatis diisi Apps Script jika kosong).
-
-### Cek daftar motor terjual
-```text
-motor terjual
-motor vixion terjual
-```
-Bot akan menampilkan daftar motor yang statusnya terjual.
-Jika pakai keyword nama, daftar difilter sesuai nama motor.
-
-## 4. Logika
-- Input stok boleh ada field kosong.
-- Jika `HARGA LAKU` terisi, `STATUS` otomatis centang.
-- Jika update `HARGA LAKU` tanpa `TGL TERJUAL`, tanggal otomatis hari ini.
-- Hanya `ADMIN_NUMBERS` yang boleh memproses data.
-- Self chat bot (`sender == BOT_NUMBER` dan tujuan `BOT_NUMBER`) boleh diproses jika `ALLOW_SELF_CHAT_MESSAGES=true`.
-- Pesan bot ke nomor lain tidak diproses ke spreadsheet.
-- Pesan non-admin tidak diproses.
-- Untuk melihat alasan pesan di-skip/proses, set `DEBUG_WA_FILTER=true` lalu cek log bot.
-
-## 5. Uji Keamanan Step 1
-- Admin kirim `input#...` ke bot: harus diproses dan tersimpan.
-- Non-admin kirim `input#...` ke bot: bot diam, data tidak tersimpan.
-- Bot kirim `input#...` ke nomor lain: tidak diproses, data tidak tersimpan.

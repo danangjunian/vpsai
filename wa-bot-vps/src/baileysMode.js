@@ -12,6 +12,12 @@ const { processIncomingText } = require("./messageProcessor");
 
 const seenInboundMessageIds_ = new Map();
 const MESSAGE_DEDUP_TTL_MS = 6 * 60 * 60 * 1000;
+let dailyExpenseReminderTimer_ = null;
+let dailyExpenseReminderLastDate_ = "";
+let appScriptMonitorTimer_ = null;
+let appScriptMonitorInFlight_ = false;
+let appScriptMonitorConsecutiveFailures_ = 0;
+let appScriptMonitorLastAlertAt_ = 0;
 
 async function startBaileysMode(options) {
   const cfg = options || {};
@@ -22,6 +28,25 @@ async function startBaileysMode(options) {
   const debugWaFilter = Boolean(cfg.debugWaFilter);
   const adminNumberSet = buildNumberSet_(cfg.adminNumbers);
   const configuredBotNumber = normalizeWaNumber_(cfg.botNumber);
+  const dailyExpenseReminderEnabled =
+    cfg.dailyExpenseReminderEnabled === undefined ? true : Boolean(cfg.dailyExpenseReminderEnabled);
+  const dailyExpenseReminderTime = normalizeReminderTime_(cfg.dailyExpenseReminderTime || "22:00");
+  const dailyExpenseReminderTz = String(cfg.dailyExpenseReminderTz || "Asia/Jakarta").trim() || "Asia/Jakarta";
+  const appScriptMonitorEnabled =
+    cfg.appScriptMonitorEnabled === undefined ? true : Boolean(cfg.appScriptMonitorEnabled);
+  const appScriptMonitorIntervalSec = Math.max(30, Number(cfg.appScriptMonitorIntervalSec || 180));
+  const appScriptMonitorFailureThreshold = Math.max(1, Number(cfg.appScriptMonitorFailureThreshold || 3));
+  const appScriptMonitorAlertCooldownSec = Math.max(60, Number(cfg.appScriptMonitorAlertCooldownSec || 900));
+  const appScriptMonitorExitOnFailure = Boolean(cfg.appScriptMonitorExitOnFailure);
+  const onConnectionUpdate = typeof cfg.onConnectionUpdate === "function" ? cfg.onConnectionUpdate : null;
+  const onMessageProcessed = typeof cfg.onMessageProcessed === "function" ? cfg.onMessageProcessed : null;
+  const onMessageError = typeof cfg.onMessageError === "function" ? cfg.onMessageError : null;
+  const onAppScriptMonitorResult =
+    typeof cfg.onAppScriptMonitorResult === "function" ? cfg.onAppScriptMonitorResult : null;
+  const onAppScriptMonitorAlert =
+    typeof cfg.onAppScriptMonitorAlert === "function" ? cfg.onAppScriptMonitorAlert : null;
+  const onAppScriptMonitorFatal =
+    typeof cfg.onAppScriptMonitorFatal === "function" ? cfg.onAppScriptMonitorFatal : null;
 
   ensureDir(sessionDir);
 
@@ -44,6 +69,29 @@ async function startBaileysMode(options) {
 
   sock.ev.on("creds.update", saveCreds);
 
+  configureDailyExpenseReminder_({
+    sock: sock,
+    enabled: dailyExpenseReminderEnabled,
+    reminderTime: dailyExpenseReminderTime,
+    reminderTz: dailyExpenseReminderTz,
+    adminNumbers: cfg.adminNumbers
+  });
+
+  configureAppScriptMonitor_({
+    enabled: appScriptMonitorEnabled,
+    intervalSec: appScriptMonitorIntervalSec,
+    failureThreshold: appScriptMonitorFailureThreshold,
+    alertCooldownSec: appScriptMonitorAlertCooldownSec,
+    exitOnFailure: appScriptMonitorExitOnFailure,
+    sock: sock,
+    dataService: cfg.dataService,
+    adminNumbers: cfg.adminNumbers,
+    botNumber: cfg.botNumber,
+    onResult: onAppScriptMonitorResult,
+    onAlert: onAppScriptMonitorAlert,
+    onFatal: onAppScriptMonitorFatal
+  });
+
   sock.ev.on("connection.update", function (update) {
     const connection = update.connection;
     const qr = update.qr;
@@ -57,6 +105,11 @@ async function startBaileysMode(options) {
 
     if (connection === "open") {
       console.log("WhatsApp connected.");
+      emitCallback_(onConnectionUpdate, {
+        connection: "open",
+        statusCode: "",
+        errorMessage: ""
+      });
     }
 
     if (connection === "close") {
@@ -68,6 +121,13 @@ async function startBaileysMode(options) {
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
       console.log("WhatsApp disconnected. code=", statusCode, "reconnect=", shouldReconnect);
+      emitCallback_(onConnectionUpdate, {
+        connection: "close",
+        statusCode: statusCode,
+        errorMessage: String(
+          (lastDisconnect && lastDisconnect.error && lastDisconnect.error.message) || ""
+        )
+      });
       if (shouldReconnect) {
         setTimeout(function () {
           startBaileysMode(cfg).catch(function (err) {
@@ -177,15 +237,30 @@ async function startBaileysMode(options) {
           source: "BAILEYS"
         };
 
-        const result = await processIncomingText(text, cfg.dataService, messageMeta);
+        const result = await processIncomingText(text, cfg.dataService, messageMeta, cfg.aiCommandParser);
         if (!result.reply) continue;
 
         await sock.sendMessage(jid, { text: result.reply }, { quoted: msg });
+        emitCallback_(onMessageProcessed, {
+          sender: senderJid,
+          chatJid: remoteJid,
+          messageId: msgId
+        });
       }
     } catch (err) {
       console.error("[baileys] message handler error:", err.message);
+      emitCallback_(onMessageError, err);
     }
   });
+}
+
+function emitCallback_(cb, payload) {
+  if (typeof cb !== "function") return;
+  try {
+    cb(payload);
+  } catch (err) {
+    // abaikan error callback observability agar flow utama tidak terganggu
+  }
 }
 
 function extractTextMessage(message) {
@@ -267,6 +342,9 @@ function isCommandLike_(textLower) {
   if (!t) return false;
   if (t === "halo" || t === "hi" || t === "menu") return true;
   if (t === "motor masuk" || t === "ok" || t === "batal") return true;
+  if (t === "trigger pengeluaran harian" || t === "pengeluaran harian" || t === "pengeluaran") return true;
+  if (t.indexOf("pengeluaran ") === 0 || t.indexOf("laba ") === 0 || t.indexOf("keuntungan ") === 0) return true;
+  if (t.indexOf("total aset") === 0 || t.indexOf("total kendaraan") === 0 || t.indexOf("total modal") === 0) return true;
   if (t.indexOf("data motor") === 0) return true;
   if (t.indexOf("cek data motor") === 0) return true;
   if (t.indexOf("input#") === 0 || t.indexOf("update#") === 0) return true;
@@ -330,6 +408,313 @@ function cleanupSeenInboundMessages_() {
       seenInboundMessageIds_.delete(key);
     }
   }
+}
+
+function configureDailyExpenseReminder_(cfg) {
+  if (dailyExpenseReminderTimer_) {
+    clearInterval(dailyExpenseReminderTimer_);
+    dailyExpenseReminderTimer_ = null;
+  }
+
+  const enabled = Boolean(cfg && cfg.enabled);
+  if (!enabled) return;
+
+  const schedule = (cfg && cfg.reminderTime) || { hour: 22, minute: 0, text: "22:00" };
+  const tz = String((cfg && cfg.reminderTz) || "Asia/Jakarta").trim() || "Asia/Jakarta";
+
+  dailyExpenseReminderTimer_ = setInterval(function () {
+    runDailyExpenseReminderTick_(cfg, schedule, tz).catch(function (err) {
+      console.error("[daily-expense] tick error:", err.message);
+    });
+  }, 30000);
+
+  runDailyExpenseReminderTick_(cfg, schedule, tz).catch(function (err) {
+    console.error("[daily-expense] initial tick error:", err.message);
+  });
+
+  console.log(
+    "[daily-expense] reminder enabled at " + schedule.text +
+    " (" + tz + ")"
+  );
+}
+
+function configureAppScriptMonitor_(cfg) {
+  if (appScriptMonitorTimer_) {
+    clearInterval(appScriptMonitorTimer_);
+    appScriptMonitorTimer_ = null;
+  }
+
+  appScriptMonitorInFlight_ = false;
+  appScriptMonitorConsecutiveFailures_ = 0;
+  appScriptMonitorLastAlertAt_ = 0;
+
+  const enabled = Boolean(cfg && cfg.enabled);
+  if (!enabled) return;
+
+  const intervalSec = Math.max(30, Number((cfg && cfg.intervalSec) || 180));
+  const intervalMs = intervalSec * 1000;
+
+  appScriptMonitorTimer_ = setInterval(function () {
+    runAppScriptMonitorTick_(cfg).catch(function (err) {
+      console.error("[appscript-monitor] tick error:", err.message);
+    });
+  }, intervalMs);
+
+  runAppScriptMonitorTick_(cfg).catch(function (err) {
+    console.error("[appscript-monitor] initial tick error:", err.message);
+  });
+
+  console.log(
+    "[appscript-monitor] enabled interval=" + intervalSec + "s" +
+    " threshold=" + Math.max(1, Number((cfg && cfg.failureThreshold) || 3)) +
+    " cooldown=" + Math.max(60, Number((cfg && cfg.alertCooldownSec) || 900)) + "s" +
+    " exitOnFailure=" + Boolean(cfg && cfg.exitOnFailure)
+  );
+}
+
+async function runAppScriptMonitorTick_(cfg) {
+  if (appScriptMonitorInFlight_) return;
+  appScriptMonitorInFlight_ = true;
+
+  const checkedAt = new Date().toISOString();
+  const startedAt = Date.now();
+  const failureThreshold = Math.max(1, Number((cfg && cfg.failureThreshold) || 3));
+  const alertCooldownMs = Math.max(60, Number((cfg && cfg.alertCooldownSec) || 900)) * 1000;
+  const exitOnFailure = Boolean(cfg && cfg.exitOnFailure);
+
+  try {
+    const dataService = cfg && cfg.dataService;
+    if (!dataService || typeof dataService.executeText !== "function") {
+      throw new Error("Data service tidak tersedia");
+    }
+
+    const senderNumber = firstAdminNumber_((cfg && cfg.adminNumbers) || []);
+    const senderJid = senderNumber ? senderNumber + "@s.whatsapp.net" : "";
+    const botNumber = normalizeWaNumber_((cfg && cfg.botNumber) || "");
+    const botJid = botNumber ? botNumber + "@s.whatsapp.net" : "";
+    const meta = {
+      sender: senderJid,
+      chatJid: senderJid || botJid,
+      botJid: botJid,
+      fromMe: false,
+      source: "MONITOR"
+    };
+
+    const result = await dataService.executeText("menu", meta);
+    const reply = String((result && result.reply) || "").trim();
+    if (!reply) {
+      throw new Error("Apps Script reply kosong");
+    }
+
+    appScriptMonitorConsecutiveFailures_ = 0;
+    emitCallback_(cfg && cfg.onResult, {
+      ok: true,
+      checkedAt: checkedAt,
+      durationMs: Date.now() - startedAt,
+      consecutiveFailures: 0,
+      error: ""
+    });
+    return;
+  } catch (err) {
+    const errorText = String((err && err.message) || err || "UNKNOWN");
+    appScriptMonitorConsecutiveFailures_ += 1;
+
+    emitCallback_(cfg && cfg.onResult, {
+      ok: false,
+      checkedAt: checkedAt,
+      durationMs: Date.now() - startedAt,
+      consecutiveFailures: appScriptMonitorConsecutiveFailures_,
+      error: errorText
+    });
+
+    const shouldAlert =
+      appScriptMonitorConsecutiveFailures_ >= failureThreshold &&
+      (Date.now() - appScriptMonitorLastAlertAt_ >= alertCooldownMs);
+
+    if (shouldAlert) {
+      await sendAppScriptMonitorAlert_(cfg, {
+        checkedAt: checkedAt,
+        error: errorText,
+        consecutiveFailures: appScriptMonitorConsecutiveFailures_,
+        failureThreshold: failureThreshold
+      });
+      appScriptMonitorLastAlertAt_ = Date.now();
+
+      emitCallback_(cfg && cfg.onAlert, {
+        alertedAt: new Date(appScriptMonitorLastAlertAt_).toISOString(),
+        checkedAt: checkedAt,
+        error: errorText,
+        consecutiveFailures: appScriptMonitorConsecutiveFailures_,
+        failureThreshold: failureThreshold
+      });
+    }
+
+    if (exitOnFailure && appScriptMonitorConsecutiveFailures_ >= failureThreshold) {
+      emitCallback_(cfg && cfg.onFatal, {
+        fatalAt: new Date().toISOString(),
+        checkedAt: checkedAt,
+        error: errorText,
+        consecutiveFailures: appScriptMonitorConsecutiveFailures_,
+        failureThreshold: failureThreshold
+      });
+
+      console.error(
+        "[appscript-monitor] fatal: failure threshold reached (" +
+        appScriptMonitorConsecutiveFailures_ + "/" + failureThreshold +
+        "), exiting for PM2 restart."
+      );
+      process.exit(1);
+    }
+  } finally {
+    appScriptMonitorInFlight_ = false;
+  }
+}
+
+async function sendAppScriptMonitorAlert_(cfg, info) {
+  const sock = cfg && cfg.sock;
+  if (!sock || typeof sock.sendMessage !== "function") return;
+
+  const admins = normalizeAdminNumbers_((cfg && cfg.adminNumbers) || []);
+  if (!admins.length) return;
+
+  const payload = info && typeof info === "object" ? info : {};
+  const text = [
+    "[ALERT] Apps Script monitor bermasalah",
+    "Gagal beruntun: " + Number(payload.consecutiveFailures || 0) +
+      " (threshold " + Number(payload.failureThreshold || 0) + ")",
+    "Waktu cek: " + String(payload.checkedAt || new Date().toISOString()),
+    "Error: " + String(payload.error || "-")
+  ].join("\n");
+
+  for (let i = 0; i < admins.length; i++) {
+    const jid = admins[i] + "@s.whatsapp.net";
+    try {
+      await sock.sendMessage(jid, { text: text });
+    } catch (err) {
+      console.error("[appscript-monitor] alert send failed to", jid, "-", err.message);
+    }
+  }
+}
+
+async function runDailyExpenseReminderTick_(cfg, schedule, tz) {
+  const parts = getTimePartsInTimezone_(new Date(), tz);
+  if (!parts) return;
+  if (parts.hour !== schedule.hour || parts.minute !== schedule.minute) return;
+
+  const dateKey =
+    String(parts.year).padStart(4, "0") + "-" +
+    String(parts.month).padStart(2, "0") + "-" +
+    String(parts.day).padStart(2, "0");
+  if (dailyExpenseReminderLastDate_ === dateKey) return;
+  dailyExpenseReminderLastDate_ = dateKey;
+
+  const admins = normalizeAdminNumbers_((cfg && cfg.adminNumbers) || []);
+  if (!admins.length) return;
+
+  const sock = cfg && cfg.sock;
+  if (!sock) return;
+
+  for (let i = 0; i < admins.length; i++) {
+    const number = admins[i];
+    const jid = number + "@s.whatsapp.net";
+
+    let prompt = "";
+    try {
+      const prepared = await processIncomingText(
+        "trigger pengeluaran harian",
+        cfg.dataService,
+        {
+          sender: jid,
+          chatJid: jid,
+          botJid: "",
+          fromMe: false,
+          source: "BAILEYS"
+        }
+      );
+      prompt = String((prepared && prepared.reply) || "").trim();
+    } catch (err) {
+      console.error("[daily-expense] trigger failed for", jid, "-", err.message);
+      continue;
+    }
+
+    if (!prompt) {
+      prompt = [
+        "Pengeluaran hari ini berapa?",
+        "- keterangan :",
+        "- total pengeluaran :"
+      ].join("\n");
+    }
+
+    try {
+      await sock.sendMessage(jid, { text: prompt });
+    } catch (err) {
+      console.error("[daily-expense] send failed to", jid, "-", err.message);
+    }
+  }
+}
+
+function normalizeReminderTime_(value) {
+  const raw = String(value || "").trim();
+  const m = raw.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!m) {
+    return { hour: 22, minute: 0, text: "22:00" };
+  }
+
+  let hour = Number(m[1]);
+  let minute = Number(m[2]);
+  if (!isFinite(hour) || hour < 0 || hour > 23) hour = 22;
+  if (!isFinite(minute) || minute < 0 || minute > 59) minute = 0;
+  return {
+    hour: hour,
+    minute: minute,
+    text: String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0")
+  };
+}
+
+function getTimePartsInTimezone_(dateObj, timeZone) {
+  try {
+    const fmt = new Intl.DateTimeFormat("en-GB", {
+      timeZone: timeZone,
+      hour12: false,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+    const parts = fmt.formatToParts(dateObj);
+    const map = {};
+    for (let i = 0; i < parts.length; i++) {
+      map[parts[i].type] = parts[i].value;
+    }
+    return {
+      year: Number(map.year),
+      month: Number(map.month),
+      day: Number(map.day),
+      hour: Number(map.hour),
+      minute: Number(map.minute)
+    };
+  } catch (err) {
+    return null;
+  }
+}
+
+function normalizeAdminNumbers_(numbers) {
+  const list = Array.isArray(numbers) ? numbers : [];
+  const uniq = {};
+  const out = [];
+  for (let i = 0; i < list.length; i++) {
+    const n = normalizeWaNumber_(list[i]);
+    if (!n || uniq[n]) continue;
+    uniq[n] = true;
+    out.push(n);
+  }
+  return out;
+}
+
+function firstAdminNumber_(numbers) {
+  const list = normalizeAdminNumbers_(numbers);
+  return list.length ? list[0] : "";
 }
 
 module.exports = {
