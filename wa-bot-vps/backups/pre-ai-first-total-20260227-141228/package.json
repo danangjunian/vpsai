@@ -1,0 +1,21 @@
+{
+  "name": "wa-bot-vps",
+  "version": "1.0.0",
+  "private": true,
+  "description": "WhatsApp bot (Baileys/Webhook) -> Apps Script for stock/update workflow",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
+    "smoke:appscript": "node scripts/smoke-appscript.js",
+    "uat:step9": "node scripts/uat-step9.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.18",
+    "axios": "^1.8.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "pino": "^9.6.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}

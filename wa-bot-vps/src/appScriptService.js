@@ -11,182 +11,112 @@ class AppScriptService {
     }
   }
 
-  async saveStock(cols, messageMeta) {
-    const message = "input#" + normalizeCols_(cols, 11).join(";");
-    const result = await this.sendMessage_(message, messageMeta);
-    assertCommandProcessed_(result, "input");
-    return result;
+  async executeData(payload) {
+    const body = payload && typeof payload === "object" ? payload : {};
+    return this.sendPayload_(body);
   }
 
-  async updateSold(cols, messageMeta) {
-    const message = "update#" + normalizeCols_(cols, 5).join(";");
-    const result = await this.sendMessage_(message, messageMeta);
-    assertCommandProcessed_(result, "update");
-    return result;
-  }
-
-  async executeText(text, messageMeta) {
-    const message = String(text || "").trim();
-    if (!message) {
-      return { row: null, reply: "NO_MESSAGE", saveResult: null };
-    }
-    return this.sendMessage_(message, messageMeta);
-  }
-
-  async sendMessage_(message, messageMeta) {
-    const payload = buildPayload_(message, messageMeta);
-
+  async sendPayload_(payload) {
     try {
-      const res = await postJsonPreserveRedirects_(this.webhookUrl, payload, this.timeoutMs);
+      const res = await axios.post(this.webhookUrl, payload, {
+        headers: { "Content-Type": "application/json" },
+        timeout: this.timeoutMs,
+        maxRedirects: 5,
+        validateStatus: function () {
+          return true;
+        }
+      });
       return parseAppScriptResponse_(res.data, this.webhookUrl);
     } catch (err) {
-      // Fallback ke GET untuk deployment Apps Script yang tidak menerima POST.
-      try {
-        const getRes = await axios.get(this.webhookUrl, {
-          params: payload,
-          timeout: this.timeoutMs,
-          validateStatus: function () {
-            return true;
-          }
-        });
-        return parseAppScriptResponse_(getRes.data, this.webhookUrl);
-      } catch (fallbackErr) {
-        const status = fallbackErr && fallbackErr.response ? fallbackErr.response.status : "";
-        throw new Error(
-          "Gagal akses Apps Script" +
-          (status ? " (HTTP " + status + ")" : "") +
-          ". Cek APPS_SCRIPT_WEBHOOK_URL (/exec), permission deployment, dan handler doGet/doPost. Detail: " +
-          String(fallbackErr.message || err.message || "")
-        );
-      }
+      const status = err && err.response ? err.response.status : "";
+      throw new Error(
+        "Gagal akses Apps Script" +
+        (status ? " (HTTP " + status + ")" : "") +
+        ". Cek APPS_SCRIPT_WEBHOOK_URL (/exec) dan permission deployment. Detail: " +
+        String(err && err.message ? err.message : err || "")
+      );
     }
   }
-}
-
-function buildPayload_(message, messageMeta) {
-  const meta = normalizeMessageMeta_(messageMeta);
-  const messageId = meta.messageId || buildClientMessageId_();
-  return {
-    sender: meta.sender,
-    message: String(message || ""),
-    message_id: messageId,
-    chat_jid: meta.chatJid,
-    bot_jid: meta.botJid,
-    from_me: meta.fromMe ? "1" : "0",
-    source: meta.source
-  };
-}
-
-function buildClientMessageId_() {
-  const ts = Date.now().toString(36);
-  const rnd = Math.random().toString(36).slice(2, 10);
-  return "vps_" + ts + "_" + rnd;
-}
-
-function normalizeMessageMeta_(messageMeta) {
-  const meta = messageMeta && typeof messageMeta === "object" ? messageMeta : {};
-  return {
-    sender: normalizeText_(meta.sender),
-    messageId: normalizeText_(meta.messageId || meta.message_id),
-    chatJid: normalizeText_(meta.chatJid || meta.chat_jid),
-    botJid: normalizeText_(meta.botJid || meta.bot_jid),
-    fromMe: toBool_(meta.fromMe !== undefined ? meta.fromMe : meta.from_me),
-    source: normalizeText_(meta.source)
-  };
-}
-
-function normalizeText_(value) {
-  return String(value === undefined || value === null ? "" : value).trim();
-}
-
-function toBool_(value) {
-  if (value === true || value === false) return value;
-  const v = String(value === undefined || value === null ? "" : value).trim().toLowerCase();
-  if (!v) return false;
-  return ["1", "true", "yes", "y", "on"].indexOf(v) !== -1;
-}
-
-async function postJsonPreserveRedirects_(url, payload, timeoutMs) {
-  const maxHops = 5;
-  let currentUrl = url;
-
-  for (let i = 0; i < maxHops; i++) {
-    const res = await axios.post(currentUrl, payload, {
-      headers: { "Content-Type": "application/json" },
-      timeout: timeoutMs,
-      maxRedirects: 0,
-      validateStatus: function () {
-        return true;
-      }
-    });
-
-    if (!isRedirect_(res.status)) {
-      return res;
-    }
-
-    const location = res.headers && res.headers.location ? String(res.headers.location).trim() : "";
-    if (!location) return res;
-
-    currentUrl = resolveUrl_(currentUrl, location);
-  }
-
-  throw new Error("Terlalu banyak redirect dari Apps Script endpoint.");
-}
-
-function normalizeCols_(cols, size) {
-  const out = Array.isArray(cols) ? cols.slice() : [];
-  while (out.length < size) out.push("");
-  return out.slice(0, size).map(function (v) {
-    return String(v === undefined || v === null ? "" : v).trim();
-  });
 }
 
 function parseAppScriptResponse_(raw, webhookUrl) {
   if (typeof raw === "string") {
     const trimmed = raw.trim();
     if (trimmed && trimmed[0] === "{") {
-      try {
-        return parseAppScriptResponse_(JSON.parse(trimmed), webhookUrl);
-      } catch (e) {
-        // lanjut ke parsing teks biasa
+      const parsed = safeJsonParse_(trimmed);
+      if (parsed && typeof parsed === "object") {
+        return normalizeAppScriptEnvelope_(parsed);
       }
     }
+
+    if (!trimmed) {
+      return { status: "error", error: { code: "EMPTY_RESPONSE", message: "EMPTY_RESPONSE" } };
+    }
+
+    if (looksLikeHtml_(trimmed)) {
+      throw new Error(
+        "Apps Script mengembalikan HTML (bukan JSON/API). URL: " + String(webhookUrl || "")
+      );
+    }
+
+    return { status: "error", error: { code: "TEXT_RESPONSE", message: trimmed } };
   }
 
   if (raw && typeof raw === "object") {
-    const ok = raw.ok !== false;
-    if (!ok) {
-      throw new Error(String(raw.error || "Apps Script error"));
+    const normalized = normalizeAppScriptEnvelope_(raw);
+    if (isPayloadPreviewEnvelope_(normalized)) {
+      throw new Error("Apps Script mengembalikan payload_preview (bukan data executor).");
+    }
+    return normalized;
+  }
+
+  return { status: "error", error: { code: "INVALID_RESPONSE", message: "INVALID_RESPONSE" } };
+}
+
+function normalizeAppScriptEnvelope_(raw) {
+  const src = raw && typeof raw === "object" ? raw : {};
+  const statusRaw = String(src.status || "").trim();
+  const status = statusRaw.toLowerCase();
+
+  if (statusRaw === "success" || statusRaw === "error" || statusRaw === "skipped") {
+    return src;
+  }
+
+  if (statusRaw === "SINGLE" || statusRaw === "MULTIPLE" || statusRaw === "NOT_FOUND") {
+    let data = src.data;
+    if (statusRaw === "NOT_FOUND" && (data === null || data === undefined)) {
+      data = [];
     }
     return {
-      row: raw.row || null,
-      reply: raw.reply ? String(raw.reply) : "",
-      saveResult: raw.saveResult || null
+      status: "success",
+      data: data !== undefined ? data : null,
+      error: null,
+      legacy_status: statusRaw
     };
   }
 
-  const text = String(raw || "").trim();
-  if (!text) {
-    return { row: null, reply: "", saveResult: null };
+  if (statusRaw === "ERROR") {
+    const errMsg = src && src.error ? String(src.error) : "Apps Script error";
+    return {
+      status: "error",
+      data: src.data !== undefined ? src.data : null,
+      error: {
+        code: "APPSCRIPT_ERROR",
+        message: errMsg
+      },
+      legacy_status: statusRaw
+    };
   }
 
-  if (looksLikeHtml_(text)) {
-    throw new Error(
-      "Apps Script mengembalikan HTML (bukan JSON/API). " +
-      "Biasanya URL salah atau akses Web App belum public. URL: " + String(webhookUrl || "")
-    );
-  }
+  return src;
+}
 
-  if (text.indexOf("ERROR_") === 0) {
-    throw new Error(text.slice(6) || "Apps Script error");
-  }
-
-  const m = text.match(/^OK_SAVED_ROW_(\d+)$/);
-  if (m) {
-    return { row: Number(m[1]), reply: "", saveResult: { ok: true, row: Number(m[1]) } };
-  }
-
-  return { row: null, reply: text, saveResult: null };
+function isPayloadPreviewEnvelope_(envelope) {
+  const src = envelope && typeof envelope === "object" ? envelope : {};
+  const data = src && src.data && typeof src.data === "object" ? src.data : null;
+  if (!data) return false;
+  if (!Object.prototype.hasOwnProperty.call(data, "payload_preview")) return false;
+  return String(data.service || "").trim() === "apps_script_data_executor";
 }
 
 function looksLikeHtml_(text) {
@@ -194,30 +124,11 @@ function looksLikeHtml_(text) {
   return t.indexOf("<html") !== -1 || t.indexOf("<!doctype html") !== -1 || t.indexOf("docs-drive-logo") !== -1;
 }
 
-function isRedirect_(status) {
-  return [301, 302, 303, 307, 308].indexOf(Number(status)) !== -1;
-}
-
-function resolveUrl_(baseUrl, location) {
+function safeJsonParse_(raw) {
   try {
-    return new URL(location, baseUrl).toString();
-  } catch (e) {
-    return location;
-  }
-}
-
-function assertCommandProcessed_(result, commandType) {
-  const hasRow = result && result.row !== null && result.row !== undefined && result.row !== "";
-  const saveOk = Boolean(result && result.saveResult && result.saveResult.ok);
-  const reply = String((result && result.reply) || "").trim().toUpperCase();
-
-  if (hasRow || saveOk) return;
-
-  if (reply === "OK" || reply === "NO_MESSAGE" || reply === "") {
-    throw new Error(
-      "Apps Script belum memproses perintah " + commandType +
-      ". Pastikan deployment menjalankan versi terbaru dan doGet/doPost membaca parameter message."
-    );
+    return JSON.parse(String(raw || ""));
+  } catch (err) {
+    return null;
   }
 }
 

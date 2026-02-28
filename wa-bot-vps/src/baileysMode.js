@@ -4,11 +4,9 @@ const pino = require("pino");
 const qrcode = require("qrcode-terminal");
 const {
   default: makeWASocket,
-  DisconnectReason,
   fetchLatestBaileysVersion,
   useMultiFileAuthState
 } = require("@whiskeysockets/baileys");
-const { processIncomingText } = require("./messageProcessor");
 
 const seenInboundMessageIds_ = new Map();
 const MESSAGE_DEDUP_TTL_MS = 6 * 60 * 60 * 1000;
@@ -18,20 +16,28 @@ let appScriptMonitorTimer_ = null;
 let appScriptMonitorInFlight_ = false;
 let appScriptMonitorConsecutiveFailures_ = 0;
 let appScriptMonitorLastAlertAt_ = 0;
+let reconnectTimer_ = null;
+let reconnectAttempt_ = 0;
+let reconnectInProgress_ = false;
 
 async function startBaileysMode(options) {
   const cfg = options || {};
+  const conversationController = cfg.conversationController;
+  if (!conversationController || typeof conversationController.processIncomingText !== "function") {
+    throw new Error("conversationController belum tersedia untuk mode BAILEYS");
+  }
+
   const sessionDir = path.resolve(process.cwd(), cfg.sessionDir || "./auth_info_baileys");
   const allowGroupMessages = Boolean(cfg.allowGroupMessages);
   const allowSelfChatMessages =
     cfg.allowSelfChatMessages === undefined ? true : Boolean(cfg.allowSelfChatMessages);
-  const debugWaFilter = Boolean(cfg.debugWaFilter);
   const adminNumberSet = buildNumberSet_(cfg.adminNumbers);
   const configuredBotNumber = normalizeWaNumber_(cfg.botNumber);
   const dailyExpenseReminderEnabled =
     cfg.dailyExpenseReminderEnabled === undefined ? true : Boolean(cfg.dailyExpenseReminderEnabled);
   const dailyExpenseReminderTime = normalizeReminderTime_(cfg.dailyExpenseReminderTime || "22:00");
   const dailyExpenseReminderTz = String(cfg.dailyExpenseReminderTz || "Asia/Jakarta").trim() || "Asia/Jakarta";
+  const reminderNumbers = normalizeAdminNumbers_((cfg && cfg.reminderNumbers) || []);
   const appScriptMonitorEnabled =
     cfg.appScriptMonitorEnabled === undefined ? true : Boolean(cfg.appScriptMonitorEnabled);
   const appScriptMonitorIntervalSec = Math.max(30, Number(cfg.appScriptMonitorIntervalSec || 180));
@@ -74,7 +80,7 @@ async function startBaileysMode(options) {
     enabled: dailyExpenseReminderEnabled,
     reminderTime: dailyExpenseReminderTime,
     reminderTz: dailyExpenseReminderTz,
-    adminNumbers: cfg.adminNumbers
+    adminNumbers: reminderNumbers.length ? reminderNumbers : normalizeAdminNumbers_((cfg && cfg.adminNumbers) || [])
   });
 
   configureAppScriptMonitor_({
@@ -104,6 +110,9 @@ async function startBaileysMode(options) {
     }
 
     if (connection === "open") {
+      clearReconnectTimer_();
+      reconnectAttempt_ = 0;
+      reconnectInProgress_ = false;
       console.log("WhatsApp connected.");
       emitCallback_(onConnectionUpdate, {
         connection: "open",
@@ -113,12 +122,9 @@ async function startBaileysMode(options) {
     }
 
     if (connection === "close") {
-      const statusCode =
-        lastDisconnect &&
-        lastDisconnect.error &&
-        lastDisconnect.error.output &&
-        lastDisconnect.error.output.statusCode;
-      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+      const statusCode = extractDisconnectStatusCode_(lastDisconnect);
+      const isUnauthorized = Number(statusCode || 0) === 401;
+      const shouldReconnect = !isUnauthorized;
 
       console.log("WhatsApp disconnected. code=", statusCode, "reconnect=", shouldReconnect);
       emitCallback_(onConnectionUpdate, {
@@ -128,15 +134,20 @@ async function startBaileysMode(options) {
           (lastDisconnect && lastDisconnect.error && lastDisconnect.error.message) || ""
         )
       });
-      if (shouldReconnect) {
-        setTimeout(function () {
-          startBaileysMode(cfg).catch(function (err) {
-            console.error("[baileys] reconnect error:", err.message);
-          });
-        }, 3000);
-      } else {
-        console.log("Session logged out. Hapus folder session lalu login ulang.");
+      if (isUnauthorized) {
+        handleUnauthorizedDisconnect_(cfg, sessionDir);
+        return;
       }
+
+      if (shouldReconnect) {
+        scheduleReconnect_(cfg, statusCode);
+        return;
+      }
+
+      clearReconnectTimer_();
+      reconnectAttempt_ = 0;
+      reconnectInProgress_ = false;
+      console.log("Session logged out. Hapus folder session lalu login ulang.");
     }
   });
 
@@ -178,14 +189,9 @@ async function startBaileysMode(options) {
 
         const text = extractTextMessage(msg.message);
         if (!text) continue;
-        const textLower = text.toLowerCase();
-        const traceThisMessage = debugWaFilter && isCommandLike_(textLower);
         const msgId = normalizeMessageId_(msg.key && msg.key.id);
 
         if (isDuplicateMessage_(remoteJid, msgId)) {
-          if (traceThisMessage) {
-            console.log("[wa-dedup] skip duplicate message id=" + msgId + " remote=" + remoteJid);
-          }
           continue;
         }
 
@@ -193,39 +199,13 @@ async function startBaileysMode(options) {
         // - bot -> nomor lain: selalu diabaikan
         // - hanya admin atau self-chat bot yang boleh diproses
         if (isSenderBot && !isSelfChat) {
-          if (traceThisMessage) {
-            console.log("[wa-auth] skip bot-outbound sender=" + senderJid + " remote=" + remoteJid);
-          }
           continue;
         }
         if (!isAuthorized) {
-          if (traceThisMessage) {
-            console.log(
-              "[wa-auth] skip unauthorized sender=" + senderJid +
-              " chat=" + remoteJid +
-              " senderPn=" + String((msg.key && msg.key.senderPn) || "") +
-              " participantPn=" + String((msg.key && msg.key.participantPn) || "") +
-              " admin=" + isAdminSender +
-              " selfChat=" + isSelfChat
-            );
-          }
           continue;
         }
         if (isSelfChat && !allowSelfChatMessages) {
-          if (traceThisMessage) {
-            console.log("[wa-auth] skip self-chat disabled sender=" + senderJid);
-          }
           continue;
-        }
-
-        if (traceThisMessage) {
-          console.log(
-            "[wa-auth] process sender=" + senderJid +
-            " remote=" + remoteJid +
-            " fromMe=" + fromMe +
-            " selfChat=" + isSelfChat +
-            " admin=" + isAdminSender
-          );
         }
 
         const messageMeta = {
@@ -237,21 +217,114 @@ async function startBaileysMode(options) {
           source: "BAILEYS"
         };
 
-        const result = await processIncomingText(text, cfg.dataService, messageMeta, cfg.aiCommandParser);
-        if (!result.reply) continue;
+        try {
+          const result = await conversationController.processIncomingText(text, messageMeta);
+          if (!result.reply) continue;
 
-        await sock.sendMessage(jid, { text: result.reply }, { quoted: msg });
-        emitCallback_(onMessageProcessed, {
-          sender: senderJid,
-          chatJid: remoteJid,
-          messageId: msgId
-        });
+          await sock.sendMessage(jid, { text: result.reply }, { quoted: msg });
+          emitCallback_(onMessageProcessed, {
+            sender: senderJid,
+            chatJid: remoteJid,
+            messageId: msgId
+          });
+        } catch (itemErr) {
+          const detail = String(itemErr && itemErr.message ? itemErr.message : itemErr || "UNKNOWN");
+          console.error("[baileys] message item error:", detail);
+          emitCallback_(onMessageError, itemErr);
+
+          try {
+            await sock.sendMessage(
+              jid,
+              { text: "Maaf, proses pesan tadi gagal. Silakan kirim ulang sekali lagi." },
+              { quoted: msg }
+            );
+          } catch (sendErr) {
+            // ignore send fallback error
+          }
+        }
       }
     } catch (err) {
       console.error("[baileys] message handler error:", err.message);
       emitCallback_(onMessageError, err);
     }
   });
+
+  return {
+    sendText: async function (targetNumber, text) {
+      const number = normalizeWaNumber_(targetNumber);
+      const body = String(text || "").trim();
+      if (!number || !body) return false;
+      const jid = number + "@s.whatsapp.net";
+      await sock.sendMessage(jid, { text: body });
+      return true;
+    }
+  };
+}
+
+function scheduleReconnect_(cfg, statusCode) {
+  if (reconnectInProgress_) {
+    console.log("[baileys] reconnect in progress, skip duplicate.");
+    return;
+  }
+
+  if (reconnectTimer_) {
+    console.log("[baileys] reconnect already scheduled, skip duplicate.");
+    return;
+  }
+
+  const attempt = reconnectAttempt_ + 1;
+  const delayMs = Math.min(30000, Math.floor(3000 * Math.pow(1.7, reconnectAttempt_)));
+  reconnectAttempt_ = attempt;
+
+  console.log(
+    "[baileys] scheduling reconnect attempt=" + attempt +
+    " delayMs=" + delayMs +
+    " lastCode=" + String(statusCode || "")
+  );
+
+  reconnectTimer_ = setTimeout(function () {
+    reconnectTimer_ = null;
+    reconnectInProgress_ = true;
+    startBaileysMode(cfg).catch(function (err) {
+      reconnectInProgress_ = false;
+      console.error("[baileys] reconnect error:", err.message);
+      scheduleReconnect_(cfg, "startup_error");
+    });
+  }, delayMs);
+}
+
+function clearReconnectTimer_() {
+  if (!reconnectTimer_) return;
+  clearTimeout(reconnectTimer_);
+  reconnectTimer_ = null;
+}
+
+function extractDisconnectStatusCode_(lastDisconnect) {
+  const candidate = firstDefined_([
+    lastDisconnect && lastDisconnect.error && lastDisconnect.error.output && lastDisconnect.error.output.statusCode,
+    lastDisconnect && lastDisconnect.error && lastDisconnect.error.data && lastDisconnect.error.data.statusCode,
+    lastDisconnect && lastDisconnect.error && lastDisconnect.error.statusCode
+  ]);
+  const parsed = Number(candidate);
+  return isFinite(parsed) ? parsed : "";
+}
+
+function handleUnauthorizedDisconnect_(cfg, sessionDir) {
+  clearReconnectTimer_();
+  reconnectAttempt_ = 0;
+  reconnectInProgress_ = false;
+
+  try {
+    fs.rmSync(sessionDir, { recursive: true, force: true });
+    console.log("[baileys] session invalid (401). Session folder deleted:", sessionDir);
+  } catch (err) {
+    console.error("[baileys] failed deleting session folder:", err.message);
+  }
+
+  // Restart process agar seluruh state bersih; PM2 akan auto-restart.
+  setTimeout(function () {
+    process.exit(1);
+  }, 300);
 }
 
 function emitCallback_(cb, payload) {
@@ -337,23 +410,13 @@ function firstNonEmpty_(values) {
   return "";
 }
 
-function isCommandLike_(textLower) {
-  const t = String(textLower || "").trim();
-  if (!t) return false;
-  if (t === "halo" || t === "hi" || t === "menu") return true;
-  if (t === "motor masuk" || t === "ok" || t === "batal") return true;
-  if (t === "trigger pengeluaran harian" || t === "pengeluaran harian" || t === "pengeluaran") return true;
-  if (t.indexOf("pengeluaran ") === 0 || t.indexOf("laba ") === 0 || t.indexOf("keuntungan ") === 0) return true;
-  if (t.indexOf("total aset") === 0 || t.indexOf("total kendaraan") === 0 || t.indexOf("total modal") === 0) return true;
-  if (t.indexOf("data motor") === 0) return true;
-  if (t.indexOf("cek data motor") === 0) return true;
-  if (t.indexOf("input#") === 0 || t.indexOf("update#") === 0) return true;
-  return (
-    t.indexOf("nama motor:") !== -1 ||
-    t.indexOf("harga jual:") !== -1 ||
-    t.indexOf("harga laku:") !== -1 ||
-    t.indexOf("no:") !== -1
-  );
+function firstDefined_(values) {
+  const list = Array.isArray(values) ? values : [];
+  for (let i = 0; i < list.length; i++) {
+    const v = list[i];
+    if (v !== undefined && v !== null && v !== "") return v;
+  }
+  return "";
 }
 
 function normalizeWaNumber_(value) {
@@ -484,26 +547,24 @@ async function runAppScriptMonitorTick_(cfg) {
 
   try {
     const dataService = cfg && cfg.dataService;
-    if (!dataService || typeof dataService.executeText !== "function") {
+    if (!dataService || typeof dataService.executeData !== "function") {
       throw new Error("Data service tidak tersedia");
     }
 
-    const senderNumber = firstAdminNumber_((cfg && cfg.adminNumbers) || []);
-    const senderJid = senderNumber ? senderNumber + "@s.whatsapp.net" : "";
-    const botNumber = normalizeWaNumber_((cfg && cfg.botNumber) || "");
-    const botJid = botNumber ? botNumber + "@s.whatsapp.net" : "";
-    const meta = {
-      sender: senderJid,
-      chatJid: senderJid || botJid,
-      botJid: botJid,
-      fromMe: false,
-      source: "MONITOR"
-    };
-
-    const result = await dataService.executeText("menu", meta);
-    const reply = String((result && result.reply) || "").trim();
-    if (!reply) {
+    const result = await dataService.executeData({
+      intent: "CEK_DATA",
+      target_sheet: "STOK_MOTOR",
+      parameters: { limit: 1 }
+    });
+    const status = String((result && result.status) || "").trim().toLowerCase();
+    if (!status) {
       throw new Error("Apps Script reply kosong");
+    }
+    if (status !== "success") {
+      const errText = result && result.error && result.error.message
+        ? String(result.error.message)
+        : String((result && result.error) || "Apps Script error");
+      throw new Error(errText);
     }
 
     appScriptMonitorConsecutiveFailures_ = 0;
@@ -618,35 +679,15 @@ async function runDailyExpenseReminderTick_(cfg, schedule, tz) {
     const number = admins[i];
     const jid = number + "@s.whatsapp.net";
 
-    let prompt = "";
     try {
-      const prepared = await processIncomingText(
-        "trigger pengeluaran harian",
-        cfg.dataService,
-        {
-          sender: jid,
-          chatJid: jid,
-          botJid: "",
-          fromMe: false,
-          source: "BAILEYS"
-        }
-      );
-      prompt = String((prepared && prepared.reply) || "").trim();
-    } catch (err) {
-      console.error("[daily-expense] trigger failed for", jid, "-", err.message);
-      continue;
-    }
-
-    if (!prompt) {
-      prompt = [
-        "Pengeluaran hari ini berapa?",
-        "- keterangan :",
-        "- total pengeluaran :"
-      ].join("\n");
-    }
-
-    try {
-      await sock.sendMessage(jid, { text: prompt });
+      await sock.sendMessage(jid, { text: "Pengingat ya, jangan lupa isi pengeluaran hari ini." });
+      await sock.sendMessage(jid, {
+        text: [
+          "Tolong diisi ya",
+          "1. Keterangan:",
+          "2. Total pengeluaran:"
+        ].join("\n")
+      });
     } catch (err) {
       console.error("[daily-expense] send failed to", jid, "-", err.message);
     }
@@ -710,11 +751,6 @@ function normalizeAdminNumbers_(numbers) {
     out.push(n);
   }
   return out;
-}
-
-function firstAdminNumber_(numbers) {
-  const list = normalizeAdminNumbers_(numbers);
-  return list.length ? list[0] : "";
 }
 
 module.exports = {

@@ -1,12 +1,16 @@
 const express = require("express");
 const axios = require("axios");
-const { processIncomingText, toWebhookResult } = require("./messageProcessor");
 
 function startWebhookMode(options) {
   const cfg = options || {};
   const adminNumberSet = buildNumberSet(cfg.adminNumbers);
   const botNumber = normalizeWaNumber(cfg.botNumber);
+  const controller = cfg.conversationController;
   const app = express();
+
+  if (!controller || typeof controller.processIncomingText !== "function") {
+    throw new Error("conversationController belum tersedia untuk mode WEBHOOK");
+  }
 
   app.use(express.json({ limit: "1mb" }));
   app.use(express.urlencoded({ extended: true }));
@@ -31,7 +35,6 @@ function startWebhookMode(options) {
       const isAdminSender = adminNumberSet.has(senderNumber);
 
       if ((isSenderBot && !isSelfChat) || (!isAdminSender && !isSelfChat)) {
-        // Abaikan diam-diam: tidak simpan dan tidak balas.
         return res.type("text/plain").send("OK");
       }
 
@@ -43,7 +46,8 @@ function startWebhookMode(options) {
         fromMe: toBool(payload.from_me !== undefined ? payload.from_me : payload.fromMe),
         source: "WEBHOOK"
       };
-      const result = await processIncomingText(text, cfg.dataService, messageMeta, cfg.aiCommandParser);
+
+      const result = await controller.processIncomingText(text, messageMeta);
 
       if (sender && result.reply) {
         await sendWaReply(sender, result.reply, cfg.fonnteToken);
@@ -59,6 +63,16 @@ function startWebhookMode(options) {
   app.listen(cfg.port, function () {
     console.log("WA bot WEBHOOK mode running on port " + cfg.port);
   });
+
+  return {
+    sendText: async function (target, text) {
+      const number = normalizeWaNumber(target);
+      const body = String(text || "").trim();
+      if (!number || !body) return false;
+      await sendWaReply(number, body, cfg.fonnteToken);
+      return true;
+    }
+  };
 }
 
 function toBool(value) {
@@ -113,6 +127,21 @@ function parseIncomingPayload(body) {
   }
 
   return body;
+}
+
+function toWebhookResult(saveResult) {
+  if (!saveResult || typeof saveResult !== "object") return "OK";
+  const status = String(saveResult.status || "").trim().toLowerCase();
+  if (!status || status === "success" || status === "skipped") {
+    return "OK";
+  }
+  if (status === "error") {
+    const errText = saveResult && saveResult.error && saveResult.error.message
+      ? String(saveResult.error.message)
+      : String(saveResult.error || "ERROR");
+    return "ERROR_" + errText;
+  }
+  return "OK";
 }
 
 async function sendWaReply(target, message, fonnteToken) {
