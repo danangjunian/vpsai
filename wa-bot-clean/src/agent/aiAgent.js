@@ -1132,10 +1132,109 @@ function buildParserSchema_() {
                   },
                   required: ["ids", "names", "attributes"]
                 },
-                filters: { type: "object" },
+                filters: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    nama_motor: { type: "string" },
+                    nomor_motor: { type: "string" },
+                    tahun: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] },
+                    pajak: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] },
+                    surat: { type: "string" },
+                    harga_beli: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] },
+                    harga_jual: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] },
+                    harga_laku: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] },
+                    plat: { type: "string" },
+                    tahun_plat: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] },
+                    sold: {
+                      anyOf: [
+                        { type: "boolean" },
+                        { type: "string", enum: ["all"] },
+                        { type: "null" }
+                      ]
+                    },
+                    availability_state: {
+                      anyOf: [
+                        { type: "string", enum: ["available", "sold", "all"] },
+                        { type: "null" }
+                      ]
+                    },
+                    status_terjual: {
+                      anyOf: [
+                        { type: "boolean" },
+                        { type: "string", enum: ["all"] },
+                        { type: "null" }
+                      ]
+                    }
+                  },
+                  required: [
+                    "nama_motor",
+                    "nomor_motor",
+                    "tahun",
+                    "pajak",
+                    "surat",
+                    "harga_beli",
+                    "harga_jual",
+                    "harga_laku",
+                    "plat",
+                    "tahun_plat",
+                    "sold",
+                    "availability_state",
+                    "status_terjual"
+                  ]
+                },
                 projection: { type: "array", items: { type: "string" } },
-                mutation_payload: { type: "object" },
-                temporal: { type: "object" },
+                mutation_payload: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    no: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] },
+                    nama_motor: { type: "string" },
+                    tahun: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] },
+                    plat: { type: "string" },
+                    surat_surat: { type: "string" },
+                    surat: { type: "string" },
+                    tahun_plat: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] },
+                    pajak: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] },
+                    harga_beli: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] },
+                    harga_jual: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] },
+                    harga_laku: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] },
+                    tanggal: { type: "string" },
+                    keterangan: { type: "string" },
+                    total_pengeluaran: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] },
+                    due_at: { type: "string" },
+                    reminder_text: { type: "string" }
+                  },
+                  required: [
+                    "no",
+                    "nama_motor",
+                    "tahun",
+                    "plat",
+                    "surat_surat",
+                    "surat",
+                    "tahun_plat",
+                    "pajak",
+                    "harga_beli",
+                    "harga_jual",
+                    "harga_laku",
+                    "tanggal",
+                    "keterangan",
+                    "total_pengeluaran",
+                    "due_at",
+                    "reminder_text"
+                  ]
+                },
+                temporal: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    preset: { type: "string", enum: ["today", "week", "month", "all", "none"] },
+                    last_days: { anyOf: [{ type: "number" }, { type: "null" }] },
+                    start_date: { type: "string" },
+                    end_date: { type: "string" }
+                  },
+                  required: ["preset", "last_days", "start_date", "end_date"]
+                },
                 value: { type: "string" },
                 count: { anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }] }
               },
