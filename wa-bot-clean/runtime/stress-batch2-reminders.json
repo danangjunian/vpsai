@@ -1,0 +1,58 @@
+{
+  "items": [
+    {
+      "id": "mmogv8yg_xoa76o5f",
+      "phone": "628995000001",
+      "text": "makan",
+      "dueAt": "2026-03-13T02:00:00.000Z",
+      "sent": false,
+      "createdAt": "2026-03-13T05:39:01.531Z",
+      "updatedAt": "2026-03-13T05:39:01.531Z"
+    },
+    {
+      "id": "mmogvy0g_dev2n57b",
+      "phone": "628995000001",
+      "text": "minum obat",
+      "dueAt": "2026-03-13T03:00:00.000Z",
+      "sent": false,
+      "createdAt": "2026-03-13T05:39:34.000Z",
+      "updatedAt": "2026-03-13T05:39:34.000Z"
+    },
+    {
+      "id": "mmogw4ip_8049ghf3",
+      "phone": "628995000001",
+      "text": "beli bensin",
+      "dueAt": "2026-03-13T17:00:00.000Z",
+      "sent": false,
+      "createdAt": "2026-03-13T05:39:42.433Z",
+      "updatedAt": "2026-03-13T05:39:42.433Z"
+    },
+    {
+      "id": "mmogwb9c_lqxomxp3",
+      "phone": "628995000001",
+      "text": "olahraga",
+      "dueAt": "2026-03-13T00:00:00.000Z",
+      "sent": false,
+      "createdAt": "2026-03-13T05:39:51.168Z",
+      "updatedAt": "2026-03-13T05:39:51.168Z"
+    },
+    {
+      "id": "mmogx57p_d1is41m7",
+      "phone": "628995000001",
+      "text": "bangun",
+      "dueAt": "2026-03-12T23:00:00.000Z",
+      "sent": false,
+      "createdAt": "2026-03-13T05:40:29.989Z",
+      "updatedAt": "2026-03-13T05:40:29.989Z"
+    },
+    {
+      "id": "mmogxct6_vrp9euka",
+      "phone": "628995000001",
+      "text": "sarapan",
+      "dueAt": "2026-03-13T01:00:00.000Z",
+      "sent": false,
+      "createdAt": "2026-03-13T05:40:39.834Z",
+      "updatedAt": "2026-03-13T05:40:39.834Z"
+    }
+  ]
+}

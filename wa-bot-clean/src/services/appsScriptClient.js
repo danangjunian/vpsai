@@ -14,121 +14,54 @@ class AppsScriptClient {
 
   async getMotorData(payload) {
     console.log("APPS_SCRIPT_TOOL:", "get_motor_data", asObject(payload));
-    return this.callWithCompatibility({
-      action: "GET_DATA",
-      sheet: "STOK MOTOR",
-      payload: asObject(payload),
-      legacyIntent: "CEK_DATA",
-      legacyTargetSheet: "STOK_MOTOR"
-    });
+    return this.callJson("GET_DATA", "STOK MOTOR", payload);
   }
 
   async insertMotor(payload) {
     console.log("APPS_SCRIPT_TOOL:", "insert_motor", asObject(payload));
-    return this.callWithCompatibility({
-      action: "INSERT_DATA",
-      sheet: "STOK MOTOR",
-      payload: asObject(payload),
-      legacyIntent: "INPUT_DATA",
-      legacyTargetSheet: "STOK_MOTOR"
-    });
+    return this.callJson("INSERT_DATA", "STOK MOTOR", payload);
   }
 
   async updateMotor(payload) {
     console.log("APPS_SCRIPT_TOOL:", "update_motor", asObject(payload));
-    return this.callWithCompatibility({
-      action: "UPDATE_DATA",
-      sheet: "STOK MOTOR",
-      payload: asObject(payload),
-      legacyIntent: "EDIT_DATA",
-      legacyTargetSheet: "STOK_MOTOR"
-    });
+    return this.callJson("UPDATE_DATA", "STOK MOTOR", payload);
   }
 
   async deleteMotor(payload) {
     console.log("APPS_SCRIPT_TOOL:", "delete_motor", asObject(payload));
-    return this.callWithCompatibility({
-      action: "DELETE_DATA",
-      sheet: "STOK MOTOR",
-      payload: asObject(payload),
-      legacyIntent: "HAPUS_DATA",
-      legacyTargetSheet: "STOK_MOTOR"
-    });
+    return this.callJson("DELETE_DATA", "STOK MOTOR", payload);
   }
 
   async confirmSold(payload) {
     console.log("APPS_SCRIPT_TOOL:", "confirm_sold", asObject(payload));
-    return this.callWithCompatibility({
-      action: "UPDATE_DATA",
-      sheet: "STOK MOTOR",
-      payload: asObject(payload),
-      legacyIntent: "KONFIRMASI_TERJUAL",
-      legacyTargetSheet: "STOK_MOTOR"
-    });
+    return this.callJson("UPDATE_DATA", "STOK MOTOR", payload);
   }
 
   async getPengeluaran(payload) {
     console.log("APPS_SCRIPT_TOOL:", "get_pengeluaran", asObject(payload));
-    return this.callWithCompatibility({
-      action: "GET_DATA",
-      sheet: "PENGELUARAN HARIAN",
-      payload: asObject(payload),
-      legacyIntent: "CEK_DATA",
-      legacyTargetSheet: "PENGELUARAN_HARIAN"
-    });
+    return this.callJson("GET_DATA", "PENGELUARAN HARIAN", payload);
   }
 
   async insertPengeluaran(payload) {
     console.log("APPS_SCRIPT_TOOL:", "insert_pengeluaran", asObject(payload));
-    return this.callWithCompatibility({
-      action: "INSERT_DATA",
-      sheet: "PENGELUARAN HARIAN",
-      payload: asObject(payload),
-      legacyIntent: "INPUT_DATA",
-      legacyTargetSheet: "PENGELUARAN_HARIAN"
-    });
+    return this.callJson("INSERT_DATA", "PENGELUARAN HARIAN", payload);
   }
 
   async updatePengeluaran(payload) {
     console.log("APPS_SCRIPT_TOOL:", "update_pengeluaran", asObject(payload));
-    return this.callWithCompatibility({
-      action: "UPDATE_DATA",
-      sheet: "PENGELUARAN HARIAN",
-      payload: asObject(payload),
-      legacyIntent: "EDIT_DATA",
-      legacyTargetSheet: "PENGELUARAN_HARIAN"
-    });
+    return this.callJson("UPDATE_DATA", "PENGELUARAN HARIAN", payload);
   }
 
-  async getTotalPendapatan(payload) {
-    const src = asObject(payload);
-    const metricLabel = String(src.metric_label || src.metric || "").trim() || "total pendapatan";
-    const params = Object.assign({}, src, { metric_label: metricLabel });
-    console.log("APPS_SCRIPT_TOOL:", "get_total_pendapatan", params);
-    return this.callWithCompatibility({
-      action: "GET_DATA",
-      sheet: "TOTAL ASET",
-      payload: params,
-      legacyIntent: "CEK_DATA",
-      legacyTargetSheet: "TOTAL_ASET"
-    });
-  }
 
   async getTotalAsetData(payload) {
     const src = asObject(payload);
     const metricLabel = String(src.metric_label || src.metric || src.label || "").trim();
     const params = metricLabel ? Object.assign({}, src, { metric_label: metricLabel }) : src;
     console.log("APPS_SCRIPT_TOOL:", "get_total_aset_data", params);
-    return this.callWithCompatibility({
-      action: "GET_DATA",
-      sheet: "TOTAL ASET",
-      payload: params,
-      legacyIntent: "CEK_DATA",
-      legacyTargetSheet: "TOTAL_ASET"
-    });
+    return this.callJson("GET_DATA", "TOTAL ASET", params);
   }
 
-  async callWithCompatibility(input) {
+  async callJson(action, sheet, payload) {
     if (!this.isReady()) {
       return {
         status: "error",
@@ -136,68 +69,33 @@ class AppsScriptClient {
       };
     }
 
-    const req = input && typeof input === "object" ? input : {};
-
-    const modernPayload = {
+    const requestPayload = {
       internal_api_key: this.internalApiKey,
       api_key: this.internalApiKey,
-      action: String(req.action || "").trim(),
-      sheet: String(req.sheet || "").trim(),
-      payload: asObject(req.payload)
+      action: String(action || "").trim(),
+      sheet: String(sheet || "").trim(),
+      payload: asObject(payload)
     };
 
     console.log("APPS_SCRIPT_CALL:", {
-      action: modernPayload.action,
-      sheet: modernPayload.sheet,
-      payload: modernPayload.payload
+      action: requestPayload.action,
+      sheet: requestPayload.sheet,
+      payload: requestPayload.payload
     });
-    const modernResult = await this.postJson(modernPayload);
-    console.log("APPS_SCRIPT_RESULT:", modernResult);
-    if (modernResult.status === "success") return modernResult;
 
-    if (!req.legacyIntent || !req.legacyTargetSheet) {
-      return modernResult;
-    }
-
-    const legacyPayload = {
-      internal_api_key: this.internalApiKey,
-      api_key: this.internalApiKey,
-      intent: String(req.legacyIntent || "").trim(),
-      target_sheet: String(req.legacyTargetSheet || "").trim(),
-      parameters: asObject(req.payload)
-    };
-
-    console.log("APPS_SCRIPT_CALL_LEGACY:", {
-      intent: legacyPayload.intent,
-      target_sheet: legacyPayload.target_sheet,
-      parameters: legacyPayload.parameters
-    });
-    const legacyResult = await this.postJson(legacyPayload);
-    console.log("APPS_SCRIPT_RESULT_LEGACY:", legacyResult);
-    if (legacyResult.status === "success") return legacyResult;
-
-    if (isGenericCompatibilityFailure(modernResult) && !isGenericCompatibilityFailure(legacyResult)) {
-      return legacyResult;
-    }
-    return modernResult;
-  }
-
-  async postJson(payload) {
     try {
-      const res = await axios.post(this.webhookUrl, payload, {
+      const res = await axios.post(this.webhookUrl, requestPayload, {
         timeout: this.timeoutMs,
         headers: {
           "Content-Type": "application/json"
         }
       });
-      return normalizeResponse(res && res.data ? res.data : {});
+      const normalized = normalizeResponse(res && res.data ? res.data : {});
+      console.log("APPS_SCRIPT_RESULT:", normalized);
+      return normalized;
     } catch (err) {
       console.error("APPS_SCRIPT_ERROR:", err);
-      const statusCode = Number(
-        err &&
-        err.response &&
-        err.response.status ? err.response.status : 0
-      );
+      const statusCode = Number(err && err.response && err.response.status ? err.response.status : 0);
       const raw = err && err.response ? err.response.data : null;
       const parsed = normalizeResponse(raw);
       if (parsed.status === "error" && parsed.message) return parsed;
@@ -265,16 +163,6 @@ function buildHttpErrorMessage(statusCode, err) {
   return [statusCode > 0 ? "HTTP " + statusCode : "", code, msg]
     .filter(Boolean)
     .join(" - ") || "HTTP request failed";
-}
-
-function isGenericCompatibilityFailure(result) {
-  const r = result && typeof result === "object" ? result : {};
-  const msg = String(r.message || "").toUpperCase();
-  return (
-    msg.indexOf("INTENT_INVALID") !== -1 ||
-    msg.indexOf("TARGET_SHEET_INVALID") !== -1 ||
-    msg.indexOf("ACTION") !== -1
-  );
 }
 
 module.exports = AppsScriptClient;

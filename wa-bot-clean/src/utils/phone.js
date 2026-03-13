@@ -11,8 +11,8 @@ function normalizePhone(input) {
   if (!raw) return "";
   let digits = raw.replace(/[^\d]/g, "");
   if (!digits) return "";
-  if (digits.startsWith("00")) digits = digits.slice(2);
-  if (digits.startsWith("0")) digits = "62" + digits.slice(1);
+  if (digits.slice(0, 2) === "00") digits = digits.slice(2);
+  if (digits.slice(0, 1) === "0") digits = "62" + digits.slice(1);
   return digits;
 }
 
@@ -31,8 +31,8 @@ function buildPhoneCandidatesFromJid(jidOrPhone) {
 
   addUnique(out, normalizePhone(digits));
   addUnique(out, digits);
-  if (digits.startsWith("62")) addUnique(out, "0" + digits.slice(2));
-  if (digits.startsWith("0")) addUnique(out, "62" + digits.slice(1));
+  if (digits.slice(0, 2) === "62") addUnique(out, "0" + digits.slice(2));
+  if (digits.slice(0, 1) === "0") addUnique(out, "62" + digits.slice(1));
 
   return out.filter(Boolean).map(normalizePhone).filter(Boolean);
 }
@@ -59,20 +59,56 @@ function parseAdminList(envValue) {
 function hasAnyInSet(setObj, values) {
   if (!setObj || typeof setObj.has !== "function") return false;
   const arr = Array.isArray(values) ? values : [];
+  const allowed = toNormalizedArrayFromSet(setObj);
   for (let i = 0; i < arr.length; i++) {
     const token = normalizePhone(arr[i]);
     if (token && setObj.has(token)) return true;
+    if (!token) continue;
+    for (let j = 0; j < allowed.length; j++) {
+      if (isLoosePhoneMatch(token, allowed[j])) return true;
+    }
   }
   return false;
 }
 
-function pickWhitelistedCandidate(setObj, values, fallback) {
+function pickWhitelistedCandidate(setObj, values, defaultValue) {
+  const allowed = toNormalizedArrayFromSet(setObj);
   const arr = Array.isArray(values) ? values : [];
   for (let i = 0; i < arr.length; i++) {
     const token = normalizePhone(arr[i]);
     if (token && setObj.has(token)) return token;
   }
-  return normalizePhone(fallback);
+
+  for (let i = 0; i < arr.length; i++) {
+    const token = normalizePhone(arr[i]);
+    if (!token) continue;
+    for (let j = 0; j < allowed.length; j++) {
+      if (isLoosePhoneMatch(token, allowed[j])) return allowed[j];
+    }
+  }
+
+  return normalizePhone(defaultValue);
+}
+
+function toNormalizedArrayFromSet(setObj) {
+  if (!setObj || typeof setObj.forEach !== "function") return [];
+  const out = [];
+  setObj.forEach((value) => {
+    const token = normalizePhone(value);
+    if (token) out.push(token);
+  });
+  return out;
+}
+
+function isLoosePhoneMatch(a, b) {
+  const x = normalizePhone(a);
+  const y = normalizePhone(b);
+  if (!x || !y) return false;
+  if (x === y) return true;
+
+  const minTail = 10;
+  if (x.length < minTail || y.length < minTail) return false;
+  return x.slice(-minTail) === y.slice(-minTail);
 }
 
 module.exports = {

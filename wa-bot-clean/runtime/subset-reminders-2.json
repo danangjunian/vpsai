@@ -1,0 +1,31 @@
+{
+  "items": [
+    {
+      "id": "mmmq5kpn_2xnzonty",
+      "phone": "628111000131",
+      "text": "makan",
+      "dueAt": "2026-03-11T17:00:00.000Z",
+      "sent": false,
+      "createdAt": "2026-03-12T00:23:27.515Z",
+      "updatedAt": "2026-03-12T00:23:27.515Z"
+    },
+    {
+      "id": "mmmq5pxr_32yxtr2u",
+      "phone": "628111000134",
+      "text": "beli bensin",
+      "dueAt": "2026-03-12T17:00:00.000Z",
+      "sent": false,
+      "createdAt": "2026-03-12T00:23:34.287Z",
+      "updatedAt": "2026-03-12T00:23:34.287Z"
+    },
+    {
+      "id": "mmmq5usw_scnvhlwk",
+      "phone": "628111000135",
+      "text": "olahraga",
+      "dueAt": "2026-03-11T17:00:00.000Z",
+      "sent": false,
+      "createdAt": "2026-03-12T00:23:40.592Z",
+      "updatedAt": "2026-03-12T00:23:40.592Z"
+    }
+  ]
+}

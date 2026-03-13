@@ -1,0 +1,1544 @@
+{
+  "finished": false,
+  "completed": 74,
+  "total": 150,
+  "results": [
+    {
+      "id": 69,
+      "category": "followup_context",
+      "phone": "628992200002",
+      "query": "motor vario",
+      "startedAt": "2026-03-12T11:24:01.070Z",
+      "prepared": {
+        "hasUsableInput": true,
+        "directReply": "",
+        "plainText": "motor vario",
+        "inputKind": "text"
+      },
+      "sessionBefore": {
+        "has_last_query": false,
+        "last_query": null,
+        "has_last_semantic_payload": false,
+        "last_semantic_payload": null,
+        "last_source": "",
+        "context_valid": false,
+        "last_result_count": 0,
+        "has_ambiguous_context": false,
+        "ambiguous_candidate_count": 0,
+        "ambiguous_entity": "",
+        "invalid_query_context": false,
+        "invalid_query_reason": "",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "",
+        "last_completed_at": 0,
+        "last_action_entity": "",
+        "last_action_payload": null,
+        "correction_window_remaining": 0,
+        "last_successful_action": null
+      },
+      "parsed": {
+        "action": "query",
+        "entity": "motor",
+        "metric": "list",
+        "availability_state": "",
+        "confidence": 0.9,
+        "correction_type": "",
+        "target_field": "",
+        "new_value": "",
+        "selector": {
+          "ids": [],
+          "names": [
+            "vario"
+          ],
+          "attributes": {
+            "no": "",
+            "nama_motor": "vario",
+            "plat": ""
+          }
+        },
+        "filters": {
+          "nama_motor": "",
+          "nomor_motor": "",
+          "tahun": "",
+          "pajak": "",
+          "surat": "",
+          "harga_beli": "",
+          "harga_jual": "",
+          "harga_laku": "",
+          "plat": "",
+          "tahun_plat": "",
+          "sold": null,
+          "tanggal_masuk": "",
+          "tanggal_terjual": ""
+        },
+        "projection": [],
+        "mutation_payload": {
+          "no": "",
+          "nama_motor": "",
+          "tahun": "",
+          "plat": "",
+          "surat_surat": "",
+          "tahun_plat": "",
+          "pajak": "",
+          "harga_jual": "",
+          "harga_beli": "",
+          "harga_laku": "",
+          "sold": null,
+          "tanggal": "",
+          "tanggal_terjual": "",
+          "keterangan": "",
+          "total_pengeluaran": "",
+          "due_at": "",
+          "text": "",
+          "recurrence": ""
+        },
+        "temporal": {
+          "preset": "",
+          "last_days": "",
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        },
+        "reference": {
+          "mode": "",
+          "target": ""
+        },
+        "user_context": "",
+        "value": "",
+        "count": ""
+      },
+      "resolved": {
+        "handled": true,
+        "reply": "NO: 17\nNama Motor: Vario KZR merah\nTahun: 2012\nPlat: W Gresik\nSurat: Lengkap hidup\nTahun Plat: 2027\nPajak: 2026\nHarga Beli: Rp 8.000.000\nHarga Jual: Rp 9.300.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 38\nNama Motor: vario techno biru\nTahun: 2010\nPlat: S LAMONGAN\nSurat: Lengkap hidup\nTahun Plat: 2030\nPajak: 2026\nHarga Beli: Rp 5.700.000\nHarga Jual: Rp 6.900.000\nHarga Laku: -\nStatus: Belum terjual",
+        "rows": [
+          {
+            "no": "17",
+            "nama_motor": "Vario KZR merah",
+            "tahun": "2012",
+            "plat": "W Gresik",
+            "surat_surat": "Lengkap hidup",
+            "tahun_plat": "2027",
+            "pajak": "2026",
+            "harga_beli": 8000000,
+            "harga_jual": 9300000,
+            "harga_laku": 0,
+            "tgl_terjual": null,
+            "tanggal_masuk": null,
+            "isSold": false
+          },
+          {
+            "no": "38",
+            "nama_motor": "vario techno biru",
+            "tahun": "2010",
+            "plat": "S LAMONGAN",
+            "surat_surat": "Lengkap hidup",
+            "tahun_plat": "2030",
+            "pajak": "2026",
+            "harga_beli": 5700000,
+            "harga_jual": 6900000,
+            "harga_laku": 0,
+            "tgl_terjual": null,
+            "tanggal_masuk": null,
+            "isSold": false
+          }
+        ],
+        "source": "motor"
+      },
+      "reply": "NO: 17\nNama Motor: Vario KZR merah\nTahun: 2012\nPlat: W Gresik\nSurat: Lengkap hidup\nTahun Plat: 2027\nPajak: 2026\nHarga Beli: Rp 8.000.000\nHarga Jual: Rp 9.300.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 38\nNama Motor: vario techno biru\nTahun: 2010\nPlat: S LAMONGAN\nSurat: Lengkap hidup\nTahun Plat: 2030\nPajak: 2026\nHarga Beli: Rp 5.700.000\nHarga Jual: Rp 6.900.000\nHarga Laku: -\nStatus: Belum terjual",
+      "sessionAfter": {
+        "has_last_query": true,
+        "last_query": {
+          "action": "query",
+          "entity": "motor",
+          "metric": "list",
+          "selector": {
+            "ids": [],
+            "names": [
+              "vario"
+            ],
+            "attributes": {
+              "no": "",
+              "nama_motor": "vario",
+              "plat": ""
+            }
+          },
+          "filters": {
+            "date_range": {
+              "preset": "",
+              "last_days": 0,
+              "start_date": "",
+              "end_date": "",
+              "raw": ""
+            },
+            "sold": false
+          },
+          "projection": [],
+          "fields": [],
+          "temporal": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          },
+          "reference": {
+            "mode": "",
+            "target": ""
+          },
+          "availability_state": "",
+          "selector_predicates": {
+            "ids": [],
+            "names": [
+              "vario"
+            ],
+            "attributes": {
+              "no": "",
+              "nama_motor": "vario",
+              "plat": ""
+            }
+          },
+          "filter_predicates": {
+            "date_range": {
+              "preset": "",
+              "last_days": 0,
+              "start_date": "",
+              "end_date": "",
+              "raw": ""
+            },
+            "sold": false
+          },
+          "projection_fields": [],
+          "mutation_payload": {},
+          "temporal_window": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          }
+        },
+        "has_last_semantic_payload": true,
+        "last_semantic_payload": {
+          "action": "query",
+          "entity": "motor",
+          "metric": "list",
+          "availability_state": "",
+          "confidence": 0.9,
+          "correction_type": "",
+          "target_field": "",
+          "new_value": "",
+          "selector": {
+            "ids": [],
+            "names": [
+              "vario"
+            ],
+            "attributes": {
+              "no": "",
+              "nama_motor": "vario",
+              "plat": ""
+            }
+          },
+          "filters": {
+            "nama_motor": "",
+            "no": "",
+            "tahun": "",
+            "pajak": "",
+            "surat_surat": "",
+            "harga_beli": "",
+            "harga_jual": "",
+            "harga_laku": "",
+            "plat": "",
+            "tahun_plat": "",
+            "sold": "",
+            "tanggal_masuk": "",
+            "tanggal_terjual": "",
+            "date_range": {
+              "preset": "",
+              "last_days": 0,
+              "start_date": "",
+              "end_date": "",
+              "raw": ""
+            }
+          },
+          "projection": [],
+          "mutation_payload": {
+            "no": null,
+            "nama_motor": "",
+            "tahun": null,
+            "plat": "",
+            "surat_surat": "",
+            "tahun_plat": null,
+            "pajak": null,
+            "harga_jual": null,
+            "harga_beli": null,
+            "harga_laku": null,
+            "sold": "",
+            "tanggal_terjual": ""
+          },
+          "temporal": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          },
+          "reference": {
+            "mode": "",
+            "target": ""
+          },
+          "user_context": "",
+          "value": "",
+          "count": 0,
+          "fields": [],
+          "data": {
+            "no": null,
+            "nama_motor": "",
+            "tahun": null,
+            "plat": "",
+            "surat_surat": "",
+            "tahun_plat": null,
+            "pajak": null,
+            "harga_jual": null,
+            "harga_beli": null,
+            "harga_laku": null,
+            "sold": "",
+            "tanggal_terjual": ""
+          },
+          "reference_mode": "",
+          "reminder_time": "",
+          "reminder_text": "",
+          "reminder_recurrence": ""
+        },
+        "last_source": "motor",
+        "context_valid": true,
+        "last_result_count": 2,
+        "has_ambiguous_context": true,
+        "ambiguous_candidate_count": 2,
+        "ambiguous_entity": "motor",
+        "invalid_query_context": false,
+        "invalid_query_reason": "",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "",
+        "last_completed_at": 0,
+        "last_action_entity": "",
+        "last_action_payload": null,
+        "correction_window_remaining": 0,
+        "last_successful_action": null
+      },
+      "durationMs": 19715
+    },
+    {
+      "id": 70,
+      "category": "followup_context",
+      "phone": "628992200002",
+      "query": "yang tahun 2019",
+      "startedAt": "2026-03-12T11:24:23.300Z",
+      "prepared": {
+        "hasUsableInput": true,
+        "directReply": "",
+        "plainText": "yang tahun 2019",
+        "inputKind": "text"
+      },
+      "sessionBefore": {
+        "has_last_query": true,
+        "last_query": {
+          "action": "query",
+          "entity": "motor",
+          "metric": "list",
+          "selector": {
+            "ids": [],
+            "names": [
+              "vario"
+            ],
+            "attributes": {
+              "no": "",
+              "nama_motor": "vario",
+              "plat": ""
+            }
+          },
+          "filters": {
+            "date_range": {
+              "preset": "",
+              "last_days": 0,
+              "start_date": "",
+              "end_date": "",
+              "raw": ""
+            },
+            "sold": false
+          },
+          "projection": [],
+          "fields": [],
+          "temporal": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          },
+          "reference": {
+            "mode": "",
+            "target": ""
+          },
+          "availability_state": "",
+          "selector_predicates": {
+            "ids": [],
+            "names": [
+              "vario"
+            ],
+            "attributes": {
+              "no": "",
+              "nama_motor": "vario",
+              "plat": ""
+            }
+          },
+          "filter_predicates": {
+            "date_range": {
+              "preset": "",
+              "last_days": 0,
+              "start_date": "",
+              "end_date": "",
+              "raw": ""
+            },
+            "sold": false
+          },
+          "projection_fields": [],
+          "mutation_payload": {},
+          "temporal_window": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          }
+        },
+        "has_last_semantic_payload": true,
+        "last_semantic_payload": {
+          "action": "query",
+          "entity": "motor",
+          "metric": "list",
+          "availability_state": "",
+          "confidence": 0.9,
+          "correction_type": "",
+          "target_field": "",
+          "new_value": "",
+          "selector": {
+            "ids": [],
+            "names": [
+              "vario"
+            ],
+            "attributes": {
+              "no": "",
+              "nama_motor": "vario",
+              "plat": ""
+            }
+          },
+          "filters": {
+            "nama_motor": "",
+            "no": "",
+            "tahun": "",
+            "pajak": "",
+            "surat_surat": "",
+            "harga_beli": "",
+            "harga_jual": "",
+            "harga_laku": "",
+            "plat": "",
+            "tahun_plat": "",
+            "sold": "",
+            "tanggal_masuk": "",
+            "tanggal_terjual": "",
+            "date_range": {
+              "preset": "",
+              "last_days": 0,
+              "start_date": "",
+              "end_date": "",
+              "raw": ""
+            }
+          },
+          "projection": [],
+          "mutation_payload": {
+            "no": null,
+            "nama_motor": "",
+            "tahun": null,
+            "plat": "",
+            "surat_surat": "",
+            "tahun_plat": null,
+            "pajak": null,
+            "harga_jual": null,
+            "harga_beli": null,
+            "harga_laku": null,
+            "sold": "",
+            "tanggal_terjual": ""
+          },
+          "temporal": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          },
+          "reference": {
+            "mode": "",
+            "target": ""
+          },
+          "user_context": "",
+          "value": "",
+          "count": 0,
+          "fields": [],
+          "data": {
+            "no": null,
+            "nama_motor": "",
+            "tahun": null,
+            "plat": "",
+            "surat_surat": "",
+            "tahun_plat": null,
+            "pajak": null,
+            "harga_jual": null,
+            "harga_beli": null,
+            "harga_laku": null,
+            "sold": "",
+            "tanggal_terjual": ""
+          },
+          "reference_mode": "",
+          "reminder_time": "",
+          "reminder_text": "",
+          "reminder_recurrence": ""
+        },
+        "last_source": "motor",
+        "context_valid": true,
+        "last_result_count": 2,
+        "has_ambiguous_context": true,
+        "ambiguous_candidate_count": 2,
+        "ambiguous_entity": "motor",
+        "invalid_query_context": false,
+        "invalid_query_reason": "",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "",
+        "last_completed_at": 0,
+        "last_action_entity": "",
+        "last_action_payload": null,
+        "correction_window_remaining": 0,
+        "last_successful_action": null
+      },
+      "parsed": {
+        "action": "correction",
+        "entity": "motor",
+        "metric": "",
+        "availability_state": "",
+        "confidence": 0.9,
+        "correction_type": "selector_refinement",
+        "target_field": "",
+        "new_value": "",
+        "selector": {
+          "ids": [],
+          "names": [
+            "vario"
+          ],
+          "attributes": {
+            "no": "",
+            "nama_motor": "vario",
+            "plat": ""
+          }
+        },
+        "filters": {
+          "nama_motor": "",
+          "nomor_motor": "",
+          "tahun": 2019,
+          "pajak": "",
+          "surat": "",
+          "harga_beli": "",
+          "harga_jual": "",
+          "harga_laku": "",
+          "plat": "",
+          "tahun_plat": "",
+          "sold": null,
+          "tanggal_masuk": "",
+          "tanggal_terjual": ""
+        },
+        "projection": [],
+        "mutation_payload": {
+          "no": "",
+          "nama_motor": "",
+          "tahun": "",
+          "plat": "",
+          "surat_surat": "",
+          "tahun_plat": "",
+          "pajak": "",
+          "harga_jual": "",
+          "harga_beli": "",
+          "harga_laku": "",
+          "sold": null,
+          "tanggal": "",
+          "tanggal_terjual": "",
+          "keterangan": "",
+          "total_pengeluaran": "",
+          "due_at": "",
+          "text": "",
+          "recurrence": ""
+        },
+        "temporal": {
+          "preset": "",
+          "last_days": 0,
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        },
+        "reference": {
+          "mode": "last_query",
+          "target": "previous_query"
+        },
+        "user_context": "",
+        "value": "",
+        "count": 0
+      },
+      "resolved": {
+        "handled": true,
+        "reply": "Tidak ditemukan data yang sesuai."
+      },
+      "reply": "Tidak ditemukan data yang sesuai.",
+      "sessionAfter": {
+        "has_last_query": false,
+        "last_query": null,
+        "has_last_semantic_payload": false,
+        "last_semantic_payload": null,
+        "last_source": "",
+        "context_valid": false,
+        "last_result_count": 0,
+        "has_ambiguous_context": false,
+        "ambiguous_candidate_count": 0,
+        "ambiguous_entity": "",
+        "invalid_query_context": true,
+        "invalid_query_reason": "empty_after_correction",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "",
+        "last_completed_at": 0,
+        "last_action_entity": "",
+        "last_action_payload": null,
+        "correction_window_remaining": 0,
+        "last_successful_action": null
+      },
+      "durationMs": 15189
+    },
+    {
+      "id": 71,
+      "category": "followup_context",
+      "phone": "628992200002",
+      "query": "yang pajaknya berapa",
+      "startedAt": "2026-03-12T11:24:40.999Z",
+      "prepared": {
+        "hasUsableInput": true,
+        "directReply": "",
+        "plainText": "yang pajaknya berapa",
+        "inputKind": "text"
+      },
+      "sessionBefore": {
+        "has_last_query": false,
+        "last_query": null,
+        "has_last_semantic_payload": false,
+        "last_semantic_payload": null,
+        "last_source": "",
+        "context_valid": false,
+        "last_result_count": 0,
+        "has_ambiguous_context": false,
+        "ambiguous_candidate_count": 0,
+        "ambiguous_entity": "",
+        "invalid_query_context": true,
+        "invalid_query_reason": "empty_after_correction",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "",
+        "last_completed_at": 0,
+        "last_action_entity": "",
+        "last_action_payload": null,
+        "correction_window_remaining": 0,
+        "last_successful_action": null
+      },
+      "parsed": {
+        "action": "query",
+        "entity": "motor",
+        "metric": "",
+        "availability_state": "",
+        "confidence": 0,
+        "correction_type": "",
+        "target_field": "",
+        "new_value": "",
+        "selector": {
+          "ids": [],
+          "names": [],
+          "attributes": {
+            "no": "",
+            "nama_motor": "",
+            "plat": ""
+          }
+        },
+        "filters": {
+          "nama_motor": "",
+          "nomor_motor": "",
+          "tahun": "",
+          "pajak": "",
+          "surat": "",
+          "harga_beli": "",
+          "harga_jual": "",
+          "harga_laku": "",
+          "plat": "",
+          "tahun_plat": "",
+          "sold": null,
+          "tanggal_masuk": "",
+          "tanggal_terjual": ""
+        },
+        "projection": [
+          "pajak"
+        ],
+        "mutation_payload": {
+          "no": "",
+          "nama_motor": "",
+          "tahun": "",
+          "plat": "",
+          "surat_surat": "",
+          "tahun_plat": "",
+          "pajak": "",
+          "harga_jual": "",
+          "harga_beli": "",
+          "harga_laku": "",
+          "sold": null,
+          "tanggal": "",
+          "tanggal_terjual": "",
+          "keterangan": "",
+          "total_pengeluaran": "",
+          "due_at": "",
+          "text": "",
+          "recurrence": ""
+        },
+        "temporal": {
+          "preset": "",
+          "last_days": "",
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        },
+        "reference": {
+          "mode": "last_query",
+          "target": "previous_query"
+        },
+        "user_context": "",
+        "value": "",
+        "count": ""
+      },
+      "resolved": {
+        "handled": true,
+        "reply": "Context sebelumnya tidak lagi valid. Silakan pilih data motor kembali."
+      },
+      "reply": "Context sebelumnya tidak lagi valid. Silakan pilih data motor kembali.",
+      "sessionAfter": {
+        "has_last_query": false,
+        "last_query": null,
+        "has_last_semantic_payload": false,
+        "last_semantic_payload": null,
+        "last_source": "",
+        "context_valid": false,
+        "last_result_count": 0,
+        "has_ambiguous_context": false,
+        "ambiguous_candidate_count": 0,
+        "ambiguous_entity": "",
+        "invalid_query_context": true,
+        "invalid_query_reason": "empty_after_correction",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "",
+        "last_completed_at": 0,
+        "last_action_entity": "",
+        "last_action_payload": null,
+        "correction_window_remaining": 0,
+        "last_successful_action": null
+      },
+      "durationMs": 9992
+    },
+    {
+      "id": 72,
+      "category": "followup_context",
+      "phone": "628992200003",
+      "query": "motor beat",
+      "startedAt": "2026-03-12T11:24:53.499Z",
+      "prepared": {
+        "hasUsableInput": true,
+        "directReply": "",
+        "plainText": "motor beat",
+        "inputKind": "text"
+      },
+      "sessionBefore": {
+        "has_last_query": false,
+        "last_query": null,
+        "has_last_semantic_payload": false,
+        "last_semantic_payload": null,
+        "last_source": "",
+        "context_valid": false,
+        "last_result_count": 0,
+        "has_ambiguous_context": false,
+        "ambiguous_candidate_count": 0,
+        "ambiguous_entity": "",
+        "invalid_query_context": false,
+        "invalid_query_reason": "",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "",
+        "last_completed_at": 0,
+        "last_action_entity": "",
+        "last_action_payload": null,
+        "correction_window_remaining": 0,
+        "last_successful_action": null
+      },
+      "parsed": {
+        "action": "query",
+        "entity": "motor",
+        "metric": "list",
+        "availability_state": "",
+        "confidence": 0.9,
+        "correction_type": "",
+        "target_field": "",
+        "new_value": "",
+        "selector": {
+          "ids": [],
+          "names": [
+            "beat"
+          ],
+          "attributes": {
+            "no": "",
+            "nama_motor": "beat",
+            "plat": ""
+          }
+        },
+        "filters": {
+          "nama_motor": "",
+          "nomor_motor": "",
+          "tahun": "",
+          "pajak": "",
+          "surat": "",
+          "harga_beli": "",
+          "harga_jual": "",
+          "harga_laku": "",
+          "plat": "",
+          "tahun_plat": "",
+          "sold": null,
+          "tanggal_masuk": "",
+          "tanggal_terjual": ""
+        },
+        "projection": [],
+        "mutation_payload": {
+          "no": "",
+          "nama_motor": "",
+          "tahun": "",
+          "plat": "",
+          "surat_surat": "",
+          "tahun_plat": "",
+          "pajak": "",
+          "harga_jual": "",
+          "harga_beli": "",
+          "harga_laku": "",
+          "sold": null,
+          "tanggal": "",
+          "tanggal_terjual": "",
+          "keterangan": "",
+          "total_pengeluaran": "",
+          "due_at": "",
+          "text": "",
+          "recurrence": ""
+        },
+        "temporal": {
+          "preset": "",
+          "last_days": "",
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        },
+        "reference": {
+          "mode": "new_request",
+          "target": ""
+        },
+        "user_context": "",
+        "value": "",
+        "count": ""
+      },
+      "resolved": {
+        "handled": true,
+        "reply": "NO: 34\nNama Motor: beat\nTahun: 2013\nPlat: S LAMONGAN\nSurat: Lengkap hidup\nTahun Plat: 2028\nPajak: 2026\nHarga Beli: Rp 7.700.000\nHarga Jual: Rp 8.900.000\nHarga Laku: -\nStatus: Belum terjual",
+        "rows": [
+          {
+            "no": "34",
+            "nama_motor": "beat",
+            "tahun": "2013",
+            "plat": "S LAMONGAN",
+            "surat_surat": "Lengkap hidup",
+            "tahun_plat": "2028",
+            "pajak": "2026",
+            "harga_beli": 7700000,
+            "harga_jual": 8900000,
+            "harga_laku": 0,
+            "tgl_terjual": null,
+            "tanggal_masuk": null,
+            "isSold": false
+          }
+        ],
+        "source": "motor"
+      },
+      "reply": "NO: 34\nNama Motor: beat\nTahun: 2013\nPlat: S LAMONGAN\nSurat: Lengkap hidup\nTahun Plat: 2028\nPajak: 2026\nHarga Beli: Rp 7.700.000\nHarga Jual: Rp 8.900.000\nHarga Laku: -\nStatus: Belum terjual",
+      "sessionAfter": {
+        "has_last_query": true,
+        "last_query": {
+          "action": "query",
+          "entity": "motor",
+          "metric": "list",
+          "selector": {
+            "ids": [],
+            "names": [
+              "beat"
+            ],
+            "attributes": {
+              "no": "",
+              "nama_motor": "beat",
+              "plat": ""
+            }
+          },
+          "filters": {
+            "date_range": {
+              "preset": "",
+              "last_days": 0,
+              "start_date": "",
+              "end_date": "",
+              "raw": ""
+            },
+            "sold": false
+          },
+          "projection": [],
+          "fields": [],
+          "temporal": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          },
+          "reference": {
+            "mode": "new_request",
+            "target": ""
+          },
+          "availability_state": "",
+          "selector_predicates": {
+            "ids": [],
+            "names": [
+              "beat"
+            ],
+            "attributes": {
+              "no": "",
+              "nama_motor": "beat",
+              "plat": ""
+            }
+          },
+          "filter_predicates": {
+            "date_range": {
+              "preset": "",
+              "last_days": 0,
+              "start_date": "",
+              "end_date": "",
+              "raw": ""
+            },
+            "sold": false
+          },
+          "projection_fields": [],
+          "mutation_payload": {},
+          "temporal_window": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          }
+        },
+        "has_last_semantic_payload": true,
+        "last_semantic_payload": {
+          "action": "query",
+          "entity": "motor",
+          "metric": "list",
+          "availability_state": "",
+          "confidence": 0.9,
+          "correction_type": "",
+          "target_field": "",
+          "new_value": "",
+          "selector": {
+            "ids": [],
+            "names": [
+              "beat"
+            ],
+            "attributes": {
+              "no": "",
+              "nama_motor": "beat",
+              "plat": ""
+            }
+          },
+          "filters": {
+            "nama_motor": "",
+            "no": "",
+            "tahun": "",
+            "pajak": "",
+            "surat_surat": "",
+            "harga_beli": "",
+            "harga_jual": "",
+            "harga_laku": "",
+            "plat": "",
+            "tahun_plat": "",
+            "sold": "",
+            "tanggal_masuk": "",
+            "tanggal_terjual": "",
+            "date_range": {
+              "preset": "",
+              "last_days": 0,
+              "start_date": "",
+              "end_date": "",
+              "raw": ""
+            }
+          },
+          "projection": [],
+          "mutation_payload": {
+            "no": null,
+            "nama_motor": "",
+            "tahun": null,
+            "plat": "",
+            "surat_surat": "",
+            "tahun_plat": null,
+            "pajak": null,
+            "harga_jual": null,
+            "harga_beli": null,
+            "harga_laku": null,
+            "sold": "",
+            "tanggal_terjual": ""
+          },
+          "temporal": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          },
+          "reference": {
+            "mode": "new_request",
+            "target": ""
+          },
+          "user_context": "",
+          "value": "",
+          "count": 0,
+          "fields": [],
+          "data": {
+            "no": null,
+            "nama_motor": "",
+            "tahun": null,
+            "plat": "",
+            "surat_surat": "",
+            "tahun_plat": null,
+            "pajak": null,
+            "harga_jual": null,
+            "harga_beli": null,
+            "harga_laku": null,
+            "sold": "",
+            "tanggal_terjual": ""
+          },
+          "reference_mode": "new_request",
+          "reminder_time": "",
+          "reminder_text": "",
+          "reminder_recurrence": ""
+        },
+        "last_source": "motor",
+        "context_valid": true,
+        "last_result_count": 1,
+        "has_ambiguous_context": false,
+        "ambiguous_candidate_count": 0,
+        "ambiguous_entity": "",
+        "invalid_query_context": false,
+        "invalid_query_reason": "",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "",
+        "last_completed_at": 0,
+        "last_action_entity": "",
+        "last_action_payload": null,
+        "correction_window_remaining": 0,
+        "last_successful_action": null
+      },
+      "durationMs": 12756
+    },
+    {
+      "id": 73,
+      "category": "followup_context",
+      "phone": "628992200003",
+      "query": "yang pajaknya 2030",
+      "startedAt": "2026-03-12T11:25:08.766Z",
+      "prepared": {
+        "hasUsableInput": true,
+        "directReply": "",
+        "plainText": "yang pajaknya 2030",
+        "inputKind": "text"
+      },
+      "sessionBefore": {
+        "has_last_query": true,
+        "last_query": {
+          "action": "query",
+          "entity": "motor",
+          "metric": "list",
+          "selector": {
+            "ids": [],
+            "names": [
+              "beat"
+            ],
+            "attributes": {
+              "no": "",
+              "nama_motor": "beat",
+              "plat": ""
+            }
+          },
+          "filters": {
+            "date_range": {
+              "preset": "",
+              "last_days": 0,
+              "start_date": "",
+              "end_date": "",
+              "raw": ""
+            },
+            "sold": false
+          },
+          "projection": [],
+          "fields": [],
+          "temporal": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          },
+          "reference": {
+            "mode": "new_request",
+            "target": ""
+          },
+          "availability_state": "",
+          "selector_predicates": {
+            "ids": [],
+            "names": [
+              "beat"
+            ],
+            "attributes": {
+              "no": "",
+              "nama_motor": "beat",
+              "plat": ""
+            }
+          },
+          "filter_predicates": {
+            "date_range": {
+              "preset": "",
+              "last_days": 0,
+              "start_date": "",
+              "end_date": "",
+              "raw": ""
+            },
+            "sold": false
+          },
+          "projection_fields": [],
+          "mutation_payload": {},
+          "temporal_window": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          }
+        },
+        "has_last_semantic_payload": true,
+        "last_semantic_payload": {
+          "action": "query",
+          "entity": "motor",
+          "metric": "list",
+          "availability_state": "",
+          "confidence": 0.9,
+          "correction_type": "",
+          "target_field": "",
+          "new_value": "",
+          "selector": {
+            "ids": [],
+            "names": [
+              "beat"
+            ],
+            "attributes": {
+              "no": "",
+              "nama_motor": "beat",
+              "plat": ""
+            }
+          },
+          "filters": {
+            "nama_motor": "",
+            "no": "",
+            "tahun": "",
+            "pajak": "",
+            "surat_surat": "",
+            "harga_beli": "",
+            "harga_jual": "",
+            "harga_laku": "",
+            "plat": "",
+            "tahun_plat": "",
+            "sold": "",
+            "tanggal_masuk": "",
+            "tanggal_terjual": "",
+            "date_range": {
+              "preset": "",
+              "last_days": 0,
+              "start_date": "",
+              "end_date": "",
+              "raw": ""
+            }
+          },
+          "projection": [],
+          "mutation_payload": {
+            "no": null,
+            "nama_motor": "",
+            "tahun": null,
+            "plat": "",
+            "surat_surat": "",
+            "tahun_plat": null,
+            "pajak": null,
+            "harga_jual": null,
+            "harga_beli": null,
+            "harga_laku": null,
+            "sold": "",
+            "tanggal_terjual": ""
+          },
+          "temporal": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          },
+          "reference": {
+            "mode": "new_request",
+            "target": ""
+          },
+          "user_context": "",
+          "value": "",
+          "count": 0,
+          "fields": [],
+          "data": {
+            "no": null,
+            "nama_motor": "",
+            "tahun": null,
+            "plat": "",
+            "surat_surat": "",
+            "tahun_plat": null,
+            "pajak": null,
+            "harga_jual": null,
+            "harga_beli": null,
+            "harga_laku": null,
+            "sold": "",
+            "tanggal_terjual": ""
+          },
+          "reference_mode": "new_request",
+          "reminder_time": "",
+          "reminder_text": "",
+          "reminder_recurrence": ""
+        },
+        "last_source": "motor",
+        "context_valid": true,
+        "last_result_count": 1,
+        "has_ambiguous_context": false,
+        "ambiguous_candidate_count": 0,
+        "ambiguous_entity": "",
+        "invalid_query_context": false,
+        "invalid_query_reason": "",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "",
+        "last_completed_at": 0,
+        "last_action_entity": "",
+        "last_action_payload": null,
+        "correction_window_remaining": 0,
+        "last_successful_action": null
+      },
+      "parsed": {
+        "action": "query",
+        "entity": "motor",
+        "metric": "list",
+        "availability_state": "",
+        "confidence": 0.9,
+        "correction_type": "",
+        "target_field": "",
+        "new_value": "",
+        "selector": {
+          "ids": [],
+          "names": [],
+          "attributes": {
+            "no": "",
+            "nama_motor": "",
+            "plat": ""
+          }
+        },
+        "filters": {
+          "nama_motor": "",
+          "nomor_motor": "",
+          "tahun": "",
+          "pajak": 2030,
+          "surat": "",
+          "harga_beli": "",
+          "harga_jual": "",
+          "harga_laku": "",
+          "plat": "",
+          "tahun_plat": "",
+          "sold": false,
+          "tanggal_masuk": "",
+          "tanggal_terjual": ""
+        },
+        "projection": [],
+        "mutation_payload": {
+          "no": "",
+          "nama_motor": "",
+          "tahun": "",
+          "plat": "",
+          "surat_surat": "",
+          "tahun_plat": "",
+          "pajak": "",
+          "harga_jual": "",
+          "harga_beli": "",
+          "harga_laku": "",
+          "sold": null,
+          "tanggal": "",
+          "tanggal_terjual": "",
+          "keterangan": "",
+          "total_pengeluaran": "",
+          "due_at": "",
+          "text": "",
+          "recurrence": ""
+        },
+        "temporal": {
+          "preset": "",
+          "last_days": 0,
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        },
+        "reference": {
+          "mode": "last_query",
+          "target": "previous_query"
+        },
+        "user_context": "",
+        "value": "",
+        "count": 0
+      },
+      "resolved": {
+        "handled": true,
+        "reply": "Tidak ditemukan data yang sesuai."
+      },
+      "reply": "Tidak ditemukan data yang sesuai.",
+      "sessionAfter": {
+        "has_last_query": false,
+        "last_query": null,
+        "has_last_semantic_payload": false,
+        "last_semantic_payload": null,
+        "last_source": "",
+        "context_valid": false,
+        "last_result_count": 0,
+        "has_ambiguous_context": false,
+        "ambiguous_candidate_count": 0,
+        "ambiguous_entity": "",
+        "invalid_query_context": true,
+        "invalid_query_reason": "empty_reference_query",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "",
+        "last_completed_at": 0,
+        "last_action_entity": "",
+        "last_action_payload": null,
+        "correction_window_remaining": 0,
+        "last_successful_action": null
+      },
+      "durationMs": 15888
+    },
+    {
+      "id": 74,
+      "category": "followup_context",
+      "phone": "628992200003",
+      "query": "yang ini harga jualnya berapa",
+      "startedAt": "2026-03-12T11:25:27.156Z",
+      "prepared": {
+        "hasUsableInput": true,
+        "directReply": "",
+        "plainText": "yang ini harga jualnya berapa",
+        "inputKind": "text"
+      },
+      "sessionBefore": {
+        "has_last_query": false,
+        "last_query": null,
+        "has_last_semantic_payload": false,
+        "last_semantic_payload": null,
+        "last_source": "",
+        "context_valid": false,
+        "last_result_count": 0,
+        "has_ambiguous_context": false,
+        "ambiguous_candidate_count": 0,
+        "ambiguous_entity": "",
+        "invalid_query_context": true,
+        "invalid_query_reason": "empty_reference_query",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "",
+        "last_completed_at": 0,
+        "last_action_entity": "",
+        "last_action_payload": null,
+        "correction_window_remaining": 0,
+        "last_successful_action": null
+      },
+      "parsed": {
+        "action": "query",
+        "entity": "motor",
+        "metric": "",
+        "availability_state": "",
+        "confidence": 0,
+        "correction_type": "",
+        "target_field": "",
+        "new_value": "",
+        "selector": {
+          "ids": [],
+          "names": [],
+          "attributes": {
+            "no": "",
+            "nama_motor": "",
+            "plat": ""
+          }
+        },
+        "filters": {
+          "nama_motor": "",
+          "nomor_motor": "",
+          "tahun": "",
+          "pajak": "",
+          "surat": "",
+          "harga_beli": "",
+          "harga_jual": "",
+          "harga_laku": "",
+          "plat": "",
+          "tahun_plat": "",
+          "sold": null,
+          "tanggal_masuk": "",
+          "tanggal_terjual": ""
+        },
+        "projection": [
+          "harga_jual"
+        ],
+        "mutation_payload": {
+          "no": "",
+          "nama_motor": "",
+          "tahun": "",
+          "plat": "",
+          "surat_surat": "",
+          "tahun_plat": "",
+          "pajak": "",
+          "harga_jual": "",
+          "harga_beli": "",
+          "harga_laku": "",
+          "sold": null,
+          "tanggal": "",
+          "tanggal_terjual": "",
+          "keterangan": "",
+          "total_pengeluaran": "",
+          "due_at": "",
+          "text": "",
+          "recurrence": ""
+        },
+        "temporal": {
+          "preset": "",
+          "last_days": "",
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        },
+        "reference": {
+          "mode": "last_query",
+          "target": "previous_query"
+        },
+        "user_context": "",
+        "value": "",
+        "count": ""
+      },
+      "resolved": {
+        "handled": true,
+        "reply": "Context sebelumnya tidak lagi valid. Silakan pilih data motor kembali."
+      },
+      "reply": "Context sebelumnya tidak lagi valid. Silakan pilih data motor kembali.",
+      "sessionAfter": {
+        "has_last_query": false,
+        "last_query": null,
+        "has_last_semantic_payload": false,
+        "last_semantic_payload": null,
+        "last_source": "",
+        "context_valid": false,
+        "last_result_count": 0,
+        "has_ambiguous_context": false,
+        "ambiguous_candidate_count": 0,
+        "ambiguous_entity": "",
+        "invalid_query_context": true,
+        "invalid_query_reason": "empty_reference_query",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "",
+        "last_completed_at": 0,
+        "last_action_entity": "",
+        "last_action_payload": null,
+        "correction_window_remaining": 0,
+        "last_successful_action": null
+      },
+      "durationMs": 15370
+    }
+  ]
+}

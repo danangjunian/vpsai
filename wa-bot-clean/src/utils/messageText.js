@@ -1,4 +1,4 @@
-function unwrapMessage(message) {
+﻿function unwrapMessage(message) {
   let msg = message || null;
   for (let i = 0; i < 8; i++) {
     if (!msg) break;
@@ -53,6 +53,28 @@ function extractText(message) {
   return "";
 }
 
+function detectMedia(message) {
+  const msg = unwrapMessage(message);
+  if (!msg) return null;
+
+  if (msg.imageMessage) {
+    return {
+      kind: "image",
+      mimeType: String(msg.imageMessage.mimetype || "image/jpeg").trim() || "image/jpeg"
+    };
+  }
+
+  if (msg.audioMessage) {
+    return {
+      kind: "audio",
+      mimeType: String(msg.audioMessage.mimetype || "audio/ogg").trim() || "audio/ogg",
+      isVoiceNote: Boolean(msg.audioMessage.ptt)
+    };
+  }
+
+  return null;
+}
+
 function preserveText(value) {
   return String(value === undefined || value === null ? "" : value)
     .replace(/\r/g, "")
@@ -60,5 +82,7 @@ function preserveText(value) {
 }
 
 module.exports = {
-  extractText
+  unwrapMessage,
+  extractText,
+  detectMedia
 };

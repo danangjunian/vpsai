@@ -1,0 +1,156 @@
+[2026-03-13T04:48:16.868Z] START batch 2 range 1-50
+[2026-03-13T04:48:37.123Z] DONE 1/150 | basic_query | berapa stok motor sekarang | REPLY: Saat ini terdapat 19 unit motor yang tersedia.
+[2026-03-13T04:49:00.654Z] DONE 2/150 | basic_query | ada berapa motor yang ready | REPLY: Saat ini terdapat 19 unit motor yang tersedia.
+[2026-03-13T04:49:25.670Z] DONE 3/150 | basic_query | jumlah unit motor tersedia | REPLY: Saat ini terdapat 19 unit motor yang tersedia.
+[2026-03-13T04:49:47.505Z] DONE 4/150 | basic_query | berapa motor yang sudah laku | REPLY: Jumlah unit terjual: 22.
+[2026-03-13T04:50:15.119Z] DONE 5/150 | basic_query | motor apa saja yang ready | REPLY: NO: 1 Nama Motor: new cb led 150 Tahun: 2015 Plat: S Lamongan Surat: BPKB ONLY Tahun Plat: Pajak: Harga Beli: Rp 3.900.000 Harga Jual: Rp 0 Harga Laku: - Status
+[2026-03-13T04:50:44.670Z] DONE 6/150 | basic_query | tampilkan semua stok motor | REPLY: NO: 1 Nama Motor: new cb led 150 Tahun: 2015 Plat: S Lamongan Surat: BPKB ONLY Tahun Plat: Pajak: Harga Beli: Rp 3.900.000 Harga Jual: Rp 0 Harga Laku: - Status
+[2026-03-13T04:51:16.988Z] DONE 7/150 | basic_query | daftar semua motor | REPLY: NO: 1 Nama Motor: new cb led 150 Tahun: 2015 Plat: S Lamongan Surat: BPKB ONLY Tahun Plat: Pajak: Harga Beli: Rp 3.900.000 Harga Jual: Rp 0 Harga Laku: - Status
+[2026-03-13T04:52:03.672Z] DONE 8/150 | basic_query | motor yang tersedia sekarang | REPLY: NO: 1 Nama Motor: new cb led 150 Tahun: 2015 Plat: S Lamongan Surat: BPKB ONLY Tahun Plat: Pajak: Harga Beli: Rp 3.900.000 Harga Jual: Rp 0 Harga Laku: - Status
+[2026-03-13T04:52:39.065Z] DONE 9/150 | basic_query | total unit motor di gudang | REPLY: Saat ini terdapat 19 unit motor yang tersedia.
+[2026-03-13T04:53:04.667Z] DONE 10/150 | basic_query | stok motor sekarang ada berapa | REPLY: Saat ini terdapat 19 unit motor yang tersedia.
+[2026-03-13T04:53:35.503Z] DONE 11/150 | basic_query | lihat daftar motor | REPLY: NO: 1 Nama Motor: new cb led 150 Tahun: 2015 Plat: S Lamongan Surat: BPKB ONLY Tahun Plat: Pajak: Harga Beli: Rp 3.900.000 Harga Jual: Rp 0 Harga Laku: - Status
+[2026-03-13T04:54:05.320Z] DONE 12/150 | basic_query | tampilkan stok yang ada | REPLY: NO: 1 Nama Motor: new cb led 150 Tahun: 2015 Plat: S Lamongan Surat: BPKB ONLY Tahun Plat: Pajak: Harga Beli: Rp 3.900.000 Harga Jual: Rp 0 Harga Laku: - Status
+[2026-03-13T04:54:29.786Z] DONE 13/150 | basic_query | berapa unit motor tersedia | REPLY: Saat ini terdapat 19 unit motor yang tersedia.
+[2026-03-13T04:54:59.231Z] DONE 14/150 | basic_query | apa saja motor yang belum laku | REPLY: NO: 1 Nama Motor: new cb led 150 Tahun: 2015 Plat: S Lamongan Surat: BPKB ONLY Tahun Plat: Pajak: Harga Beli: Rp 3.900.000 Harga Jual: Rp 0 Harga Laku: - Status
+[2026-03-13T04:55:35.162Z] DONE 15/150 | basic_query | jumlah stok motor | REPLY: Saat ini terdapat 19 unit motor yang tersedia.
+[2026-03-13T04:56:05.046Z] DONE 16/150 | basic_query | stok motor ready | REPLY: NO: 1 Nama Motor: new cb led 150 Tahun: 2015 Plat: S Lamongan Surat: BPKB ONLY Tahun Plat: Pajak: Harga Beli: Rp 3.900.000 Harga Jual: Rp 0 Harga Laku: - Status
+[2026-03-13T04:58:00.333Z] DONE 17/150 | basic_query | motor apa saja yang belum terjual | REPLY: NO: 1 Nama Motor: new cb led 150 Tahun: 2015 Plat: S Lamongan Surat: BPKB ONLY Tahun Plat: Pajak: Harga Beli: Rp 3.900.000 Harga Jual: Rp 0 Harga Laku: - Status
+[2026-03-13T04:59:29.228Z] DONE 18/150 | basic_query | tampilkan semua motor yang ready | REPLY: NO: 1 Nama Motor: new cb led 150 Tahun: 2015 Plat: S Lamongan Surat: BPKB ONLY Tahun Plat: Pajak: Harga Beli: Rp 3.900.000 Harga Jual: Rp 0 Harga Laku: - Status
+[2026-03-13T04:59:51.498Z] DONE 19/150 | basic_query | daftar unit yang belum laku | REPLY: NO: 1 Nama Motor: new cb led 150 Tahun: 2015 Plat: S Lamongan Surat: BPKB ONLY Tahun Plat: Pajak: Harga Beli: Rp 3.900.000 Harga Jual: Rp 0 Harga Laku: - Status
+[2026-03-13T05:00:13.700Z] DONE 20/150 | basic_query | unit motor tersedia | REPLY: Saat ini terdapat 19 unit motor yang tersedia.
+[2026-03-13T05:00:36.510Z] DONE 21/150 | attribute_filter | motor pajak 2030 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:01:11.139Z] DONE 22/150 | attribute_filter | motor yang pajaknya 2030 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:01:32.783Z] DONE 23/150 | attribute_filter | motor dengan pajak tahun 2030 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:01:53.224Z] DONE 24/150 | attribute_filter | motor tahun 2019 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:02:12.650Z] DONE 25/150 | attribute_filter | motor yang tahun 2019 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:02:33.757Z] DONE 26/150 | attribute_filter | motor beat | REPLY: NO: 34 Nama Motor: beat Tahun: 2013 Plat: S LAMONGAN Surat: Lengkap hidup Tahun Plat: 2028 Pajak: 2026 Harga Beli: Rp 7.700.000 Harga Jual: Rp 8.900.000 Harga L
+[2026-03-13T05:02:58.021Z] DONE 27/150 | attribute_filter | lihat motor beat | REPLY: NO: 34 Nama Motor: beat Tahun: 2013 Plat: S LAMONGAN Surat: Lengkap hidup Tahun Plat: 2028 Pajak: 2026 Harga Beli: Rp 7.700.000 Harga Jual: Rp 8.900.000 Harga L
+[2026-03-13T05:03:15.246Z] DONE 28/150 | attribute_filter | motor vario | REPLY: NO: 17 Nama Motor: Vario KZR merah Tahun: 2012 Plat: W Gresik Surat: Lengkap hidup Tahun Plat: 2027 Pajak: 2026 Harga Beli: Rp 8.000.000 Harga Jual: Rp 9.300.00
+[2026-03-13T05:03:44.124Z] DONE 29/150 | attribute_filter | motor vario yang pajaknya 2030 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:04:04.409Z] DONE 30/150 | attribute_filter | motor beat tahun 2018 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:04:29.248Z] DONE 31/150 | attribute_filter | motor plat S | REPLY: NO: 1 Nama Motor: new cb led 150 Tahun: 2015 Plat: S Lamongan Surat: BPKB ONLY Tahun Plat: Pajak: Harga Beli: Rp 3.900.000 Harga Jual: Rp 0 Harga Laku: - Status
+[2026-03-13T05:04:46.247Z] DONE 32/150 | attribute_filter | motor yang platnya S | REPLY: NO: 1 Nama Motor: new cb led 150 Tahun: 2015 Plat: S Lamongan Surat: BPKB ONLY Tahun Plat: Pajak: Harga Beli: Rp 3.900.000 Harga Jual: Rp 0 Harga Laku: - Status
+[2026-03-13T05:05:05.409Z] DONE 33/150 | attribute_filter | motor dengan surat lengkap hidup | REPLY: NO: 17 Nama Motor: Vario KZR merah Tahun: 2012 Plat: W Gresik Surat: Lengkap hidup Tahun Plat: 2027 Pajak: 2026 Harga Beli: Rp 8.000.000 Harga Jual: Rp 9.300.00
+[2026-03-13T05:05:23.516Z] DONE 34/150 | attribute_filter | motor yang suratnya lengkap hidup | REPLY: NO: 17 Nama Motor: Vario KZR merah Tahun: 2012 Plat: W Gresik Surat: Lengkap hidup Tahun Plat: 2027 Pajak: 2026 Harga Beli: Rp 8.000.000 Harga Jual: Rp 9.300.00
+[2026-03-13T05:06:07.621Z] DONE 35/150 | attribute_filter | motor dengan harga jual 7 juta | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:06:41.739Z] DONE 36/150 | attribute_filter | motor harga jual 7 juta | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:07:09.721Z] DONE 37/150 | attribute_filter | motor harga beli 4 juta | REPLY: NO: 32 Nama Motor: Satria 2 tak Tahun: 1998 Plat: W MOJOKERTO Surat: Lengkap mati Tahun Plat: 2007 Pajak: 2004 Harga Beli: Rp 4.000.000 Harga Jual: Rp 6.900.000
+[2026-03-13T05:07:31.808Z] DONE 38/150 | attribute_filter | motor yang harga belinya 4 juta | REPLY: NO: 32 Nama Motor: Satria 2 tak Tahun: 1998 Plat: W MOJOKERTO Surat: Lengkap mati Tahun Plat: 2007 Pajak: 2004 Harga Beli: Rp 4.000.000 Harga Jual: Rp 6.900.000
+[2026-03-13T05:07:51.971Z] DONE 39/150 | attribute_filter | motor tahun plat 2030 | REPLY: NO: 25 Nama Motor: Scoopy Tahun: 2015 Plat: S Lamongan Surat: Lengkap hidup Tahun Plat: 2030 Pajak: 2026 Harga Beli: Rp 9.000.000 Harga Jual: Rp 9.950.000 Harga
+[2026-03-13T05:08:14.869Z] DONE 40/150 | attribute_filter | motor yang tahun platnya 2030 | REPLY: NO: 25 Nama Motor: Scoopy Tahun: 2015 Plat: S Lamongan Surat: Lengkap hidup Tahun Plat: 2030 Pajak: 2026 Harga Beli: Rp 9.000.000 Harga Jual: Rp 9.950.000 Harga
+[2026-03-13T05:08:36.758Z] DONE 41/150 | attribute_filter | motor beat pajak 2030 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:09:06.356Z] DONE 42/150 | attribute_filter | motor vario pajak 2025 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:09:30.158Z] DONE 43/150 | attribute_filter | motor beat tahun 2019 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:09:49.584Z] DONE 44/150 | attribute_filter | motor vario tahun 2019 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:10:06.617Z] DONE 45/150 | attribute_filter | motor plat L | REPLY: NO: 7 Nama Motor: KLX 150 Tahun: 2009 Plat: L Surabaya Surat: Lengkap mati Tahun Plat: 2019 Pajak: 2018 Harga Beli: Rp 10.250.000 Harga Jual: Rp 11.500.000 Harg
+[2026-03-13T05:10:24.810Z] DONE 46/150 | selector_by_number | motor nomor 7 | REPLY: NO: 7 Nama Motor: KLX 150 Tahun: 2009 Plat: L Surabaya Surat: Lengkap mati Tahun Plat: 2019 Pajak: 2018 Harga Beli: Rp 10.250.000 Harga Jual: Rp 11.500.000 Harg
+[2026-03-13T05:10:43.577Z] DONE 47/150 | selector_by_number | motor no 7 | REPLY: NO: 7 Nama Motor: KLX 150 Tahun: 2009 Plat: L Surabaya Surat: Lengkap mati Tahun Plat: 2019 Pajak: 2018 Harga Beli: Rp 10.250.000 Harga Jual: Rp 11.500.000 Harg
+[2026-03-13T05:11:05.694Z] DONE 48/150 | selector_by_number | motor nomor 7 pajaknya berapa | REPLY: NO: 7 Pajak: 2018
+[2026-03-13T05:11:40.805Z] DONE 49/150 | selector_by_number | motor nomor 7 tahun berapa | REPLY: NO: 7 Tahun: 2009
+[2026-03-13T05:12:00.055Z] DONE 50/150 | selector_by_number | motor nomor 7 harga belinya berapa | REPLY: NO: 7 Harga Beli: Rp 10.250.000
+[2026-03-13T05:12:00.069Z] FINISHED batch 2 range 1-50
+[2026-03-13T05:12:33.281Z] START batch 2 range 51-100
+[2026-03-13T05:12:51.166Z] DONE 51/150 | selector_by_number | motor nomor 7 harga jualnya berapa | REPLY: NO: 7 Harga Jual: Rp 11.500.000
+[2026-03-13T05:13:16.758Z] DONE 52/150 | selector_by_number | motor nomor 12 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:13:35.023Z] DONE 53/150 | selector_by_number | motor nomor 12 pajak berapa | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:13:58.835Z] DONE 54/150 | selector_by_number | motor nomor 12 tahun berapa | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:14:19.385Z] DONE 55/150 | selector_by_number | motor nomor 12 suratnya apa | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:14:36.846Z] DONE 56/150 | selector_by_number | motor nomor 15 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:14:54.962Z] DONE 57/150 | selector_by_number | motor nomor 15 pajaknya | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:15:18.874Z] DONE 58/150 | selector_by_number | motor nomor 15 harga jual | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:15:37.591Z] DONE 59/150 | selector_by_number | motor nomor 15 harga beli | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:16:00.218Z] DONE 60/150 | selector_by_number | motor nomor 15 tahun | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:16:21.750Z] DONE 61/150 | followup_context | motor vario | REPLY: NO: 17 Nama Motor: Vario KZR merah Tahun: 2012 Plat: W Gresik Surat: Lengkap hidup Tahun Plat: 2027 Pajak: 2026 Harga Beli: Rp 8.000.000 Harga Jual: Rp 9.300.00
+[2026-03-13T05:16:35.768Z] DONE 62/150 | followup_context | yang ini pajaknya berapa | REPLY: Terdapat beberapa motor yang cocok. Pilih nomor motor yang dimaksud.
+[2026-03-13T05:16:48.402Z] DONE 63/150 | followup_context | yang tahun berapa | REPLY: Terdapat beberapa motor yang cocok. Pilih nomor motor yang dimaksud.
+[2026-03-13T05:17:02.428Z] DONE 64/150 | followup_context | harga belinya berapa | REPLY: Terdapat beberapa motor yang cocok. Pilih nomor motor yang dimaksud.
+[2026-03-13T05:17:19.998Z] DONE 65/150 | followup_context | motor beat | REPLY: NO: 34 Nama Motor: beat Tahun: 2013 Plat: S LAMONGAN Surat: Lengkap hidup Tahun Plat: 2028 Pajak: 2026 Harga Beli: Rp 7.700.000 Harga Jual: Rp 8.900.000 Harga L
+[2026-03-13T05:17:32.797Z] DONE 66/150 | followup_context | yang pajaknya berapa | REPLY: NO: 34 Pajak: 2026
+[2026-03-13T05:17:46.142Z] DONE 67/150 | followup_context | yang ini tahun berapa | REPLY: NO: 34 Tahun: 2013
+[2026-03-13T05:17:58.731Z] DONE 68/150 | followup_context | yang ini harga jualnya | REPLY: NO: 34 Harga Jual: Rp 8.900.000
+[2026-03-13T05:18:19.794Z] DONE 69/150 | followup_context | motor vario | REPLY: NO: 17 Nama Motor: Vario KZR merah Tahun: 2012 Plat: W Gresik Surat: Lengkap hidup Tahun Plat: 2027 Pajak: 2026 Harga Beli: Rp 8.000.000 Harga Jual: Rp 9.300.00
+[2026-03-13T05:18:43.741Z] DONE 70/150 | followup_context | yang tahun 2019 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:19:15.935Z] DONE 71/150 | followup_context | yang pajaknya berapa | REPLY: Context sebelumnya tidak lagi valid. Silakan pilih data motor kembali.
+[2026-03-13T05:19:39.260Z] DONE 72/150 | followup_context | motor beat | REPLY: NO: 34 Nama Motor: beat Tahun: 2013 Plat: S LAMONGAN Surat: Lengkap hidup Tahun Plat: 2028 Pajak: 2026 Harga Beli: Rp 7.700.000 Harga Jual: Rp 8.900.000 Harga L
+[2026-03-13T05:20:10.205Z] DONE 73/150 | followup_context | yang pajaknya 2030 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:20:43.690Z] DONE 74/150 | followup_context | yang ini harga jualnya berapa | REPLY: Context sebelumnya tidak lagi valid. Silakan pilih data motor kembali.
+[2026-03-13T05:21:11.607Z] DONE 75/150 | followup_context | motor vario | REPLY: NO: 17 Nama Motor: Vario KZR merah Tahun: 2012 Plat: W Gresik Surat: Lengkap hidup Tahun Plat: 2027 Pajak: 2026 Harga Beli: Rp 8.000.000 Harga Jual: Rp 9.300.00
+[2026-03-13T05:21:27.412Z] DONE 76/150 | followup_context | yang tahun berapa | REPLY: Terdapat beberapa motor yang cocok. Pilih nomor motor yang dimaksud.
+[2026-03-13T05:21:39.460Z] DONE 77/150 | followup_context | yang harga jualnya berapa | REPLY: Terdapat beberapa motor yang cocok. Pilih nomor motor yang dimaksud.
+[2026-03-13T05:21:59.313Z] DONE 78/150 | followup_context | motor beat | REPLY: NO: 34 Nama Motor: beat Tahun: 2013 Plat: S LAMONGAN Surat: Lengkap hidup Tahun Plat: 2028 Pajak: 2026 Harga Beli: Rp 7.700.000 Harga Jual: Rp 8.900.000 Harga L
+[2026-03-13T05:22:07.991Z] DONE 79/150 | followup_context | yang ini pajaknya | REPLY: NO: 34 Pajak: 2026
+[2026-03-13T05:22:20.202Z] DONE 80/150 | followup_context | yang tahun platnya | REPLY: NO: 34 Tahun Plat: 2028
+[2026-03-13T05:22:34.161Z] DONE 81/150 | mutation_input | input pengeluaran rokok 20k | REPLY: Pengeluaran berhasil dicatat: rokok - Rp20.000
+[2026-03-13T05:22:43.392Z] DONE 82/150 | mutation_input | beli bensin 30k | REPLY: Pengeluaran berhasil dicatat: bensin - Rp30.000
+[2026-03-13T05:22:53.280Z] DONE 83/150 | mutation_input | pengeluaran kopi 15k | REPLY: Pengeluaran berhasil dicatat: kopi - Rp15.000
+[2026-03-13T05:23:03.298Z] DONE 84/150 | mutation_input | input pengeluaran parkir 5k | REPLY: Pengeluaran berhasil dicatat: parkir - Rp5.000
+[2026-03-13T05:23:12.632Z] DONE 85/150 | mutation_input | beli oli 40k | REPLY: Pengeluaran berhasil dicatat: oli - Rp40.000
+[2026-03-13T05:23:23.731Z] DONE 86/150 | mutation_input | input pengeluaran makan 25k | REPLY: Pengeluaran berhasil dicatat: makan - Rp25.000
+[2026-03-13T05:23:33.040Z] DONE 87/150 | mutation_input | beli bensin 50k | REPLY: Pengeluaran berhasil dicatat: bensin - Rp50.000
+[2026-03-13T05:23:43.998Z] DONE 88/150 | mutation_input | input pengeluaran servis 100k | REPLY: Pengeluaran berhasil dicatat: servis - Rp100.000
+[2026-03-13T05:23:52.610Z] DONE 89/150 | mutation_input | beli air minum 10k | REPLY: Data pengeluaran belum lengkap. Field kosong: TOTAL Apakah mau langsung disimpan? Balas: iya Atau isi saja field yang masih kosong.
+[2026-03-13T05:24:03.699Z] DONE 90/150 | mutation_input | pengeluaran parkir 2000 | REPLY: Pengeluaran berhasil dicatat: parkir - Rp2.000
+[2026-03-13T05:24:17.441Z] DONE 91/150 | mutation_input | motor masuk beat 2019 | REPLY: Data motor belum lengkap. Field kosong: PLAT SURAT-SURAT TAHUN PLAT PAJAK HARGA JUAL HARGA BELI Apakah mau langsung disimpan? Balas: iya Atau isi saja field yan
+[2026-03-13T05:24:32.918Z] DONE 92/150 | mutation_input | motor masuk vario 2020 | REPLY: Data motor belum lengkap. Field kosong: PLAT SURAT-SURAT TAHUN PLAT PAJAK HARGA JUAL HARGA BELI Apakah mau langsung disimpan? Balas: iya Atau isi saja field yan
+[2026-03-13T05:24:44.803Z] DONE 93/150 | mutation_input | tambah motor beat 2018 | REPLY: Data motor belum lengkap. Field kosong: PLAT SURAT-SURAT TAHUN PLAT PAJAK HARGA JUAL HARGA BELI Apakah mau langsung disimpan? Balas: iya Atau isi saja field yan
+[2026-03-13T05:24:56.080Z] DONE 94/150 | mutation_input | tambah motor vario 2017 | REPLY: Data motor belum lengkap. Field kosong: PLAT SURAT-SURAT TAHUN PLAT PAJAK HARGA JUAL HARGA BELI Apakah mau langsung disimpan? Balas: iya Atau isi saja field yan
+[2026-03-13T05:25:07.949Z] DONE 95/150 | mutation_input | input motor beat | REPLY: Data motor belum lengkap. Field kosong: TAHUN PLAT SURAT-SURAT TAHUN PLAT PAJAK HARGA JUAL HARGA BELI Apakah mau langsung disimpan? Balas: iya Atau isi saja fie
+[2026-03-13T05:25:20.581Z] DONE 96/150 | mutation_input | motor masuk beat | REPLY: Data motor belum lengkap. Field kosong: TAHUN PLAT SURAT-SURAT TAHUN PLAT PAJAK HARGA JUAL HARGA BELI Apakah mau langsung disimpan? Balas: iya Atau isi saja fie
+[2026-03-13T05:25:32.022Z] DONE 97/150 | mutation_input | motor masuk vario | REPLY: Data motor belum lengkap. Field kosong: TAHUN PLAT SURAT-SURAT TAHUN PLAT PAJAK HARGA JUAL HARGA BELI Apakah mau langsung disimpan? Balas: iya Atau isi saja fie
+[2026-03-13T05:25:44.766Z] DONE 98/150 | mutation_input | tambah motor baru beat | REPLY: Data motor belum lengkap. Field kosong: TAHUN PLAT SURAT-SURAT TAHUN PLAT PAJAK HARGA JUAL HARGA BELI Apakah mau langsung disimpan? Balas: iya Atau isi saja fie
+[2026-03-13T05:25:58.132Z] DONE 99/150 | mutation_input | tambah motor baru vario | REPLY: Data motor belum lengkap. Field kosong: TAHUN PLAT SURAT-SURAT TAHUN PLAT PAJAK HARGA JUAL HARGA BELI Apakah mau langsung disimpan? Balas: iya Atau isi saja fie
+[2026-03-13T05:26:12.533Z] DONE 100/150 | mutation_input | input motor baru | REPLY: Silakan isi template motor masuk berikut: NAMA MOTOR: TAHUN: PLAT: SURAT-SURAT: TAHUN PLAT: PAJAK: HARGA JUAL: HARGA BELI:
+[2026-03-13T05:26:12.548Z] FINISHED batch 2 range 51-100
+[2026-03-13T05:29:19.123Z] START batch 2 range 101-150
+[2026-03-13T05:29:30.920Z] DONE 101/150 | mutation_correction | input pengeluaran rokok 20k | REPLY: Pengeluaran berhasil dicatat: rokok - Rp20.000
+[2026-03-13T05:29:40.618Z] DONE 102/150 | mutation_correction | bukan 20k, 25k | REPLY: Pengeluaran berhasil diperbarui: rokok - Rp25.000
+[2026-03-13T05:29:49.565Z] DONE 103/150 | mutation_correction | beli bensin 30k | REPLY: Pengeluaran berhasil dicatat: bensin - Rp30.000
+[2026-03-13T05:29:59.351Z] DONE 104/150 | mutation_correction | bukan bensin, solar | REPLY: Pengeluaran berhasil diperbarui: solar - Rp30.000
+[2026-03-13T05:30:25.129Z] DONE 105/150 | mutation_correction | motor vario laku 7 juta | REPLY: NO: 17 Nama Motor: Vario KZR merah Tahun: 2012 Plat: W Gresik Surat: Lengkap hidup Tahun Plat: 2027 Pajak: 2026 Harga Beli: Rp 8.000.000 Harga Jual: Rp 9.300.00
+[2026-03-13T05:30:41.179Z] DONE 106/150 | mutation_correction | bukan 7 juta, 6 juta | REPLY: Baik, harga laku saya perbarui menjadi Rp 6.000.000. Pilih nomor motor yang dimaksud.
+[2026-03-13T05:31:02.211Z] DONE 107/150 | mutation_correction | motor beat laku 5 juta | REPLY: Konfirmasi motor terjual berhasil disimpan. NO: 34 Nama Motor: beat Harga Laku: Rp 5.000.000
+[2026-03-13T05:31:29.035Z] DONE 108/150 | mutation_correction | bukan beat, vario | REPLY: NO: 17 Nama Motor: Vario KZR merah Tahun: 2012 Plat: W Gresik Surat: Lengkap hidup Tahun Plat: 2027 Pajak: 2026 Harga Beli: Rp 8.000.000 Harga Jual: Rp 9.300.00
+[2026-03-13T05:31:40.257Z] DONE 109/150 | mutation_correction | input pengeluaran kopi 15k | REPLY: Pengeluaran berhasil dicatat: kopi - Rp15.000
+[2026-03-13T05:31:50.063Z] DONE 110/150 | mutation_correction | bukan kopi, teh | REPLY: Pengeluaran berhasil diperbarui: teh - Rp15.000
+[2026-03-13T05:32:02.016Z] DONE 111/150 | mutation_correction | beli bensin 40k | REPLY: Pengeluaran berhasil dicatat: bensin - Rp40.000
+[2026-03-13T05:32:12.450Z] DONE 112/150 | mutation_correction | bukan 40k, 35k | REPLY: Pengeluaran berhasil diperbarui: bensin - Rp35.000
+[2026-03-13T05:32:38.440Z] DONE 113/150 | mutation_correction | motor vario laku 8 juta | REPLY: NO: 17 Nama Motor: Vario KZR merah Tahun: 2012 Plat: W Gresik Surat: Lengkap hidup Tahun Plat: 2027 Pajak: 2026 Harga Beli: Rp 8.000.000 Harga Jual: Rp 9.300.00
+[2026-03-13T05:32:57.699Z] DONE 114/150 | mutation_correction | bukan 8 juta, 7 juta | REPLY: Baik, harga laku saya perbarui menjadi Rp 7.000.000. Pilih nomor motor yang dimaksud.
+[2026-03-13T05:33:20.793Z] DONE 115/150 | mutation_correction | bukan itu maksudku | REPLY: Baik, konteks sebelumnya saya abaikan. Silakan sampaikan permintaan yang benar.
+[2026-03-13T05:33:50.758Z] DONE 116/150 | context_switch | motor vario | REPLY: NO: 17 Nama Motor: Vario KZR merah Tahun: 2012 Plat: W Gresik Surat: Lengkap hidup Tahun Plat: 2027 Pajak: 2026 Harga Beli: Rp 8.000.000 Harga Jual: Rp 9.300.00
+[2026-03-13T05:34:13.652Z] DONE 117/150 | context_switch | berapa stok motor sekarang | REPLY: Saat ini terdapat 19 unit motor yang tersedia.
+[2026-03-13T05:34:37.254Z] DONE 118/150 | context_switch | motor beat | REPLY: NO: 34 Nama Motor: beat Tahun: 2013 Plat: S LAMONGAN Surat: Lengkap hidup Tahun Plat: 2028 Pajak: 2026 Harga Beli: Rp 7.700.000 Harga Jual: Rp 8.900.000 Harga L
+[2026-03-13T05:35:02.454Z] DONE 119/150 | context_switch | keuntungan minggu ini | REPLY: Total keuntungan: Rp 700.000.
+[2026-03-13T05:35:29.648Z] DONE 120/150 | context_switch | motor pajak 2030 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:35:49.688Z] DONE 121/150 | context_switch | berapa motor yang sudah laku | REPLY: Jumlah unit terjual: 22.
+[2026-03-13T05:36:11.508Z] DONE 122/150 | context_switch | motor nomor 7 | REPLY: NO: 7 Nama Motor: KLX 150 Tahun: 2009 Plat: L Surabaya Surat: Lengkap mati Tahun Plat: 2019 Pajak: 2018 Harga Beli: Rp 10.250.000 Harga Jual: Rp 11.500.000 Harg
+[2026-03-13T05:36:31.262Z] DONE 123/150 | context_switch | total pengeluaran hari ini | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:36:50.858Z] DONE 124/150 | context_switch | motor beat | REPLY: NO: 34 Nama Motor: beat Tahun: 2013 Plat: S LAMONGAN Surat: Lengkap hidup Tahun Plat: 2028 Pajak: 2026 Harga Beli: Rp 7.700.000 Harga Jual: Rp 8.900.000 Harga L
+[2026-03-13T05:37:11.770Z] DONE 125/150 | context_switch | berapa stok sekarang | REPLY: Saat ini terdapat 19 unit motor yang tersedia.
+[2026-03-13T05:37:31.566Z] DONE 126/150 | context_switch | motor vario | REPLY: NO: 17 Nama Motor: Vario KZR merah Tahun: 2012 Plat: W Gresik Surat: Lengkap hidup Tahun Plat: 2027 Pajak: 2026 Harga Beli: Rp 8.000.000 Harga Jual: Rp 9.300.00
+[2026-03-13T05:37:47.848Z] DONE 127/150 | context_switch | daftar reminder | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:38:03.974Z] DONE 128/150 | context_switch | motor nomor 10 | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:38:16.510Z] DONE 129/150 | context_switch | pengeluaran 3 hari | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:38:40.774Z] DONE 130/150 | context_switch | stok motor sekarang | REPLY: Saat ini terdapat 19 unit motor yang tersedia.
+[2026-03-13T05:39:01.535Z] DONE 131/150 | reminder | ingatkan aku jam 9 makan | REPLY: Reminder disimpan untuk 13/03/2026, 09:00: makan
+[2026-03-13T05:39:23.088Z] DONE 132/150 | reminder | daftar reminder | REPLY: ID: mmogv8yg_xoa76o5f Waktu: 13/03/2026, 09:00 Pesan: makan
+[2026-03-13T05:39:34.001Z] DONE 133/150 | reminder | ingatkan aku jam 10 minum obat | REPLY: Reminder disimpan untuk 13/03/2026, 10:00: minum obat
+[2026-03-13T05:39:42.435Z] DONE 134/150 | reminder | ingatkan aku besok beli bensin | REPLY: Reminder disimpan untuk 14/03/2026, 00:00: beli bensin
+[2026-03-13T05:39:51.169Z] DONE 135/150 | reminder | ingatkan aku jam 7 olahraga | REPLY: Reminder disimpan untuk 13/03/2026, 07:00: olahraga
+[2026-03-13T05:40:01.622Z] DONE 136/150 | reminder | reminder apa saja | REPLY: ID: mmogwb9c_lqxomxp3 Waktu: 13/03/2026, 07:00 Pesan: olahraga ID: mmogv8yg_xoa76o5f Waktu: 13/03/2026, 09:00 Pesan: makan ID: mmogvy0g_dev2n57b Waktu: 13/03/20
+[2026-03-13T05:40:20.208Z] DONE 137/150 | reminder | lihat reminder | REPLY: ID: mmogwb9c_lqxomxp3 Waktu: 13/03/2026, 07:00 Pesan: olahraga ID: mmogv8yg_xoa76o5f Waktu: 13/03/2026, 09:00 Pesan: makan ID: mmogvy0g_dev2n57b Waktu: 13/03/20
+[2026-03-13T05:40:29.990Z] DONE 138/150 | reminder | ingatkan aku jam 6 bangun | REPLY: Reminder disimpan untuk 13/03/2026, 06:00: bangun
+[2026-03-13T05:40:39.835Z] DONE 139/150 | reminder | ingatkan aku jam 8 sarapan | REPLY: Reminder disimpan untuk 13/03/2026, 08:00: sarapan
+[2026-03-13T05:40:54.435Z] DONE 140/150 | reminder | tampilkan reminder | REPLY: ID: mmogx57p_d1is41m7 Waktu: 13/03/2026, 06:00 Pesan: bangun ID: mmogwb9c_lqxomxp3 Waktu: 13/03/2026, 07:00 Pesan: olahraga ID: mmogxct6_vrp9euka Waktu: 13/03/2
+[2026-03-13T05:41:22.255Z] DONE 141/150 | temporal_metric | keuntungan minggu ini | REPLY: Total keuntungan: Rp 700.000.
+[2026-03-13T05:42:03.180Z] DONE 142/150 | temporal_metric | profit 7 hari | REPLY: Total keuntungan: Rp 700.000.
+[2026-03-13T05:42:32.256Z] DONE 143/150 | temporal_metric | laba 7 hari terakhir | REPLY: Total keuntungan: Rp 700.000.
+[2026-03-13T05:42:45.733Z] DONE 144/150 | temporal_metric | total pengeluaran hari ini | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:43:02.672Z] DONE 145/150 | temporal_metric | pengeluaran 3 hari | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:44:12.349Z] DONE 146/150 | temporal_metric | pengeluaran minggu ini | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:45:01.571Z] DONE 147/150 | temporal_metric | berapa hasil penjualan minggu ini | REPLY: Total penjualan: Rp 23.200.000.
+[2026-03-13T05:46:38.741Z] DONE 148/150 | temporal_metric | total laba minggu ini | REPLY: Total keuntungan: Rp 700.000.
+[2026-03-13T05:47:23.643Z] DONE 149/150 | temporal_metric | keuntungan bulan ini | REPLY: Total keuntungan: Rp 1.700.000.
+[2026-03-13T05:47:37.911Z] DONE 150/150 | temporal_metric | pengeluaran bulan ini | REPLY: Tidak ditemukan data yang sesuai.
+[2026-03-13T05:47:37.935Z] FINISHED batch 2 range 101-150

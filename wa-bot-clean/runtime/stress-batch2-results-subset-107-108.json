@@ -1,0 +1,334 @@
+{
+  "finished": false,
+  "completed": 108,
+  "total": 150,
+  "results": [
+    {
+      "id": 107,
+      "category": "mutation_correction",
+      "phone": "628993300003",
+      "query": "motor beat laku 5 juta",
+      "startedAt": "2026-03-12T10:43:41.169Z",
+      "prepared": {
+        "hasUsableInput": true,
+        "directReply": "",
+        "plainText": "motor beat laku 5 juta",
+        "inputKind": "text"
+      },
+      "sessionBefore": {
+        "has_last_query": false,
+        "last_query": null,
+        "has_last_semantic_payload": false,
+        "last_semantic_payload": null,
+        "last_source": "",
+        "context_valid": false,
+        "last_result_count": 0,
+        "has_ambiguous_context": false,
+        "ambiguous_candidate_count": 0,
+        "ambiguous_entity": "",
+        "invalid_query_context": false,
+        "invalid_query_reason": "",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "",
+        "last_completed_at": 0,
+        "last_action_entity": "",
+        "last_action_payload": null,
+        "correction_window_remaining": 0,
+        "last_successful_action": null
+      },
+      "parsed": {
+        "action": "confirm",
+        "entity": "sales",
+        "metric": "",
+        "availability_state": "",
+        "confidence": 1,
+        "correction_type": "",
+        "target_field": "",
+        "new_value": "",
+        "selector": {
+          "ids": [],
+          "names": [
+            "beat"
+          ],
+          "attributes": {
+            "no": "",
+            "nama_motor": "",
+            "plat": ""
+          }
+        },
+        "filters": {
+          "nama_motor": "beat",
+          "nomor_motor": "",
+          "tahun": "",
+          "pajak": "",
+          "surat": "",
+          "harga_beli": "",
+          "harga_jual": "",
+          "harga_laku": "",
+          "plat": "",
+          "tahun_plat": "",
+          "sold": null,
+          "tanggal_masuk": "",
+          "tanggal_terjual": ""
+        },
+        "projection": [],
+        "mutation_payload": {
+          "no": "",
+          "nama_motor": "",
+          "tahun": "",
+          "plat": "",
+          "surat_surat": "",
+          "tahun_plat": "",
+          "pajak": "",
+          "harga_jual": "",
+          "harga_beli": "",
+          "harga_laku": 5000000,
+          "sold": null,
+          "tanggal": "",
+          "tanggal_terjual": "",
+          "keterangan": "",
+          "total_pengeluaran": "",
+          "due_at": "",
+          "text": "",
+          "recurrence": ""
+        },
+        "temporal": {
+          "preset": "",
+          "last_days": "",
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        },
+        "reference": {
+          "mode": "",
+          "target": ""
+        },
+        "user_context": "",
+        "value": "",
+        "count": ""
+      },
+      "resolved": {
+        "handled": true,
+        "reply": "Konfirmasi motor terjual berhasil disimpan.\nNO: 34\nNama Motor: beat\nHarga Laku: Rp 5.000.000"
+      },
+      "reply": "Konfirmasi motor terjual berhasil disimpan.\nNO: 34\nNama Motor: beat\nHarga Laku: Rp 5.000.000",
+      "sessionAfter": {
+        "has_last_query": false,
+        "last_query": null,
+        "has_last_semantic_payload": false,
+        "last_semantic_payload": null,
+        "last_source": "",
+        "context_valid": false,
+        "last_result_count": 0,
+        "has_ambiguous_context": false,
+        "ambiguous_candidate_count": 0,
+        "ambiguous_entity": "",
+        "invalid_query_context": false,
+        "invalid_query_reason": "",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "confirm:sales",
+        "last_completed_at": 1773312242018,
+        "last_action_entity": "sales",
+        "last_action_payload": {
+          "no": "34",
+          "nama_motor": "beat",
+          "plat": "S LAMONGAN",
+          "harga_laku": 5000000
+        },
+        "correction_window_remaining": 1,
+        "last_successful_action": {
+          "completedAt": 1773312242018,
+          "action": "confirm",
+          "entity": "sales",
+          "payload": {
+            "no": "34",
+            "nama_motor": "beat",
+            "plat": "S LAMONGAN",
+            "harga_laku": 5000000
+          }
+        }
+      },
+      "durationMs": 20850
+    },
+    {
+      "id": 108,
+      "category": "mutation_correction",
+      "phone": "628993300003",
+      "query": "bukan beat, vario",
+      "startedAt": "2026-03-12T10:44:04.532Z",
+      "prepared": {
+        "hasUsableInput": true,
+        "directReply": "",
+        "plainText": "bukan beat, vario",
+        "inputKind": "text"
+      },
+      "sessionBefore": {
+        "has_last_query": false,
+        "last_query": null,
+        "has_last_semantic_payload": false,
+        "last_semantic_payload": null,
+        "last_source": "",
+        "context_valid": false,
+        "last_result_count": 0,
+        "has_ambiguous_context": false,
+        "ambiguous_candidate_count": 0,
+        "ambiguous_entity": "",
+        "invalid_query_context": false,
+        "invalid_query_reason": "",
+        "conversation_state": "IDLE",
+        "has_pending_action": false,
+        "pending_action_type": "",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 0,
+        "pending_selected_no": "",
+        "last_completed_action_type": "confirm:sales",
+        "last_completed_at": 1773312242018,
+        "last_action_entity": "sales",
+        "last_action_payload": {
+          "no": "34",
+          "nama_motor": "beat",
+          "plat": "S LAMONGAN",
+          "harga_laku": 5000000
+        },
+        "correction_window_remaining": 1,
+        "last_successful_action": {
+          "completedAt": 1773312242018,
+          "action": "confirm",
+          "entity": "sales",
+          "payload": {
+            "no": "34",
+            "nama_motor": "beat",
+            "plat": "S LAMONGAN",
+            "harga_laku": 5000000
+          }
+        }
+      },
+      "parsed": {
+        "action": "correction",
+        "entity": "sales",
+        "metric": "",
+        "availability_state": "",
+        "confidence": 1,
+        "correction_type": "selector_replacement",
+        "target_field": "nama_motor",
+        "new_value": "vario",
+        "selector": {
+          "ids": [],
+          "names": [],
+          "attributes": {
+            "no": 34,
+            "nama_motor": "beat",
+            "plat": "S LAMONGAN"
+          }
+        },
+        "filters": {
+          "nama_motor": "beat",
+          "nomor_motor": "",
+          "tahun": "",
+          "pajak": "",
+          "surat": "",
+          "harga_beli": "",
+          "harga_jual": "",
+          "harga_laku": "",
+          "plat": "",
+          "tahun_plat": "",
+          "sold": null,
+          "tanggal_masuk": "",
+          "tanggal_terjual": ""
+        },
+        "projection": [],
+        "mutation_payload": {
+          "no": 34,
+          "nama_motor": "vario",
+          "tahun": "",
+          "plat": "S LAMONGAN",
+          "surat_surat": "",
+          "tahun_plat": "",
+          "pajak": "",
+          "harga_jual": "",
+          "harga_beli": "",
+          "harga_laku": "",
+          "sold": null,
+          "tanggal": "",
+          "tanggal_terjual": "",
+          "keterangan": "",
+          "total_pengeluaran": "",
+          "due_at": "",
+          "text": "",
+          "recurrence": ""
+        },
+        "temporal": {
+          "preset": "",
+          "last_days": "",
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        },
+        "reference": {
+          "mode": "pending_action",
+          "target": "pending_action"
+        },
+        "user_context": "",
+        "value": "",
+        "count": ""
+      },
+      "resolved": {
+        "handled": true,
+        "reply": "NO: 17\nNama Motor: Vario KZR merah\nTahun: 2012\nPlat: W Gresik\nSurat: Lengkap hidup\nTahun Plat: 2027\nPajak: 2026\nHarga Beli: Rp 8.000.000\nHarga Jual: Rp 9.300.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 38\nNama Motor: vario techno biru\nTahun: 2010\nPlat: S LAMONGAN\nSurat: Lengkap hidup\nTahun Plat: 2030\nPajak: 2026\nHarga Beli: Rp 5.700.000\nHarga Jual: Rp 6.900.000\nHarga Laku: -\nStatus: Belum terjual"
+      },
+      "reply": "NO: 17\nNama Motor: Vario KZR merah\nTahun: 2012\nPlat: W Gresik\nSurat: Lengkap hidup\nTahun Plat: 2027\nPajak: 2026\nHarga Beli: Rp 8.000.000\nHarga Jual: Rp 9.300.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 38\nNama Motor: vario techno biru\nTahun: 2010\nPlat: S LAMONGAN\nSurat: Lengkap hidup\nTahun Plat: 2030\nPajak: 2026\nHarga Beli: Rp 5.700.000\nHarga Jual: Rp 6.900.000\nHarga Laku: -\nStatus: Belum terjual",
+      "sessionAfter": {
+        "has_last_query": false,
+        "last_query": null,
+        "has_last_semantic_payload": false,
+        "last_semantic_payload": null,
+        "last_source": "",
+        "context_valid": false,
+        "last_result_count": 0,
+        "has_ambiguous_context": false,
+        "ambiguous_candidate_count": 0,
+        "ambiguous_entity": "",
+        "invalid_query_context": false,
+        "invalid_query_reason": "",
+        "conversation_state": "COLLECT_DATA",
+        "has_pending_action": true,
+        "pending_action_type": "confirm:sales",
+        "pending_missing_fields": [],
+        "pending_candidate_count": 2,
+        "pending_selected_no": "",
+        "last_completed_action_type": "confirm:sales",
+        "last_completed_at": 1773312242018,
+        "last_action_entity": "sales",
+        "last_action_payload": {
+          "no": "34",
+          "nama_motor": "beat",
+          "plat": "S LAMONGAN",
+          "harga_laku": 5000000
+        },
+        "correction_window_remaining": 1,
+        "last_successful_action": {
+          "completedAt": 1773312242018,
+          "action": "confirm",
+          "entity": "sales",
+          "payload": {
+            "no": "34",
+            "nama_motor": "beat",
+            "plat": "S LAMONGAN",
+            "harga_laku": 5000000
+          }
+        }
+      },
+      "durationMs": 25749
+    }
+  ]
+}

@@ -1,0 +1,221 @@
+[
+  {
+    "query": "stok motor sekarang",
+    "parsed": {
+      "action": "query",
+      "entity": "motor",
+      "metric": "count",
+      "availability_state": "available",
+      "confidence": 1,
+      "correction_type": "",
+      "target_field": "",
+      "new_value": "",
+      "selector": {
+        "ids": [],
+        "names": [],
+        "attributes": {
+          "no": "",
+          "nama_motor": "",
+          "plat": ""
+        }
+      },
+      "filters": {
+        "nama_motor": "",
+        "nomor_motor": "",
+        "tahun": "",
+        "pajak": "",
+        "surat": "",
+        "harga_beli": "",
+        "harga_jual": "",
+        "harga_laku": "",
+        "plat": "",
+        "tahun_plat": "",
+        "sold": null,
+        "tanggal_masuk": "",
+        "tanggal_terjual": ""
+      },
+      "projection": [],
+      "mutation_payload": {
+        "no": "",
+        "nama_motor": "",
+        "tahun": "",
+        "plat": "",
+        "surat_surat": "",
+        "tahun_plat": "",
+        "pajak": "",
+        "harga_jual": "",
+        "harga_beli": "",
+        "harga_laku": "",
+        "sold": null,
+        "tanggal": "",
+        "tanggal_terjual": "",
+        "keterangan": "",
+        "total_pengeluaran": "",
+        "due_at": "",
+        "text": "",
+        "recurrence": ""
+      },
+      "temporal": {
+        "preset": "",
+        "last_days": "",
+        "start_date": "",
+        "end_date": "",
+        "raw": ""
+      },
+      "reference": {
+        "mode": "",
+        "target": ""
+      },
+      "user_context": "",
+      "value": "",
+      "count": 0
+    },
+    "reply": "Saat ini terdapat 20 unit motor yang tersedia."
+  },
+  {
+    "query": "ingatkan aku jam 9 makan",
+    "parsed": {
+      "action": "reminder",
+      "entity": "reminder",
+      "metric": "",
+      "availability_state": "",
+      "confidence": 1,
+      "correction_type": "",
+      "target_field": "",
+      "new_value": "",
+      "selector": {
+        "ids": [],
+        "names": [],
+        "attributes": {
+          "no": "",
+          "nama_motor": "",
+          "plat": ""
+        }
+      },
+      "filters": {
+        "nama_motor": "",
+        "nomor_motor": "",
+        "tahun": "",
+        "pajak": "",
+        "surat": "",
+        "harga_beli": "",
+        "harga_jual": "",
+        "harga_laku": "",
+        "plat": "",
+        "tahun_plat": "",
+        "sold": null,
+        "tanggal_masuk": "",
+        "tanggal_terjual": ""
+      },
+      "projection": [],
+      "mutation_payload": {
+        "no": "",
+        "nama_motor": "",
+        "tahun": "",
+        "plat": "",
+        "surat_surat": "",
+        "tahun_plat": "",
+        "pajak": "",
+        "harga_jual": "",
+        "harga_beli": "",
+        "harga_laku": "",
+        "sold": null,
+        "tanggal": "",
+        "tanggal_terjual": "",
+        "keterangan": "",
+        "total_pengeluaran": "",
+        "due_at": "2026-03-12T09:00:00",
+        "text": "makan",
+        "recurrence": ""
+      },
+      "temporal": {
+        "preset": "",
+        "last_days": "",
+        "start_date": "",
+        "end_date": "",
+        "raw": ""
+      },
+      "reference": {
+        "mode": "",
+        "target": ""
+      },
+      "user_context": "",
+      "value": "",
+      "count": ""
+    },
+    "reply": "Reminder disimpan untuk 12/03/2026, 09:00: makan"
+  },
+  {
+    "query": "daftar reminder",
+    "parsed": {
+      "action": "query",
+      "entity": "reminder",
+      "metric": "list",
+      "availability_state": "",
+      "confidence": 1,
+      "correction_type": "",
+      "target_field": "",
+      "new_value": "",
+      "selector": {
+        "ids": [],
+        "names": [],
+        "attributes": {
+          "no": "",
+          "nama_motor": "",
+          "plat": ""
+        }
+      },
+      "filters": {
+        "nama_motor": "",
+        "nomor_motor": "",
+        "tahun": "",
+        "pajak": "",
+        "surat": "",
+        "harga_beli": "",
+        "harga_jual": "",
+        "harga_laku": "",
+        "plat": "",
+        "tahun_plat": "",
+        "sold": null,
+        "tanggal_masuk": "",
+        "tanggal_terjual": ""
+      },
+      "projection": [],
+      "mutation_payload": {
+        "no": "",
+        "nama_motor": "",
+        "tahun": "",
+        "plat": "",
+        "surat_surat": "",
+        "tahun_plat": "",
+        "pajak": "",
+        "harga_jual": "",
+        "harga_beli": "",
+        "harga_laku": "",
+        "sold": null,
+        "tanggal": "",
+        "tanggal_terjual": "",
+        "keterangan": "",
+        "total_pengeluaran": "",
+        "due_at": "",
+        "text": "",
+        "recurrence": ""
+      },
+      "temporal": {
+        "preset": "",
+        "last_days": "",
+        "start_date": "",
+        "end_date": "",
+        "raw": ""
+      },
+      "reference": {
+        "mode": "new_request",
+        "target": ""
+      },
+      "user_context": "",
+      "value": "",
+      "count": ""
+    },
+    "reply": "ID: mmmr8vsb_via1c8fp\nWaktu: 12/03/2026, 09:00\nPesan: makan"
+  }
+]

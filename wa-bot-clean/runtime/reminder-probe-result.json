@@ -1,0 +1,76 @@
+{
+  "query": "ingatkan aku jam 7 olahraga",
+  "parsed": {
+    "action": "reminder",
+    "entity": "reminder",
+    "metric": "",
+    "availability_state": "",
+    "confidence": 1,
+    "correction_type": "",
+    "target_field": "",
+    "new_value": "",
+    "selector": {
+      "ids": [],
+      "names": [],
+      "attributes": {
+        "no": "",
+        "nama_motor": "",
+        "plat": ""
+      }
+    },
+    "filters": {
+      "nama_motor": "",
+      "nomor_motor": "",
+      "tahun": "",
+      "pajak": "",
+      "surat": "",
+      "harga_beli": "",
+      "harga_jual": "",
+      "harga_laku": "",
+      "plat": "",
+      "tahun_plat": "",
+      "sold": null,
+      "tanggal_masuk": "",
+      "tanggal_terjual": ""
+    },
+    "projection": [],
+    "mutation_payload": {
+      "no": "",
+      "nama_motor": "",
+      "tahun": "",
+      "plat": "",
+      "surat_surat": "",
+      "tahun_plat": "",
+      "pajak": "",
+      "harga_jual": "",
+      "harga_beli": "",
+      "harga_laku": "",
+      "sold": null,
+      "tanggal": "",
+      "tanggal_terjual": "",
+      "keterangan": "",
+      "total_pengeluaran": "",
+      "due_at": "2026-03-12T07:00:00+07:00",
+      "text": "olahraga",
+      "recurrence": ""
+    },
+    "temporal": {
+      "preset": "",
+      "last_days": "",
+      "start_date": "",
+      "end_date": "",
+      "raw": ""
+    },
+    "reference": {
+      "mode": "",
+      "target": ""
+    },
+    "user_context": "",
+    "value": "",
+    "count": ""
+  },
+  "resolved": {
+    "handled": true,
+    "reply": "Reminder disimpan untuk 12/03/2026, 07:00: olahraga"
+  }
+}

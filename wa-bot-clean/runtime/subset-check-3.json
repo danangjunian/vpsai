@@ -1,0 +1,645 @@
+[
+  {
+    "query": "motor beat laku 5 juta",
+    "parsed": {
+      "action": "query",
+      "entity": "motor",
+      "metric": "list",
+      "availability_state": "",
+      "confidence": 0,
+      "correction_type": "",
+      "target_field": "",
+      "new_value": "",
+      "selector": {
+        "ids": [],
+        "names": [
+          "beat"
+        ],
+        "attributes": {
+          "no": "",
+          "nama_motor": "beat",
+          "plat": ""
+        }
+      },
+      "filters": {
+        "nama_motor": "beat",
+        "nomor_motor": "",
+        "tahun": "",
+        "pajak": "",
+        "surat": "",
+        "harga_beli": "",
+        "harga_jual": "",
+        "harga_laku": 5000000,
+        "plat": "",
+        "tahun_plat": "",
+        "sold": null,
+        "tanggal_masuk": "",
+        "tanggal_terjual": ""
+      },
+      "projection": [],
+      "mutation_payload": {
+        "no": "",
+        "nama_motor": "",
+        "tahun": "",
+        "plat": "",
+        "surat_surat": "",
+        "tahun_plat": "",
+        "pajak": "",
+        "harga_jual": "",
+        "harga_beli": "",
+        "harga_laku": "",
+        "sold": null,
+        "tanggal": "",
+        "tanggal_terjual": "",
+        "keterangan": "",
+        "total_pengeluaran": "",
+        "due_at": "",
+        "text": "",
+        "recurrence": ""
+      },
+      "temporal": {
+        "preset": "",
+        "last_days": "",
+        "start_date": "",
+        "end_date": "",
+        "raw": ""
+      },
+      "reference": {
+        "mode": "",
+        "target": ""
+      },
+      "user_context": "",
+      "value": "",
+      "count": ""
+    },
+    "reply": "Tidak ditemukan data yang sesuai.",
+    "session": {
+      "has_last_query": false,
+      "last_query": null,
+      "has_last_semantic_payload": false,
+      "last_semantic_payload": null,
+      "last_source": "",
+      "last_result_count": 0,
+      "has_ambiguous_context": false,
+      "ambiguous_candidate_count": 0,
+      "ambiguous_entity": "",
+      "invalid_query_context": false,
+      "invalid_query_reason": "",
+      "conversation_state": "IDLE",
+      "has_pending_action": false,
+      "pending_action_type": "",
+      "pending_missing_fields": [],
+      "pending_candidate_count": 0,
+      "pending_selected_no": "",
+      "last_completed_action_type": "",
+      "last_completed_at": 0,
+      "correction_window_remaining": 0,
+      "last_successful_action": null
+    }
+  },
+  {
+    "query": "bukan beat, vario",
+    "parsed": {
+      "action": "correction",
+      "entity": "motor",
+      "metric": "",
+      "availability_state": "",
+      "confidence": 0,
+      "correction_type": "selector_replacement",
+      "target_field": "nama_motor",
+      "new_value": "vario",
+      "selector": {
+        "ids": [],
+        "names": [],
+        "attributes": {
+          "no": "",
+          "nama_motor": "vario",
+          "plat": ""
+        }
+      },
+      "filters": {
+        "nama_motor": "",
+        "nomor_motor": "",
+        "tahun": "",
+        "pajak": "",
+        "surat": "",
+        "harga_beli": "",
+        "harga_jual": "",
+        "harga_laku": "",
+        "plat": "",
+        "tahun_plat": "",
+        "sold": null,
+        "tanggal_masuk": "",
+        "tanggal_terjual": ""
+      },
+      "projection": [],
+      "mutation_payload": {
+        "no": "",
+        "nama_motor": "",
+        "tahun": "",
+        "plat": "",
+        "surat_surat": "",
+        "tahun_plat": "",
+        "pajak": "",
+        "harga_jual": "",
+        "harga_beli": "",
+        "harga_laku": "",
+        "sold": null,
+        "tanggal": "",
+        "tanggal_terjual": "",
+        "keterangan": "",
+        "total_pengeluaran": "",
+        "due_at": "",
+        "text": "",
+        "recurrence": ""
+      },
+      "temporal": {
+        "preset": "",
+        "last_days": "",
+        "start_date": "",
+        "end_date": "",
+        "raw": ""
+      },
+      "reference": {
+        "mode": "last_query",
+        "target": "previous_query"
+      },
+      "user_context": "",
+      "value": "",
+      "count": ""
+    },
+    "reply": "Maaf, saya belum punya konteks sebelumnya yang valid untuk dikoreksi.",
+    "session": {
+      "has_last_query": false,
+      "last_query": null,
+      "has_last_semantic_payload": false,
+      "last_semantic_payload": null,
+      "last_source": "",
+      "last_result_count": 0,
+      "has_ambiguous_context": false,
+      "ambiguous_candidate_count": 0,
+      "ambiguous_entity": "",
+      "invalid_query_context": false,
+      "invalid_query_reason": "",
+      "conversation_state": "IDLE",
+      "has_pending_action": false,
+      "pending_action_type": "",
+      "pending_missing_fields": [],
+      "pending_candidate_count": 0,
+      "pending_selected_no": "",
+      "last_completed_action_type": "",
+      "last_completed_at": 0,
+      "correction_window_remaining": 0,
+      "last_successful_action": null
+    }
+  },
+  {
+    "query": "ingatkan aku jam 9 makan",
+    "parsed": {
+      "action": "reminder",
+      "entity": "reminder",
+      "metric": "",
+      "availability_state": "",
+      "confidence": 1,
+      "correction_type": "",
+      "target_field": "",
+      "new_value": "",
+      "selector": {
+        "ids": [],
+        "names": [],
+        "attributes": {
+          "no": "",
+          "nama_motor": "",
+          "plat": ""
+        }
+      },
+      "filters": {
+        "nama_motor": "",
+        "nomor_motor": "",
+        "tahun": "",
+        "pajak": "",
+        "surat": "",
+        "harga_beli": "",
+        "harga_jual": "",
+        "harga_laku": "",
+        "plat": "",
+        "tahun_plat": "",
+        "sold": null,
+        "tanggal_masuk": "",
+        "tanggal_terjual": ""
+      },
+      "projection": [],
+      "mutation_payload": {
+        "no": "",
+        "nama_motor": "",
+        "tahun": "",
+        "plat": "",
+        "surat_surat": "",
+        "tahun_plat": "",
+        "pajak": "",
+        "harga_jual": "",
+        "harga_beli": "",
+        "harga_laku": "",
+        "sold": null,
+        "tanggal": "",
+        "tanggal_terjual": "",
+        "keterangan": "",
+        "total_pengeluaran": "",
+        "due_at": "2026-03-12T09:00:00",
+        "text": "makan",
+        "recurrence": ""
+      },
+      "temporal": {
+        "preset": "",
+        "last_days": "",
+        "start_date": "",
+        "end_date": "",
+        "raw": ""
+      },
+      "reference": {
+        "mode": "",
+        "target": ""
+      },
+      "user_context": "",
+      "value": "",
+      "count": ""
+    },
+    "reply": "Reminder disimpan untuk 12/03/2026, 00:00: makan",
+    "session": {
+      "has_last_query": false,
+      "last_query": null,
+      "has_last_semantic_payload": false,
+      "last_semantic_payload": null,
+      "last_source": "",
+      "last_result_count": 0,
+      "has_ambiguous_context": false,
+      "ambiguous_candidate_count": 0,
+      "ambiguous_entity": "",
+      "invalid_query_context": false,
+      "invalid_query_reason": "",
+      "conversation_state": "IDLE",
+      "has_pending_action": false,
+      "pending_action_type": "",
+      "pending_missing_fields": [],
+      "pending_candidate_count": 0,
+      "pending_selected_no": "",
+      "last_completed_action_type": "reminder:reminder",
+      "last_completed_at": 1773275354739,
+      "correction_window_remaining": 1,
+      "last_successful_action": {
+        "completedAt": 1773275354739,
+        "action": "reminder",
+        "entity": "reminder"
+      }
+    }
+  },
+  {
+    "query": "ingatkan aku besok beli bensin",
+    "parsed": {
+      "action": "reminder",
+      "entity": "reminder",
+      "metric": "",
+      "availability_state": "",
+      "confidence": 1,
+      "correction_type": "",
+      "target_field": "",
+      "new_value": "",
+      "selector": {
+        "ids": [],
+        "names": [],
+        "attributes": {
+          "no": "",
+          "nama_motor": "",
+          "plat": ""
+        }
+      },
+      "filters": {
+        "nama_motor": "",
+        "nomor_motor": "",
+        "tahun": "",
+        "pajak": "",
+        "surat": "",
+        "harga_beli": "",
+        "harga_jual": "",
+        "harga_laku": "",
+        "plat": "",
+        "tahun_plat": "",
+        "sold": null,
+        "tanggal_masuk": "",
+        "tanggal_terjual": ""
+      },
+      "projection": [],
+      "mutation_payload": {
+        "no": "",
+        "nama_motor": "",
+        "tahun": "",
+        "plat": "",
+        "surat_surat": "",
+        "tahun_plat": "",
+        "pajak": "",
+        "harga_jual": "",
+        "harga_beli": "",
+        "harga_laku": "",
+        "sold": null,
+        "tanggal": "",
+        "tanggal_terjual": "",
+        "keterangan": "beli bensin",
+        "total_pengeluaran": "",
+        "due_at": "2026-03-13T00:00:00",
+        "text": "beli bensin",
+        "recurrence": ""
+      },
+      "temporal": {
+        "preset": "",
+        "last_days": "",
+        "start_date": "",
+        "end_date": "",
+        "raw": ""
+      },
+      "reference": {
+        "mode": "",
+        "target": ""
+      },
+      "user_context": "",
+      "value": "",
+      "count": ""
+    },
+    "reply": "Reminder disimpan untuk 13/03/2026, 00:00: beli bensin",
+    "session": {
+      "has_last_query": false,
+      "last_query": null,
+      "has_last_semantic_payload": false,
+      "last_semantic_payload": null,
+      "last_source": "",
+      "last_result_count": 0,
+      "has_ambiguous_context": false,
+      "ambiguous_candidate_count": 0,
+      "ambiguous_entity": "",
+      "invalid_query_context": false,
+      "invalid_query_reason": "",
+      "conversation_state": "IDLE",
+      "has_pending_action": false,
+      "pending_action_type": "",
+      "pending_missing_fields": [],
+      "pending_candidate_count": 0,
+      "pending_selected_no": "",
+      "last_completed_action_type": "reminder:reminder",
+      "last_completed_at": 1773275366305,
+      "correction_window_remaining": 1,
+      "last_successful_action": {
+        "completedAt": 1773275366305,
+        "action": "reminder",
+        "entity": "reminder"
+      }
+    }
+  },
+  {
+    "query": "stok motor sekarang",
+    "parsed": {
+      "action": "query",
+      "entity": "motor",
+      "metric": "list",
+      "availability_state": "available",
+      "confidence": 1,
+      "correction_type": "",
+      "target_field": "",
+      "new_value": "",
+      "selector": {
+        "ids": [],
+        "names": [],
+        "attributes": {
+          "no": "",
+          "nama_motor": "",
+          "plat": ""
+        }
+      },
+      "filters": {
+        "nama_motor": "",
+        "nomor_motor": "",
+        "tahun": "",
+        "pajak": "",
+        "surat": "",
+        "harga_beli": "",
+        "harga_jual": "",
+        "harga_laku": "",
+        "plat": "",
+        "tahun_plat": "",
+        "sold": null,
+        "tanggal_masuk": "",
+        "tanggal_terjual": ""
+      },
+      "projection": [],
+      "mutation_payload": {
+        "no": "",
+        "nama_motor": "",
+        "tahun": "",
+        "plat": "",
+        "surat_surat": "",
+        "tahun_plat": "",
+        "pajak": "",
+        "harga_jual": "",
+        "harga_beli": "",
+        "harga_laku": "",
+        "sold": null,
+        "tanggal": "",
+        "tanggal_terjual": "",
+        "keterangan": "",
+        "total_pengeluaran": "",
+        "due_at": "",
+        "text": "",
+        "recurrence": ""
+      },
+      "temporal": {
+        "preset": "",
+        "last_days": "",
+        "start_date": "",
+        "end_date": "",
+        "raw": ""
+      },
+      "reference": {
+        "mode": "",
+        "target": ""
+      },
+      "user_context": "",
+      "value": "",
+      "count": ""
+    },
+    "reply": "NO: 1\nNama Motor: new cb led 150\nTahun: 2015\nPlat: S Lamongan\nSurat: BPKB ONLY\nTahun Plat: \nPajak: \nHarga Beli: Rp 3.900.000\nHarga Jual: Rp 0\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 7\nNama Motor: KLX 150\nTahun: 2009\nPlat: L Surabaya\nSurat: Lengkap mati\nTahun Plat: 2019\nPajak: 2018\nHarga Beli: Rp 10.250.000\nHarga Jual: Rp 11.500.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 11\nNama Motor: CB Basic GL\nTahun: 1973\nPlat: S Lamongan\nSurat: Lengkap mati\nTahun Plat: 2003\nPajak: 1999\nHarga Beli: Rp 3.600.000\nHarga Jual: Rp 4.900.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 13\nNama Motor: Grand\nTahun: 2001\nPlat: W Gresik\nSurat: BPKB ONLY\nTahun Plat: \nPajak: \nHarga Beli: Rp 2.500.000\nHarga Jual: Rp 3.300.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 16\nNama Motor: Viar VSR 200\nTahun: 2016\nPlat: L Surabaya\nSurat: Lengkap mati\nTahun Plat: 2021\nPajak: 2020\nHarga Beli: Rp 2.800.000\nHarga Jual: Rp 3.800.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 17\nNama Motor: Vario KZR merah\nTahun: 2012\nPlat: W Gresik\nSurat: Lengkap hidup\nTahun Plat: 2027\nPajak: 2026\nHarga Beli: Rp 8.000.000\nHarga Jual: Rp 9.300.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 21\nNama Motor: CB GL MAX\nTahun: 1994\nPlat: S Lamongan\nSurat: Lengkap mati\nTahun Plat: 2021\nPajak: 2018\nHarga Beli: Rp 3.600.000\nHarga Jual: Rp 4.400.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 25\nNama Motor: Scoopy\nTahun: 2015\nPlat: S Lamongan\nSurat: Lengkap hidup\nTahun Plat: 2030\nPajak: 2026\nHarga Beli: Rp 9.000.000\nHarga Jual: Rp 9.950.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 27\nNama Motor: CBR 150\nTahun: 2012\nPlat: W SIDOARJO\nSurat: Lengkap mati\nTahun Plat: 2022\nPajak: 2018\nHarga Beli: Rp 6.700.000\nHarga Jual: Rp 7.900.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 28\nNama Motor: Mio TL5\nTahun: 2007\nPlat: W GRESIK\nSurat: Lengkap mati\nTahun Plat: 2012\nPajak: 2012\nHarga Beli: Rp 3.850.000\nHarga Jual: Rp 4.900.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 30\nNama Motor: Sonic\nTahun: 2015\nPlat: S LAMONGAN\nSurat: Lengkap mati\nTahun Plat: 2025\nPajak: 2023\nHarga Beli: Rp 6.700.000\nHarga Jual: Rp 7.900.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 31\nNama Motor: Kirana\nTahun: 2005\nPlat: L SURABAYA\nSurat: Lengkap mati\nTahun Plat: 2015\nPajak: 2012\nHarga Beli: Rp 5.500.000\nHarga Jual: Rp 6.900.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 32\nNama Motor: Satria 2 tak\nTahun: 1998\nPlat: W MOJOKERTO\nSurat: Lengkap mati\nTahun Plat: 2007\nPajak: 2004\nHarga Beli: Rp 4.000.000\nHarga Jual: Rp 6.900.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 34\nNama Motor: beat\nTahun: 2013\nPlat: S LAMONGAN\nSurat: Lengkap hidup\nTahun Plat: 2028\nPajak: 2026\nHarga Beli: Rp 7.700.000\nHarga Jual: Rp 8.900.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 36\nNama Motor: mio soul\nTahun: 2010\nPlat: S LAMONGAN\nSurat: BPKB ONLY\nTahun Plat: \nPajak: \nHarga Beli: Rp 2.350.000\nHarga Jual: Rp 2.900.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 37\nNama Motor: Mio sporty\nTahun: 2010\nPlat: S TUBAN\nSurat: Lengkap mati\nTahun Plat: 2025\nPajak: 2021\nHarga Beli: Rp 3.100.000\nHarga Jual: Rp 3.900.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 38\nNama Motor: vario techno biru\nTahun: 2010\nPlat: S LAMONGAN\nSurat: Lengkap hidup\nTahun Plat: 2030\nPajak: 2026\nHarga Beli: Rp 5.700.000\nHarga Jual: Rp 6.900.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 39\nNama Motor: CB basic GL MAX\nTahun: 1995\nPlat: S Lamongan\nSurat: BPKB ONLY\nTahun Plat: \nPajak: \nHarga Beli: Rp 5.500.000\nHarga Jual: Rp 6.900.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 40\nNama Motor: Supra hitam kuning\nTahun: 2008\nPlat: L Surabaya\nSurat: Lengkap mati\nTahun Plat: 2018\nPajak: 2018\nHarga Beli: Rp 5.600.000\nHarga Jual: Rp 6.500.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 41\nNama Motor: Supra hitam silver\nTahun: 2003\nPlat: W Sidoarjo\nSurat: Lengkap mati\nTahun Plat: 2017\nPajak: 2019\nHarga Beli: Rp 3.600.000\nHarga Jual: Rp 4.500.000\nHarga Laku: -\nStatus: Belum terjual",
+    "session": {
+      "has_last_query": true,
+      "last_query": {
+        "action": "query",
+        "entity": "motor",
+        "metric": "list",
+        "selector": {
+          "ids": [],
+          "names": [],
+          "attributes": {
+            "no": "",
+            "nama_motor": "",
+            "plat": ""
+          }
+        },
+        "filters": {
+          "date_range": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          },
+          "sold": false
+        },
+        "projection": [],
+        "fields": [],
+        "temporal": {
+          "preset": "",
+          "last_days": 0,
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        },
+        "reference": {
+          "mode": "",
+          "target": ""
+        },
+        "availability_state": "available",
+        "selector_predicates": {
+          "ids": [],
+          "names": [],
+          "attributes": {
+            "no": "",
+            "nama_motor": "",
+            "plat": ""
+          }
+        },
+        "filter_predicates": {
+          "date_range": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          },
+          "sold": false
+        },
+        "projection_fields": [],
+        "mutation_payload": {},
+        "temporal_window": {
+          "preset": "",
+          "last_days": 0,
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        }
+      },
+      "has_last_semantic_payload": true,
+      "last_semantic_payload": {
+        "action": "query",
+        "entity": "motor",
+        "metric": "list",
+        "availability_state": "available",
+        "confidence": 1,
+        "correction_type": "",
+        "target_field": "",
+        "new_value": "",
+        "selector": {
+          "ids": [],
+          "names": [],
+          "attributes": {
+            "no": "",
+            "nama_motor": "",
+            "plat": ""
+          }
+        },
+        "filters": {
+          "nama_motor": "",
+          "no": "",
+          "tahun": "",
+          "pajak": "",
+          "surat_surat": "",
+          "harga_beli": "",
+          "harga_jual": "",
+          "harga_laku": "",
+          "plat": "",
+          "tahun_plat": "",
+          "sold": "",
+          "tanggal_masuk": "",
+          "tanggal_terjual": "",
+          "date_range": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          }
+        },
+        "projection": [],
+        "mutation_payload": {
+          "no": null,
+          "nama_motor": "",
+          "tahun": null,
+          "plat": "",
+          "surat_surat": "",
+          "tahun_plat": null,
+          "pajak": null,
+          "harga_jual": null,
+          "harga_beli": null,
+          "harga_laku": null,
+          "sold": "",
+          "tanggal_terjual": ""
+        },
+        "temporal": {
+          "preset": "",
+          "last_days": 0,
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        },
+        "reference": {
+          "mode": "",
+          "target": ""
+        },
+        "user_context": "",
+        "value": "",
+        "count": 0,
+        "fields": [],
+        "data": {
+          "no": null,
+          "nama_motor": "",
+          "tahun": null,
+          "plat": "",
+          "surat_surat": "",
+          "tahun_plat": null,
+          "pajak": null,
+          "harga_jual": null,
+          "harga_beli": null,
+          "harga_laku": null,
+          "sold": "",
+          "tanggal_terjual": ""
+        },
+        "reference_mode": "",
+        "reminder_time": "",
+        "reminder_text": "",
+        "reminder_recurrence": ""
+      },
+      "last_source": "motor",
+      "last_result_count": 20,
+      "has_ambiguous_context": true,
+      "ambiguous_candidate_count": 20,
+      "ambiguous_entity": "motor",
+      "invalid_query_context": false,
+      "invalid_query_reason": "",
+      "conversation_state": "IDLE",
+      "has_pending_action": false,
+      "pending_action_type": "",
+      "pending_missing_fields": [],
+      "pending_candidate_count": 0,
+      "pending_selected_no": "",
+      "last_completed_action_type": "",
+      "last_completed_at": 0,
+      "correction_window_remaining": 0,
+      "last_successful_action": null
+    }
+  }
+]

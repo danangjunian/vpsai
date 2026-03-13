@@ -96,7 +96,12 @@ function getStokMotor_(payload) {
   const qNo = normalizeNo_(pickAny_(payload, ["no", "nomor", "id"]));
   const qName = normalizeSearch_(pickAny_(payload, ["nama_motor", "nama", "keyword", "q"]));
   const qTokens = qName ? qName.split(" ").filter(Boolean) : [];
-  const statusFilter = normalizeStatusFilter_(pickAny_(payload, ["status"]));
+  const rawStatus = pickAny_(payload, ["status"]);
+  const hasExplicitStatus = String(rawStatus === undefined || rawStatus === null ? "" : rawStatus).trim() !== "";
+  const includeSold = toBoolValue_(pickAny_(payload, ["include_sold", "show_sold"]));
+  const statusFilter = hasExplicitStatus
+    ? normalizeStatusFilter_(rawStatus)
+    : (includeSold ? "all" : "belum_terjual");
   const limit = normalizeLimit_(pickAny_(payload, ["limit"]), 200, 1000);
 
   const rows = [];
@@ -262,9 +267,11 @@ function deleteStokMotor_(payload) {
 
   const row = resolveRow_(sh, payload, 1);
   if (!row) throw appError_("data_not_found");
+  assertDataRow_(row);
 
   const no = normalizeNo_(sh.getRange(row, 1).getDisplayValue());
-  sh.deleteRow(row);
+  // STOK MOTOR: protect column A (NO) and column K; clear content only on allowed columns.
+  clearRowContentByPolicy_(SHEETS.STOK_MOTOR, sh, row, [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13]);
   return { row: row, no: no };
 }
 
@@ -376,11 +383,11 @@ function deletePengeluaran_(payload) {
   const map = detectExpenseColumns_(sh);
   const row = resolveRow_(sh, payload, map.noCol);
   if (!row) throw appError_("data_not_found");
+  assertDataRow_(row);
 
   const no = map.noCol > 0 ? normalizeNo_(sh.getRange(row, map.noCol).getDisplayValue()) : "";
-  sh.getRange(row, map.dateCol).clearContent();
-  sh.getRange(row, map.descCol).clearContent();
-  sh.getRange(row, map.amountCol).clearContent();
+  // PENGELUARAN HARIAN: clear content only on A, B, C.
+  clearRowContentByPolicy_(SHEETS.PENGELUARAN_HARIAN, sh, row, [1, 2, 3]);
   return { row: row, no: no };
 }
 
@@ -445,11 +452,78 @@ function deleteTotalAset_(payload) {
   if (!sh) throw appError_("sheet_not_found");
 
   const row = Number(payload.row || 0);
-  if (!row || row < 1) throw appError_("row_required");
+  if (!row || row < 2) throw appError_("row_required_data_row");
 
   const lastCol = Math.max(1, sh.getLastColumn());
-  sh.getRange(row, 1, 1, lastCol).clearContent();
+  assertDataRow_(row);
+  clearRowContentByPolicy_(SHEETS.TOTAL_ASET, sh, row, makeRangeCols_(1, lastCol));
   return { row: row };
+}
+
+function assertDataRow_(row) {
+  const r = Number(row || 0);
+  if (!isFinite(r) || r <= 1) throw appError_("header_row_protected");
+}
+
+function clearRowContentByPolicy_(sheetToken, sheet, row, candidateCols) {
+  assertDataRow_(row);
+  const allowedCols = getAllowedClearColumns_(sheetToken, sheet);
+  const allowedMap = {};
+  for (let i = 0; i < allowedCols.length; i++) {
+    allowedMap[String(allowedCols[i])] = true;
+  }
+
+  const requested = Array.isArray(candidateCols) ? candidateCols : [];
+  const filtered = [];
+  const seen = {};
+  for (let j = 0; j < requested.length; j++) {
+    const c = Math.floor(Number(requested[j] || 0));
+    if (c <= 0) continue;
+    if (!allowedMap[String(c)]) continue;
+    if (seen[String(c)]) continue;
+    seen[String(c)] = true;
+    filtered.push(c);
+  }
+
+  if (!filtered.length) throw appError_("clear_columns_not_allowed");
+
+  filtered.sort(function(a, b) { return a - b; });
+  let start = filtered[0];
+  let prev = filtered[0];
+  for (let k = 1; k <= filtered.length; k++) {
+    const cur = filtered[k];
+    if (cur === prev + 1) {
+      prev = cur;
+      continue;
+    }
+    sheet.getRange(row, start, 1, prev - start + 1).clearContent();
+    start = cur;
+    prev = cur;
+  }
+}
+
+function getAllowedClearColumns_(sheetToken, sheet) {
+  if (sheetToken === SHEETS.STOK_MOTOR) {
+    // Allowed clear columns: B,C,D,E,F,G,H,I,J,L,M (A and K are protected).
+    return [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13];
+  }
+  if (sheetToken === SHEETS.PENGELUARAN_HARIAN) {
+    // Allowed clear columns: A,B,C.
+    return [1, 2, 3];
+  }
+  if (sheetToken === SHEETS.TOTAL_ASET) {
+    const lastCol = Math.max(1, sheet.getLastColumn());
+    return makeRangeCols_(1, lastCol);
+  }
+  throw appError_("invalid_sheet");
+}
+
+function makeRangeCols_(start, end) {
+  const s = Math.max(1, Math.floor(Number(start || 1)));
+  const e = Math.max(s, Math.floor(Number(end || s)));
+  const out = [];
+  for (let c = s; c <= e; c++) out.push(c);
+  return out;
 }
 
 function resolveRow_(sheet, payload, noCol) {
@@ -698,6 +772,13 @@ function normalizeStatusFilter_(value) {
   if (token === "terjual" || token === "laku" || token === "sold") return "terjual";
   if (token === "belum_terjual" || token === "unsold" || token === "aktif" || token === "stok" || token === "stock") return "belum_terjual";
   return "all";
+}
+
+function toBoolValue_(value) {
+  if (value === true || value === false) return value;
+  const token = normalizeSearch_(value);
+  if (!token) return false;
+  return token === "1" || token === "true" || token === "yes" || token === "ya" || token === "y" || token === "on";
 }
 
 function numberOrDisplay_(rawValue, displayValue) {

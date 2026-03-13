@@ -1,0 +1,455 @@
+[
+  {
+    "query": "motor vario",
+    "reply": "NO: 17\nNama Motor: Vario KZR merah\nTahun: 2012\nPlat: W Gresik\nSurat: Lengkap hidup\nTahun Plat: 2027\nPajak: 2026\nHarga Beli: Rp 8.000.000\nHarga Jual: Rp 9.300.000\nHarga Laku: -\nStatus: Belum terjual\n\nNO: 38\nNama Motor: vario techno biru\nTahun: 2010\nPlat: S LAMONGAN\nSurat: Lengkap hidup\nTahun Plat: 2030\nPajak: 2026\nHarga Beli: Rp 5.700.000\nHarga Jual: Rp 6.900.000\nHarga Laku: -\nStatus: Belum terjual",
+    "snapshot": {
+      "has_last_query": true,
+      "last_query": {
+        "action": "query",
+        "entity": "motor",
+        "metric": "list",
+        "selector": {
+          "ids": [],
+          "names": [
+            "vario"
+          ],
+          "attributes": {
+            "no": "",
+            "nama_motor": "vario",
+            "plat": ""
+          }
+        },
+        "filters": {
+          "nama_motor": "vario",
+          "date_range": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          },
+          "sold": false
+        },
+        "projection": [],
+        "fields": [],
+        "temporal": {
+          "preset": "",
+          "last_days": 0,
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        },
+        "reference": {
+          "mode": "",
+          "target": ""
+        },
+        "availability_state": "",
+        "selector_predicates": {
+          "ids": [],
+          "names": [
+            "vario"
+          ],
+          "attributes": {
+            "no": "",
+            "nama_motor": "vario",
+            "plat": ""
+          }
+        },
+        "filter_predicates": {
+          "nama_motor": "vario",
+          "date_range": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          },
+          "sold": false
+        },
+        "projection_fields": [],
+        "mutation_payload": {},
+        "temporal_window": {
+          "preset": "",
+          "last_days": 0,
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        }
+      },
+      "has_last_semantic_payload": true,
+      "last_semantic_payload": {
+        "action": "query",
+        "entity": "motor",
+        "metric": "list",
+        "availability_state": "",
+        "confidence": 0.9,
+        "correction_type": "",
+        "target_field": "",
+        "new_value": "",
+        "selector": {
+          "ids": [],
+          "names": [
+            "vario"
+          ],
+          "attributes": {
+            "no": "",
+            "nama_motor": "vario",
+            "plat": ""
+          }
+        },
+        "filters": {
+          "nama_motor": "vario",
+          "no": "",
+          "tahun": "",
+          "pajak": "",
+          "surat_surat": "",
+          "harga_beli": "",
+          "harga_jual": "",
+          "harga_laku": "",
+          "plat": "",
+          "tahun_plat": "",
+          "sold": "",
+          "tanggal_masuk": "",
+          "tanggal_terjual": "",
+          "date_range": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          }
+        },
+        "projection": [],
+        "mutation_payload": {
+          "no": null,
+          "nama_motor": "",
+          "tahun": null,
+          "plat": "",
+          "surat_surat": "",
+          "tahun_plat": null,
+          "pajak": null,
+          "harga_jual": null,
+          "harga_beli": null,
+          "harga_laku": null,
+          "sold": "",
+          "tanggal_terjual": ""
+        },
+        "temporal": {
+          "preset": "",
+          "last_days": 0,
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        },
+        "reference": {
+          "mode": "",
+          "target": ""
+        },
+        "user_context": "",
+        "value": "",
+        "count": 0,
+        "fields": [],
+        "data": {
+          "no": null,
+          "nama_motor": "",
+          "tahun": null,
+          "plat": "",
+          "surat_surat": "",
+          "tahun_plat": null,
+          "pajak": null,
+          "harga_jual": null,
+          "harga_beli": null,
+          "harga_laku": null,
+          "sold": "",
+          "tanggal_terjual": ""
+        },
+        "reference_mode": "",
+        "reminder_time": "",
+        "reminder_text": "",
+        "reminder_recurrence": ""
+      },
+      "last_source": "motor",
+      "last_result_count": 2,
+      "has_ambiguous_context": true,
+      "ambiguous_candidate_count": 2,
+      "ambiguous_entity": "motor",
+      "invalid_query_context": false,
+      "invalid_query_reason": "",
+      "conversation_state": "IDLE",
+      "has_pending_action": false,
+      "pending_action_type": "",
+      "pending_missing_fields": [],
+      "pending_candidate_count": 0,
+      "pending_selected_no": "",
+      "last_completed_action_type": "",
+      "last_completed_at": 0,
+      "correction_window_remaining": 0,
+      "last_successful_action": null
+    }
+  },
+  {
+    "query": "yang tahun 2019",
+    "reply": "Tidak ditemukan data yang sesuai.",
+    "snapshot": {
+      "has_last_query": false,
+      "last_query": null,
+      "has_last_semantic_payload": false,
+      "last_semantic_payload": null,
+      "last_source": "",
+      "last_result_count": 0,
+      "has_ambiguous_context": false,
+      "ambiguous_candidate_count": 0,
+      "ambiguous_entity": "",
+      "invalid_query_context": true,
+      "invalid_query_reason": "empty_after_correction",
+      "conversation_state": "IDLE",
+      "has_pending_action": false,
+      "pending_action_type": "",
+      "pending_missing_fields": [],
+      "pending_candidate_count": 0,
+      "pending_selected_no": "",
+      "last_completed_action_type": "",
+      "last_completed_at": 0,
+      "correction_window_remaining": 0,
+      "last_successful_action": null
+    }
+  },
+  {
+    "query": "yang pajaknya berapa",
+    "reply": "Konteks sebelumnya sudah tidak valid. Sebutkan lagi motor yang dimaksud.",
+    "snapshot": {
+      "has_last_query": false,
+      "last_query": null,
+      "has_last_semantic_payload": false,
+      "last_semantic_payload": null,
+      "last_source": "",
+      "last_result_count": 0,
+      "has_ambiguous_context": false,
+      "ambiguous_candidate_count": 0,
+      "ambiguous_entity": "",
+      "invalid_query_context": true,
+      "invalid_query_reason": "empty_after_correction",
+      "conversation_state": "IDLE",
+      "has_pending_action": false,
+      "pending_action_type": "",
+      "pending_missing_fields": [],
+      "pending_candidate_count": 0,
+      "pending_selected_no": "",
+      "last_completed_action_type": "",
+      "last_completed_at": 0,
+      "correction_window_remaining": 0,
+      "last_successful_action": null
+    }
+  },
+  {
+    "query": "ingatkan aku jam 9 makan",
+    "reply": "Reminder disimpan untuk 12/03/2026, 09:00: makan",
+    "snapshot": {
+      "has_last_query": false,
+      "last_query": null,
+      "has_last_semantic_payload": false,
+      "last_semantic_payload": null,
+      "last_source": "",
+      "last_result_count": 0,
+      "has_ambiguous_context": false,
+      "ambiguous_candidate_count": 0,
+      "ambiguous_entity": "",
+      "invalid_query_context": false,
+      "invalid_query_reason": "",
+      "conversation_state": "IDLE",
+      "has_pending_action": false,
+      "pending_action_type": "",
+      "pending_missing_fields": [],
+      "pending_candidate_count": 0,
+      "pending_selected_no": "",
+      "last_completed_action_type": "reminder:reminder",
+      "last_completed_at": 1773294552995,
+      "correction_window_remaining": 1,
+      "last_successful_action": {
+        "completedAt": 1773294552995,
+        "action": "reminder",
+        "entity": "reminder"
+      }
+    }
+  },
+  {
+    "query": "keuntungan bulan ini",
+    "reply": "Total keuntungan: Rp 1.700.000.",
+    "snapshot": {
+      "has_last_query": true,
+      "last_query": {
+        "action": "query",
+        "entity": "sales",
+        "metric": "profit",
+        "selector": {
+          "ids": [],
+          "names": [],
+          "attributes": {
+            "no": "",
+            "nama_motor": "",
+            "plat": ""
+          }
+        },
+        "filters": {
+          "date_range": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          },
+          "sold": true
+        },
+        "projection": [],
+        "fields": [],
+        "temporal": {
+          "preset": "month",
+          "last_days": 0,
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        },
+        "reference": {
+          "mode": "new_request",
+          "target": ""
+        },
+        "availability_state": "",
+        "selector_predicates": {
+          "ids": [],
+          "names": [],
+          "attributes": {
+            "no": "",
+            "nama_motor": "",
+            "plat": ""
+          }
+        },
+        "filter_predicates": {
+          "date_range": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          },
+          "sold": true
+        },
+        "projection_fields": [],
+        "mutation_payload": {},
+        "temporal_window": {
+          "preset": "month",
+          "last_days": 0,
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        }
+      },
+      "has_last_semantic_payload": true,
+      "last_semantic_payload": {
+        "action": "query",
+        "entity": "sales",
+        "metric": "profit",
+        "availability_state": "",
+        "confidence": 1,
+        "correction_type": "",
+        "target_field": "",
+        "new_value": "",
+        "selector": {
+          "ids": [],
+          "names": [],
+          "attributes": {
+            "no": "",
+            "nama_motor": "",
+            "plat": ""
+          }
+        },
+        "filters": {
+          "nama_motor": "",
+          "no": "",
+          "tahun": "",
+          "pajak": "",
+          "surat_surat": "",
+          "harga_beli": "",
+          "harga_jual": "",
+          "harga_laku": "",
+          "plat": "",
+          "tahun_plat": "",
+          "sold": "",
+          "tanggal_masuk": "",
+          "tanggal_terjual": "",
+          "date_range": {
+            "preset": "",
+            "last_days": 0,
+            "start_date": "",
+            "end_date": "",
+            "raw": ""
+          }
+        },
+        "projection": [],
+        "mutation_payload": {
+          "no": null,
+          "nama_motor": "",
+          "tahun": null,
+          "plat": "",
+          "surat_surat": "",
+          "tahun_plat": null,
+          "pajak": null,
+          "harga_jual": null,
+          "harga_beli": null,
+          "harga_laku": null,
+          "sold": "",
+          "tanggal_terjual": ""
+        },
+        "temporal": {
+          "preset": "month",
+          "last_days": 0,
+          "start_date": "",
+          "end_date": "",
+          "raw": ""
+        },
+        "reference": {
+          "mode": "new_request",
+          "target": ""
+        },
+        "user_context": "",
+        "value": "",
+        "count": 0,
+        "fields": [],
+        "data": {
+          "no": null,
+          "nama_motor": "",
+          "tahun": null,
+          "plat": "",
+          "surat_surat": "",
+          "tahun_plat": null,
+          "pajak": null,
+          "harga_jual": null,
+          "harga_beli": null,
+          "harga_laku": null,
+          "sold": "",
+          "tanggal_terjual": ""
+        },
+        "reference_mode": "new_request",
+        "reminder_time": "",
+        "reminder_text": "",
+        "reminder_recurrence": ""
+      },
+      "last_source": "motor",
+      "last_result_count": 11,
+      "has_ambiguous_context": true,
+      "ambiguous_candidate_count": 11,
+      "ambiguous_entity": "sales",
+      "invalid_query_context": false,
+      "invalid_query_reason": "",
+      "conversation_state": "IDLE",
+      "has_pending_action": false,
+      "pending_action_type": "",
+      "pending_missing_fields": [],
+      "pending_candidate_count": 0,
+      "pending_selected_no": "",
+      "last_completed_action_type": "",
+      "last_completed_at": 0,
+      "correction_window_remaining": 0,
+      "last_successful_action": null
+    }
+  }
+]
