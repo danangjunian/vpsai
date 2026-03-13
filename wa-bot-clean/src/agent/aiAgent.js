@@ -83,6 +83,16 @@ class AIAgent {
     const apologyNeeded = Boolean(prepared.prefaceApology || Number(parsed && parsed.confidence || 0) < 0.65);
     info("semantic_parsed", { user: userPhone, parsed: parsed });
 
+    const lowConfidenceMutationReply = buildLowConfidenceMutationReply_(parsed);
+    if (lowConfidenceMutationReply) {
+      if (liveSession && this.resolver.conversation && typeof this.resolver.conversation.rememberAssistantReply === "function") {
+        this.resolver.conversation.rememberAssistantReply(liveSession, lowConfidenceMutationReply);
+      }
+      this.pushHistory(userPhone, { role: "user", content: historyUserLabel_(prepared) });
+      this.pushHistory(userPhone, { role: "assistant", content: lowConfidenceMutationReply });
+      return lowConfidenceMutationReply;
+    }
+
     const pendingBootstrap = buildPendingBootstrap_(parsed);
     if (pendingBootstrap && liveSession && this.resolver.conversation) {
       this.resolver.conversation.enterCollect(liveSession, pendingBootstrap.pendingAction);
@@ -3213,14 +3223,20 @@ function isCorrectionLikeDirective_(value) {
 function isResultRecheckDirective_(value) {
   const normalized = normalizeDirectiveText_(value);
   if (!normalized) return false;
-  return [
+  if ([
     "kok cuma dua",
     "kok cuma satu",
     "mana yang lain",
     "yang lain mana",
     "yang lainnya",
     "emangnya cuma segitu"
-  ].indexOf(normalized) !== -1;
+  ].indexOf(normalized) !== -1) return true;
+  const words = normalized.split(" ").filter(Boolean);
+  if (words.length > 8) return false;
+  if (/^kok\b/i.test(normalized) && /\bcuma\b/i.test(normalized)) return true;
+  if (/\blain(?:nya)?\b/i.test(normalized) && /\b(mana|yang)\b/i.test(normalized)) return true;
+  if (/^harusnya\b/i.test(normalized) && /\b(ada|lebih|kurang|cuma|segitu)\b/i.test(normalized)) return true;
+  return false;
 }
 
 function hasRepairableContext_(snapshot) {
@@ -3234,6 +3250,22 @@ function isQuestionLikeText_(value) {
   if (/[?？]$/.test(text)) return true;
   const normalized = normalizeDirectiveText_(text);
   return /\b(berapa|apa|mana|kok|kenapa|yang)\b/i.test(normalized);
+}
+
+function buildLowConfidenceMutationReply_(parsed) {
+  const current = parsed && typeof parsed === "object" ? parsed : {};
+  const action = normalizeAction_(current.action);
+  if ([ "create", "update", "delete", "confirm" ].indexOf(action) === -1) return "";
+  if (Number(current.confidence || 0) >= 0.6) return "";
+
+  const entity = normalizeText(current.entity).toLowerCase();
+  if (entity === "pengeluaran") {
+    return "Saya belum cukup yakin data pengeluaran yang dimaksud. Tolong jelaskan lagi keterangannya dan nominalnya.";
+  }
+  if (entity === "motor" || entity === "sales") {
+    return "Saya belum cukup yakin data motor yang dimaksud. Tolong jelaskan lagi nama motor, nomor, atau perubahan yang ingin disimpan.";
+  }
+  return "Saya belum cukup yakin data yang dimaksud. Tolong jelaskan lagi sebelum saya menjalankan perubahan.";
 }
 
 function shouldDropCollectionHeader_(lines) {

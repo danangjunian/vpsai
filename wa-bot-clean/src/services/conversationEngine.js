@@ -51,6 +51,7 @@ class ConversationEngine {
       lastActionPayload: null,
       correctionWindowRemaining: 0,
       lastAssistantMessage: "",
+      lastAssistantPromptKind: "",
       lastAssistantQuestionCount: 0,
       lastUserMessage: "",
       conversationState: FLOW_STATE.IDLE,
@@ -87,6 +88,7 @@ class ConversationEngine {
     session.lastActionPayload = null;
     session.correctionWindowRemaining = 0;
     session.lastAssistantMessage = "";
+    session.lastAssistantPromptKind = "";
     session.lastAssistantQuestionCount = 0;
     session.lastUserMessage = "";
     session.conversationState = FLOW_STATE.IDLE;
@@ -118,6 +120,10 @@ class ConversationEngine {
       && !isProjectionOnlyFollowupPayload(payload)
     ) {
       this.clearInvalidQueryContext(session);
+      if (shouldResetIrrelevantTopicContext(session, payload, referenceMode)) {
+        this.clearQueryContext(session);
+        clearActionTopicContext(session);
+      }
     }
 
     session.updatedAt = Date.now();
@@ -375,13 +381,25 @@ class ConversationEngine {
     if (!nextReply || !isQuestionLike(nextReply)) return false;
     const lastReply = normalizeText(session.lastAssistantMessage);
     if (!lastReply) return false;
-    return nextReply === lastReply && Number(session.lastAssistantQuestionCount || 0) >= 1;
+    const nextKind = classifyAssistantPromptKind(nextReply);
+    const lastKind = normalizeText(session.lastAssistantPromptKind);
+    if (nextReply === lastReply && Number(session.lastAssistantQuestionCount || 0) >= 1) return true;
+    return Boolean(nextKind && lastKind && nextKind === lastKind && Number(session.lastAssistantQuestionCount || 0) >= 1);
   }
 
   buildRepairReply(session) {
     const state = session && typeof session === "object" ? session : {};
+    if (state.lastActionReceipt && Number(state.correctionWindowRemaining || 0) > 0) {
+      return "Maaf, saya salah memahami. Saya cek ulang hasil perubahan terakhir lebih dulu.";
+    }
+    if (state.lastQueryContext && typeof state.lastQueryContext === "object") {
+      return "Maaf, saya salah memahami. Saya cek ulang hasil pencarian terakhir agar tidak mengulang klarifikasi yang sama.";
+    }
     if (state.pendingAction && Array.isArray(state.pendingAction.missingFields) && state.pendingAction.missingFields.length) {
       return "Maaf, saya salah memahami. Balas iya untuk lanjut, atau isi data yang masih kurang.";
+    }
+    if (state.pendingAction && Array.isArray(state.pendingAction.candidates) && state.pendingAction.candidates.length > 1) {
+      return "Maaf, saya salah memahami. Sebutkan nomor atau label target yang dimaksud agar saya tidak memilih data yang salah.";
     }
     if (state.invalidQueryContext) {
       return "Maaf, saya salah memahami. Context sebelumnya tidak lagi valid. Silakan pilih data kembali.";
@@ -394,7 +412,11 @@ class ConversationEngine {
     const nextReply = normalizeText(reply);
     if (!nextReply) return;
     const lastReply = normalizeText(session.lastAssistantMessage);
+    const nextKind = classifyAssistantPromptKind(nextReply);
+    const lastKind = normalizeText(session.lastAssistantPromptKind);
     if (nextReply === lastReply && isQuestionLike(nextReply)) {
+      session.lastAssistantQuestionCount = Number(session.lastAssistantQuestionCount || 0) + 1;
+    } else if (nextKind && lastKind && nextKind === lastKind) {
       session.lastAssistantQuestionCount = Number(session.lastAssistantQuestionCount || 0) + 1;
     } else if (isQuestionLike(nextReply)) {
       session.lastAssistantQuestionCount = 1;
@@ -402,6 +424,7 @@ class ConversationEngine {
       session.lastAssistantQuestionCount = 0;
     }
     session.lastAssistantMessage = nextReply;
+    session.lastAssistantPromptKind = nextKind;
     session.updatedAt = Date.now();
   }
 
@@ -443,6 +466,7 @@ class ConversationEngine {
       correction_window_remaining: Number(session.correctionWindowRemaining || 0),
       last_successful_action: session.lastSuccessfulAction || null,
       last_assistant_message: String(session.lastAssistantMessage || ""),
+      last_assistant_prompt_kind: String(session.lastAssistantPromptKind || ""),
       repeated_assistant_questions: Number(session.lastAssistantQuestionCount || 0),
       last_user_message: String(session.lastUserMessage || "")
     };
@@ -754,6 +778,62 @@ function deriveConversationState(session, pendingAction) {
     return FLOW_STATE.PENDING_QUERY;
   }
   return FLOW_STATE.IDLE;
+}
+
+function classifyAssistantPromptKind(reply) {
+  const text = normalizeText(reply);
+  if (!text) return "";
+  const upper = text.toUpperCase();
+  if (upper.indexOf("AMBIGUITY REQUEST") === 0) return "ambiguity_request";
+  if (upper.indexOf("QUERY RESULT") === 0 && /pilih data motor kembali|permintaan datanya belum cukup jelas/i.test(text)) return "query_reset_request";
+  if (/^data .*belum lengkap\b/i.test(text)) return "missing_data_request";
+  if (/^waktu .*belum jelas\b/i.test(text)) return "reminder_clarification";
+  if (/^terdapat beberapa\b/i.test(text) || /pilih nomor/i.test(text)) return "ambiguity_request";
+  if (isQuestionLike(text)) return "clarification_request";
+  return "";
+}
+
+function semanticDomainOfEntity(entity) {
+  const raw = normalizeText(entity).toLowerCase();
+  if (raw === "motor" || raw === "sales") return "inventory";
+  if (raw === "pengeluaran") return "expense";
+  if (raw === "reminder") return "reminder";
+  if (raw === "global_summary") return "summary";
+  return "";
+}
+
+function deriveActiveSemanticDomain(session) {
+  const state = session && typeof session === "object" ? session : {};
+  if (state.pendingAction && typeof state.pendingAction === "object") {
+    return semanticDomainOfEntity(state.pendingAction.entity);
+  }
+  if (state.lastQueryContext && typeof state.lastQueryContext === "object" && normalizeText(state.lastQueryContext.entity)) {
+    return semanticDomainOfEntity(state.lastQueryContext.entity);
+  }
+  if (normalizeText(state.lastActionEntity)) {
+    return semanticDomainOfEntity(state.lastActionEntity);
+  }
+  return "";
+}
+
+function shouldResetIrrelevantTopicContext(session, payload, referenceMode) {
+  if (referenceMode === REFERENCE_MODE.LAST_QUERY || referenceMode === REFERENCE_MODE.PENDING_ACTION) return false;
+  const incoming = semanticDomainOfEntity(payload && payload.entity);
+  if (!incoming) return false;
+  const active = deriveActiveSemanticDomain(session);
+  if (!active) return false;
+  return incoming !== active;
+}
+
+function clearActionTopicContext(session) {
+  if (!session || typeof session !== "object") return;
+  session.lastCompletedAction = null;
+  session.lastSuccessfulAction = null;
+  session.lastActionReceipt = null;
+  session.lastActionEntity = "";
+  session.lastActionPayload = null;
+  session.lastReferenceTargets = [];
+  session.correctionWindowRemaining = 0;
 }
 
 function isQuestionLike(text) {

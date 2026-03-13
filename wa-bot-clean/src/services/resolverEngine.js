@@ -90,7 +90,7 @@ class ResolverEngine {
 
     if (parsed.user_context === "reset_flow") {
       this.clearSession(session);
-      return { handled: true, reply: "Baik, alur sebelumnya saya reset. Kita mulai dari awal." };
+      return { handled: true, reply: "Baik, konteks sebelumnya saya reset. Silakan jelaskan lagi data atau aksi yang Anda maksud." };
     }
 
     if (!session.pendingAction && parsed.user_context === "force_execute") {
@@ -103,7 +103,7 @@ class ResolverEngine {
 
     if (pendingDisposition === "reset") {
       this.clearSession(session);
-      return { handled: true, reply: "Baik, alur sebelumnya saya reset. Kita mulai dari awal." };
+      return { handled: true, reply: "Baik, konteks sebelumnya saya reset. Silakan jelaskan lagi data atau aksi yang Anda maksud." };
     }
 
     if (pendingDisposition === "cancel") {
@@ -162,7 +162,7 @@ class ResolverEngine {
     if (rewrite.resetOnly) {
       this.conversation.clearQueryContext(session);
        if (this.conversation.clearCorrectionWindow) this.conversation.clearCorrectionWindow(session);
-      return { handled: true, reply: "Baik, konteks sebelumnya saya abaikan. Silakan sampaikan permintaan yang benar." };
+      return { handled: true, reply: "Baik, konteks sebelumnya saya abaikan. Silakan jelaskan lagi data atau aksi yang Anda maksud." };
     }
     if (!rewrite.payload) {
       return { handled: true, reply: "Maaf, saya belum punya konteks sebelumnya yang valid untuk dikoreksi." };
@@ -246,6 +246,8 @@ class ResolverEngine {
   }
 
   async handleAction(parsed, context, session) {
+    const lowConfidenceReply = lowConfidenceMutationReply(parsed);
+    if (lowConfidenceReply) return { handled: true, reply: lowConfidenceReply };
     const safetyReply = this.enforceMutationTargetSafety(parsed, session);
     if (safetyReply) return { handled: true, reply: safetyReply };
     if (parsed.action === "create" && parsed.entity === "motor") return this.handleCreateMotor(parsed, context, session);
@@ -3917,6 +3919,22 @@ function isVerificationOnlyCorrection(parsed) {
   if (Array.isArray(current.projection) && current.projection.length) return false;
   if (hasDateRange(current.temporal)) return false;
   return true;
+}
+
+function lowConfidenceMutationReply(parsed) {
+  const current = parsed && typeof parsed === "object" ? parsed : {};
+  const action = normalizeAction(current.action);
+  if ([ "create", "update", "delete", "confirm" ].indexOf(action) === -1) return "";
+  const confidence = Number(current.confidence || 0);
+  if (confidence >= 0.6) return "";
+  const entity = canonicalEntity(current.entity);
+  if (entity === "pengeluaran") {
+    return buildStructuredReply("AMBIGUITY REQUEST", "Saya belum cukup yakin data pengeluaran yang dimaksud. Tolong jelaskan lagi keterangannya dan nominalnya.");
+  }
+  if (entity === "motor" || entity === "sales") {
+    return buildStructuredReply("AMBIGUITY REQUEST", "Saya belum cukup yakin data motor yang dimaksud. Tolong jelaskan lagi nama motor, nomor, atau perubahan yang ingin disimpan.");
+  }
+  return buildStructuredReply("AMBIGUITY REQUEST", "Saya belum cukup yakin data yang dimaksud. Tolong jelaskan lagi sebelum saya menjalankan perubahan.");
 }
 
 function hasMeaningfulFilterEntries(filters) {
